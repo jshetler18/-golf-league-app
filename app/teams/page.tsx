@@ -21,19 +21,24 @@ export default function Teams(){
     const {data:s}=await supabase.from('seasons').select('id,name').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     if(!s){setLoading(false);return}
     setSeason(s as Season)
-    const [{data:t},{data:p},{data:champions},{data:closedSeasons}]=await Promise.all([
+    const [{data:t},{data:p},{data:champions},{data:closedSeasons},{data:allTeams}]=await Promise.all([
       supabase.from('teams').select('id,name').eq('season_id',s.id).eq('is_active',true).order('name'),
       supabase.from('players').select('id,team_id,full_name,official_tee_color').eq('season_id',s.id).eq('is_active',true).order('full_name'),
       supabase.from('monthly_champions').select('team_id'),
-      supabase.from('seasons').select('id').eq('is_closed',true)
+      supabase.from('seasons').select('id').eq('is_closed',true),
+      supabase.from('teams').select('id,name')
     ])
     setTeams((t||[]) as Team[])
     setPlayers((p||[]) as Player[])
 
     const counts:Record<string,TrophyCounts>={}
+    const teamNameById=new Map(((allTeams||[]) as Team[]).map(team=>[team.id,team.name]))
+    const teamKey=(name:string)=>name.trim().toLowerCase()
     ;((champions||[]) as {team_id:string}[]).forEach(c=>{
-      counts[c.team_id]=counts[c.team_id]||{cup:0,monthly:0}
-      counts[c.team_id].monthly+=1
+      const name=teamNameById.get(c.team_id); if(!name)return
+      const key=teamKey(name)
+      counts[key]=counts[key]||{cup:0,monthly:0}
+      counts[key].monthly+=1
     })
     const closedIds=((closedSeasons||[]) as {id:string}[]).map(x=>x.id)
     if(closedIds.length){
@@ -49,7 +54,8 @@ export default function Teams(){
         })
         Object.values(totals).forEach(teamTotals=>{
           const entries=Object.entries(teamTotals).sort((a,b)=>b[1]-a[1]); if(!entries.length)return
-          const winnerId=entries[0][0]; counts[winnerId]=counts[winnerId]||{cup:0,monthly:0}; counts[winnerId].cup+=1
+          const winnerId=entries[0][0]; const winnerName=teamNameById.get(winnerId); if(!winnerName)return
+          const key=teamKey(winnerName); counts[key]=counts[key]||{cup:0,monthly:0}; counts[key].cup+=1
         })
       }
     }
@@ -93,9 +99,9 @@ export default function Teams(){
         {rows.map(({team,players:roster})=><section className="card team-card" key={team.id}>
           <div className="section-title compact">
             <div><h2>{team.name}</h2>
-              {(trophies[team.id]?.cup||trophies[team.id]?.monthly)?<div className="team-trophies" aria-label="Championships">
-                {Array.from({length:trophies[team.id]?.cup||0}).map((_,i)=><span className="trophy trophy-cup" title="Cup Championship" key={`cup-${i}`}>🏆</span>)}
-                {Array.from({length:trophies[team.id]?.monthly||0}).map((_,i)=><span className="trophy trophy-monthly" title="Monthly Championship" key={`monthly-${i}`}>🏆</span>)}
+              {(trophies[team.name.trim().toLowerCase()]?.cup||trophies[team.name.trim().toLowerCase()]?.monthly)?<div className="team-trophies" aria-label="Championships">
+                {Array.from({length:trophies[team.name.trim().toLowerCase()]?.cup||0}).map((_,i)=><span className="trophy trophy-cup" title="Cup Championship" key={`cup-${i}`}>🏆</span>)}
+                {Array.from({length:trophies[team.name.trim().toLowerCase()]?.monthly||0}).map((_,i)=><span className="trophy trophy-monthly" title="Monthly Championship" key={`monthly-${i}`}>🏆</span>)}
               </div>:null}
             </div>
             <span className="pill">{roster.length} Players</span>
