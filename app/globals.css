@@ -27,3 +27,28 @@ button{font:inherit;border:0;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-
 .trophy-cup{filter:saturate(1.15)}
 .trophy-monthly{filter:grayscale(1);opacity:.72}
 .trophy-key-items .trophy{font-size:22px}
+
+/* Version 9.4: larger team trophies + clearer simulator booking */
+.team-trophies .trophy-monthly{font-size:27px}
+.team-trophies .trophy-cup{font-size:36px}
+.slot{width:100%;text-align:left;color:inherit;font:inherit}
+.slot.personal,.slot.blocked{background:#fde9e9;border-color:#efb7b7;color:#6f2525}
+.slot.open.slot-clickable{cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
+.slot.open.slot-clickable:hover{border-color:#69a987;box-shadow:0 0 0 2px rgba(70,145,104,.10)}
+.slot.open.selected{background:#ffe3ad;border-color:#e79a24;color:#6d4300;box-shadow:0 0 0 2px rgba(231,154,36,.16)}
+.slot:disabled{cursor:not-allowed;opacity:1}
+.slot-help{margin:10px 0 0}
+.booking-confirmation{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;border:1px solid #9fcdb2;border-radius:12px;background:#e4f5ea;color:#174e30}
+.booking-confirmation strong{font-size:17px}
+.booking-confirmation a{margin-left:auto;color:#174e30;font-weight:800;text-decoration:underline}
+.booking-error{background:#fbe9e9;border-color:#efb7b7;color:#7b2929}
+@media(max-width:620px){.booking-confirmation{align-items:flex-start}.booking-confirmation a{width:100%;margin-left:0}.team-trophies .trophy-cup{font-size:34px}.team-trophies .trophy-monthly{font-size:26px}}
+
+/* Version 9.5: selected booking slots + vertical My Bookings list */
+.booking-rows{display:grid;gap:10px}
+.booking-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 16px;background:white;border:1px solid var(--line);border-radius:11px}
+.booking-row-main{display:flex;align-items:baseline;gap:18px;min-width:0;flex:1}
+.booking-row-date{font-size:17px}
+.booking-row-time{font-size:18px;font-weight:800;color:var(--accent);white-space:nowrap}
+.booking-row-cancel{flex:0 0 auto}
+@media(max-width:620px){.booking-row{align-items:flex-start;flex-direction:column}.booking-row-main{align-items:flex-start;flex-direction:column;gap:4px}.booking-row-cancel{width:100%}}
