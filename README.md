@@ -1,19 +1,26 @@
-# Golf League App
+# Tom Krise 19th Hole Golf Simulator
 
-Starter Next.js + Supabase project for an indoor simulator golf league.
+Next.js + Supabase web app for simulator bookings and the indoor golf league.
 
-## Current starter screens
-- Player home dashboard
-- Monthly standings with handicap-adjusted totals
-- Cup standings
-- Simulator settings and monthly tee assignments
-- Champions/history
-- Admin prototype
-- Secondary Book The Sim link
+## Current app features
+- Email/password sign-up and sign-in
+- New-account admin approval workflow
+- Booking calendar: 7 AM–9 PM Eastern, 1-hour increments
+- Personal bookings up to 3 hours/day and 30 days ahead (enforced by Supabase)
+- My Bookings with cancellation
+- League reservations that display the team name
+- Admin blocked-time reservations
+- League standings/Cup/history/setup starter pages
 
-## Vercel environment variables
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+## Environment variables
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-## Important
-The included SQL is a starter schema only. It enables RLS and public read policies. Admin authentication/write policies, scorecard storage, AI review, and push subscriptions are intentionally not opened until auth is configured.
+These are configured in Vercel for the production project.
+
+## Important next build items
+- Configure the first approved admin account
+- Push notification permission/subscription UI
+- Scheduled 24-hour and 1-hour booking reminders
+- Full admin management for scores, handicaps, tee assignments, announcements, and history
+- PWA manifest/icons and final Tom Krise 19th Hole branding assets

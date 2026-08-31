@@ -1,9 +1,9 @@
 import './globals.css'
-import Link from 'next/link'
+import AuthNav from '@/components/AuthNav'
 
 export const metadata = {
-  title: 'Indoor Golf League',
-  description: 'Indoor golf league standings, Cup, history, and simulator setup'
+  title: 'Tom Krise 19th Hole Golf Simulator',
+  description: 'Golf simulator bookings, indoor league standings, Cup, history, and setup'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -12,17 +12,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="topbar">
           <div>
-            <div className="eyebrow">Indoor Golf League</div>
-            <strong>League Central</strong>
+            <div className="eyebrow">Tom Krise 19th Hole</div>
+            <strong>Golf Simulator</strong>
           </div>
-          <nav>
-            <Link href="/">Home</Link>
-            <Link href="/standings">Standings</Link>
-            <Link href="/cup">Cup</Link>
-            <Link href="/setup">Setup</Link>
-            <Link href="/history">History</Link>
-            <Link href="/admin">Admin</Link>
-          </nav>
+          <AuthNav />
         </header>
         <main className="page">{children}</main>
       </body>

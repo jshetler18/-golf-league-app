@@ -1,24 +1,9 @@
 import Link from 'next/link'
 
-export default function Home() {
-  return <>
-    <section className="hero">
-      <div className="eyebrow">2026–2027 Season • November</div>
-      <h1>Indoor Golf League</h1>
-      <p>Current course: Sample Course • Week 1 of 4</p>
-      <span className="pill">10 Stableford holes</span><span className="pill">Bonus Par 3s: #12 & #17</span>
-    </section>
-    <div className="grid">
-      <section className="card"><h2>Monthly Leader</h2><div className="stat">Team 1</div><p className="muted">28.2 adjusted points</p><Link className="btn" href="/standings">View standings</Link></section>
-      <section className="card"><h2>Cup Leader</h2><div className="stat">Team 3</div><p className="muted">1,000 Cup points</p><Link className="btn" href="/cup">View Cup</Link></section>
-      <section className="card"><h2>This Month's Setup</h2><p>Elevation 2000 ft • Stimp 10 or 11 • 5 ft gimmies • No wind • Normal greens/fairways • Mulligans off</p><Link className="btn secondary" href="/setup">Full simulator setup</Link></section>
-      <section className="card notice"><h2>League Announcement</h2><p><strong>Welcome to the new season.</strong></p><p className="muted">Admin announcements and push notifications will appear here.</p></section>
-    </div>
-    <div className="section-title"><h2>Quick access</h2></div>
-    <div className="grid">
-      <Link className="card" href="/standings"><h3>Monthly Standings</h3><p className="muted">Raw, bonus, handicap and adjusted totals.</p></Link>
-      <Link className="card" href="/history"><h3>League History</h3><p className="muted">Past Cup champions and all-time monthly titles.</p></Link>
-      <a className="card" href="https://www.laurelviewvillage.com/golfsimulator"><h3>Book The Sim</h3><p className="muted">Secondary menu link to the external booking page.</p></a>
-    </div>
-  </>
+export default function Home(){
+ return <>
+  <section className="hero"><div className="eyebrow">Laurel View Village</div><h1>Tom Krise 19th Hole Golf Simulator</h1><p>Simulator reservations and indoor golf league information in one place.</p><div className="hero-actions"><Link className="btn light" href="/book">Book the Sim</Link><Link className="btn ghost" href="/standings">League Standings</Link></div></section>
+  <div className="grid"><Link className="card clickable" href="/book"><h2>Book the Sim</h2><p>View open times and reserve 1–3 hours. League team reservations are labeled on the calendar.</p></Link><Link className="card clickable" href="/my-bookings"><h2>My Bookings</h2><p>See your upcoming reservations and cancel if your plans change.</p></Link><Link className="card clickable" href="/cup"><h2>19th Hole Cup</h2><p>Follow monthly Cup points and the season-long championship race.</p></Link><Link className="card clickable" href="/setup"><h2>Round Setup</h2><p>Course, simulator settings, bonus par-3 holes, and monthly tee assignments.</p></Link></div>
+  <section className="card notice home-note"><h2>Booking rules</h2><p>Open every day from <strong>7:00 AM to 9:00 PM</strong>. Book in 1-hour increments, up to <strong>3 hours per day</strong>, and up to <strong>30 days ahead</strong>. New accounts require admin approval before booking.</p></section>
+ </>
 }
