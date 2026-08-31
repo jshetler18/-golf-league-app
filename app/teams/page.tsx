@@ -5,7 +5,9 @@ import { supabase } from '@/lib/supabase'
 
 type Season={id:string;name:string}
 type Team={id:string;name:string}
-type Player={id:string;team_id:string|null;full_name:string}
+type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
+
+const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tips'}
 
 export default function Teams(){
   const [season,setSeason]=useState<Season|null>(null)
@@ -19,7 +21,7 @@ export default function Teams(){
     setSeason(s as Season)
     const [{data:t},{data:p}]=await Promise.all([
       supabase.from('teams').select('id,name').eq('season_id',s.id).eq('is_active',true).order('name'),
-      supabase.from('players').select('id,team_id,full_name').eq('season_id',s.id).eq('is_active',true).order('full_name')
+      supabase.from('players').select('id,team_id,full_name,official_tee_color').eq('season_id',s.id).eq('is_active',true).order('full_name')
     ])
     setTeams((t||[]) as Team[])
     setPlayers((p||[]) as Player[])
@@ -53,7 +55,7 @@ export default function Teams(){
           {roster.length?<div className="player-roster">
             {roster.map((player,index)=><div className="player-name" key={player.id}>
               <span className="player-number">{index+1}</span>
-              <strong>{player.full_name}</strong>
+              {player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} title={teeLabels[player.official_tee_color]||'Official tee'} aria-label={teeLabels[player.official_tee_color]||'Official tee'}></span>}<strong>{player.full_name}</strong>
             </div>)}
           </div>:<p className="muted">No active players are assigned to this team.</p>}
         </section>)}
