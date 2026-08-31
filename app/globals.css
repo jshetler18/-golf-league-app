@@ -6,3 +6,6 @@ button{font:inherit;border:0;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-
 @media(max-width:760px){.booking-layout{grid-template-columns:1fr}.slot{font-size:14px}.actions{min-width:150px}}
 
 .section-title.compact{margin:0 0 10px;align-items:center}.roster-list{display:grid;gap:7px}.roster-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.add-player{display:flex;gap:8px;margin-top:14px}.add-player input{min-width:0;flex:1;padding:9px;border:1px solid var(--line);border-radius:9px;font-size:15px}
+
+/* Player-facing teams and rosters */
+.team-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.team-card{min-height:190px}.player-roster{display:grid;gap:4px}.player-name{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.player-name:last-child{border-bottom:0}.player-number{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#eef3f0;color:var(--accent);font-weight:800;font-size:12px;flex:0 0 26px}
