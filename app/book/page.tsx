@@ -24,7 +24,7 @@ export default function BookPage(){
   const [items,setItems]=useState<CalendarItem[]>([])
   const [profile,setProfile]=useState<Profile|null>(null)
   const [userId,setUserId]=useState('')
-  const [startHour,setStartHour]=useState(7)
+  const [startHour,setStartHour]=useState<number|null>(null)
   const [duration,setDuration]=useState(1)
   const [message,setMessage]=useState('')
   const [confirmation,setConfirmation]=useState('')
@@ -47,7 +47,7 @@ export default function BookPage(){
     if(error)setMessage(error.message)
     setLoading(false)
   }
-  useEffect(()=>{load(false)},[date])
+  useEffect(()=>{setStartHour(null);setDuration(1);load(false)},[date])
 
   function overlaps(hour:number){
     const slotStart=hour*60, slotEnd=(hour+1)*60
@@ -63,7 +63,7 @@ export default function BookPage(){
   function chooseSlot(hour:number){
     if(overlaps(hour))return
     setMessage('');setConfirmation('')
-    if(hour===startHour+duration && duration<3 && hour<21){
+    if(startHour!==null && hour===startHour+duration && duration<3 && hour<21){
       setDuration(duration+1)
       return
     }
@@ -71,16 +71,47 @@ export default function BookPage(){
     setDuration(1)
   }
 
+  function prepareBookingSound(){
+    try{
+      const ctx=new AudioContext()
+      return {
+        play(){
+          const now=ctx.currentTime
+          const gain=ctx.createGain()
+          gain.connect(ctx.destination)
+          gain.gain.setValueAtTime(0.0001,now)
+          gain.gain.exponentialRampToValueAtTime(0.16,now+0.02)
+          gain.gain.exponentialRampToValueAtTime(0.0001,now+0.65)
+          const first=ctx.createOscillator()
+          const second=ctx.createOscillator()
+          first.type='sine';second.type='sine'
+          first.frequency.setValueAtTime(659.25,now)
+          second.frequency.setValueAtTime(880,now+0.18)
+          first.connect(gain);second.connect(gain)
+          first.start(now);first.stop(now+0.28)
+          second.start(now+0.18);second.stop(now+0.62)
+          window.setTimeout(()=>ctx.close().catch(()=>{}),800)
+        },
+        close(){ctx.close().catch(()=>{})}
+      }
+    }catch{return null}
+  }
+
   const canBook=profile?.status==='approved' && profile?.booking_enabled
 
   async function book(e:FormEvent){
     e.preventDefault(); setMessage(''); setConfirmation('')
     if(!canBook){setMessage('Your account must be approved before you can book.');return}
+    if(startHour===null){setMessage('Please select a starting time.');return}
     if(startHour+duration>21){setMessage('Bookings must end by 9:00 PM.');return}
     for(let h=startHour;h<startHour+duration;h++) if(overlaps(h)){setMessage('Part of that time is already reserved. Please choose another time.');return}
+    const sound=prepareBookingSound()
     const {error}=await supabase.from('bookings').insert({kind:'personal',user_id:userId,created_by:userId,start_at:easternStamp(date,startHour),end_at:easternStamp(date,startHour+duration)})
-    if(error){setMessage(error.message);return}
+    if(error){sound?.close();setMessage(error.message);return}
     setConfirmation(`Reservation confirmed for ${friendlyDate(date)}, ${hourLabel(startHour)}–${hourLabel(startHour+duration)}.`)
+    sound?.play()
+    setStartHour(null)
+    setDuration(1)
     await load(true)
   }
 
@@ -93,9 +124,9 @@ export default function BookPage(){
     <div className="booking-layout">
       <div className="card"><h2>Choose a Day</h2><label className="field">Date<input type="date" min={today} max={maxDate} value={date} onChange={e=>setDate(e.target.value)} /></label>
         <p className="muted slot-help">Tap or click any green available time to select it. Tap the next consecutive hour to extend the reservation, up to 3 hours.</p>
-        <div className="slot-list">{hours.map(h=>{const busy=overlaps(h);const selected=!busy&&h>=startHour&&h<startHour+duration;return <button type="button" onClick={()=>chooseSlot(h)} disabled={!!busy||!canBook} className={`slot ${busy?busy.kind:'open'} ${selected?'selected':''} ${!busy&&canBook?'slot-clickable':''}`} key={h}><span><strong>{hourLabel(h)}</strong>–{hourLabel(h+1)}</span><span>{busy?(busy.kind==='league'?busy.display_title:busy.is_own?'My Booking':'Unavailable'):selected?'Selected':'Available'}</span></button>})}</div>
+        <div className="slot-list">{hours.map(h=>{const busy=overlaps(h);const selected=!busy&&startHour!==null&&h>=startHour&&h<startHour+duration;return <button type="button" onClick={()=>chooseSlot(h)} disabled={!!busy||!canBook} className={`slot ${busy?busy.kind:'open'} ${selected?'selected':''} ${!busy&&canBook?'slot-clickable':''}`} key={h}><span><strong>{hourLabel(h)}</strong>–{hourLabel(h+1)}</span><span>{busy?(busy.kind==='league'?busy.display_title:busy.is_own?'My Booking':'Unavailable'):selected?'Selected':'Available'}</span></button>})}</div>
       </div>
-      <div className="card"><h2>Reserve Time</h2><form onSubmit={book} className="form-grid single"><label className="field">Start time<select value={startHour} onChange={e=>{setStartHour(Number(e.target.value));setDuration(1);setMessage('');setConfirmation('')}}>{hours.map(h=>{const busy=overlaps(h);return <option key={h} value={h} disabled={!!busy}>{hourLabel(h)}{busy?' — Unavailable':''}</option>})}</select></label><label className="field">Length<select value={duration} onChange={e=>setDuration(Number(e.target.value))}><option value={1}>1 hour</option><option value={2}>2 hours</option><option value={3}>3 hours</option></select></label><button className="btn" disabled={!canBook}>Confirm Reservation</button></form>{message&&<p className="message booking-error">{message}</p>}<p className="muted">Reserved personal time is shown in light red as unavailable. League reservations continue to show the team name.</p><Link href="/my-bookings" className="text-link">View My Bookings →</Link></div>
+      <div className="card"><h2>Reserve Time</h2><form onSubmit={book} className="form-grid single"><label className="field">Start time<select value={startHour??''} onChange={e=>{setStartHour(e.target.value===''?null:Number(e.target.value));setDuration(1);setMessage('');setConfirmation('')}}><option value="">Select a time</option>{hours.map(h=>{const busy=overlaps(h);return <option key={h} value={h} disabled={!!busy}>{hourLabel(h)}{busy?' — Unavailable':''}</option>})}</select></label><label className="field">Length<select value={duration} onChange={e=>setDuration(Number(e.target.value))}><option value={1}>1 hour</option><option value={2}>2 hours</option><option value={3}>3 hours</option></select></label><button className="btn" disabled={!canBook}>Confirm Reservation</button></form>{message&&<p className="message booking-error">{message}</p>}<p className="muted">Reserved personal time is shown in light red as unavailable. League reservations continue to show the team name.</p><Link href="/my-bookings" className="text-link">View My Bookings →</Link></div>
     </div>
   </>
 }
