@@ -6,7 +6,7 @@ type Team={id:string;name:string}
 type Month={id:string;month_start:string;course_name:string;bonus_birdie_value:number}
 type Score={id?:string;league_month_id:string;team_id:string;week_number:number;raw_stableford:number;bonus_birdies:number;bonus_points:number;handicap_points:number;official_total:number|null;status:string}
 type Handicap={team_id:string;handicap_points:number}
-type Matchup={id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string}
+type Matchup={id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null}
 
 const pointMap:Record<number,[number,number]>={1:[1000,800],3:[700,600],5:[500,400],7:[300,200],9:[100,0]}
 
@@ -19,7 +19,7 @@ export default function WeeklyScoring({seasonId,teams}:{seasonId:string;teams:Te
 
  async function syncCompletedWeek4(){
    const [{data:m,error:matchLoadErr},{data:s,error:scoreLoadErr}]=await Promise.all([
-     supabase.from('week4_matchups').select('id,seed_high,seed_low,team_high_id,team_low_id').eq('league_month_id',monthId).order('seed_high'),
+     supabase.from('week4_matchups').select('id,seed_high,seed_low,team_high_id,team_low_id,winner_team_id').eq('league_month_id',monthId).order('seed_high'),
      supabase.from('weekly_scores').select('team_id,official_total').eq('league_month_id',monthId).eq('week_number',4).eq('status','approved')
    ])
    if(matchLoadErr)throw matchLoadErr
@@ -32,6 +32,9 @@ export default function WeeklyScoring({seasonId,teams}:{seasonId:string;teams:Te
      if(!hasHigh||!hasLow)continue
      const highScore=Number(scoreMap.get(matchup.team_high_id)),lowScore=Number(scoreMap.get(matchup.team_low_id))
      if(highScore===lowScore){
+       // Preserve an admin-selected winner for an exact tie. This lets the league
+       // apply its own tiebreaker without a later score save erasing the decision.
+       if(matchup.winner_team_id)continue
        const {error:e1}=await supabase.from('week4_matchups').update({winner_team_id:null,high_points_awarded:null,low_points_awarded:null}).eq('id',matchup.id)
        if(e1)throw e1
        const {error:e2}=await supabase.from('cup_points').delete().eq('league_month_id',monthId).in('team_id',[matchup.team_high_id,matchup.team_low_id])

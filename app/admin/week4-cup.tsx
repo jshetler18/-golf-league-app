@@ -8,6 +8,8 @@ type Month={id:string;month_start:string;course_name:string}
 type Score={team_id:string;week_number:number;official_total:number|null}
 type Matchup={id?:string;league_month_id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null;high_points_awarded:number|null;low_points_awarded:number|null}
 
+const pointMap:Record<number,[number,number]>={1:[1000,800],3:[700,600],5:[500,400],7:[300,200],9:[100,0]}
+
 export default function Week4Cup({seasonId,teams}:{seasonId:string;teams:Team[]}){
   const [months,setMonths]=useState<Month[]>([])
   const [monthId,setMonthId]=useState('')
@@ -47,6 +49,31 @@ export default function Week4Cup({seasonId,teams}:{seasonId:string;teams:Team[]}
   const teamName=(id:string)=>teams.find(t=>t.id===id)?.name||'Team'
   const week4=(id:string)=>scores.find(s=>s.team_id===id&&s.week_number===4)
 
+  async function resolveTie(matchup:Matchup,winnerId:string){
+    if(!matchup.id)return
+    setBusy(true);setMsg('')
+    const [winnerPts,loserPts]=pointMap[matchup.seed_high]
+    const highWins=winnerId===matchup.team_high_id
+    const highPts=highWins?winnerPts:loserPts
+    const lowPts=highWins?loserPts:winnerPts
+    const highPlacement=highWins?matchup.seed_high:matchup.seed_low
+    const lowPlacement=highWins?matchup.seed_low:matchup.seed_high
+    const {error:e1}=await supabase.from('week4_matchups').update({winner_team_id:winnerId,high_points_awarded:highPts,low_points_awarded:lowPts}).eq('id',matchup.id)
+    if(e1){setBusy(false);setMsg(e1.message);return}
+    const {error:e2}=await supabase.from('cup_points').upsert([
+      {league_month_id:monthId,team_id:matchup.team_high_id,points:highPts,placement:highPlacement},
+      {league_month_id:monthId,team_id:matchup.team_low_id,points:lowPts,placement:lowPlacement}
+    ],{onConflict:'league_month_id,team_id'})
+    if(e2){setBusy(false);setMsg(e2.message);return}
+    if(matchup.seed_high===1){
+      const {error:e3}=await supabase.from('monthly_champions').upsert({league_month_id:monthId,team_id:winnerId},{onConflict:'league_month_id'})
+      if(e3){setBusy(false);setMsg(e3.message);return}
+    }
+    setBusy(false)
+    setMsg(`${teamName(winnerId)} selected as the tiebreak winner. Cup points have been updated.`)
+    await loadMonthData()
+  }
+
   async function generate(){
     if(!allThree){setMsg('All 10 teams need Weeks 1–3 scores before Week 4 matchups can be generated.');return}
     if(tied){setMsg(`Tie in Weeks 1–3 seeding: ${tiedPairs.join(', ')}. Adjust the tied score or use your league tiebreaker before generating matchups.`);return}
@@ -72,6 +99,6 @@ export default function Week4Cup({seasonId,teams}:{seasonId:string;teams:Team[]}
         <button className="btn" disabled={busy||!allThree} onClick={generate}>{matchups.length?'Regenerate Week 4 Matchups':'Generate Week 4 Matchups'}</button>
       </>}
     </div>
-    {matchups.length>0&&<div className="card"><div className="section-title compact"><div><h3>Week 4 Head-to-Head</h3><p className="muted">You do not need to wait for all five matchups. Each result appears as soon as both teams have a Week 4 score.</p></div><button className="btn secondary small" onClick={loadMonthData}>Refresh Results</button></div><div className="table-wrap"><table><thead><tr><th>Matchup</th><th>Higher Seed</th><th>W4 Score</th><th>Lower Seed</th><th>W4 Score</th><th>Result</th></tr></thead><tbody>{matchups.map(m=>{const hs=week4(m.team_high_id),ls=week4(m.team_low_id);const both=hs?.official_total!=null&&ls?.official_total!=null;const liveWinner=both&&Number(hs?.official_total)!==Number(ls?.official_total)?(Number(hs?.official_total)>Number(ls?.official_total)?m.team_high_id:m.team_low_id):null;const winner=m.winner_team_id||liveWinner;const tiedScore=both&&Number(hs?.official_total)===Number(ls?.official_total);return <tr key={m.id}><td>{m.seed_high} vs {m.seed_low}</td><td>{teamName(m.team_high_id)}</td><td>{hs?.official_total==null?'—':Number(hs.official_total).toFixed(1)}</td><td>{teamName(m.team_low_id)}</td><td>{ls?.official_total==null?'—':Number(ls.official_total).toFixed(1)}</td><td>{winner?<strong>{teamName(winner)} wins</strong>:tiedScore?<strong>Tied — resolve score</strong>:'Pending'}</td></tr>})}</tbody></table></div><p className="muted">Cup awards: 1000/800, 700/600, 500/400, 300/200, and 100/0. Completed matchup points appear on the Cup Standings immediately.</p></div>}
+    {matchups.length>0&&<div className="card"><div className="section-title compact"><div><h3>Week 4 Head-to-Head</h3><p className="muted">You do not need to wait for all five matchups. Each result appears as soon as both teams have a Week 4 score.</p></div><button className="btn secondary small" onClick={loadMonthData}>Refresh Results</button></div><div className="table-wrap"><table><thead><tr><th>Matchup</th><th>Higher Seed</th><th>W4 Score</th><th>Lower Seed</th><th>W4 Score</th><th>Result</th></tr></thead><tbody>{matchups.map(m=>{const hs=week4(m.team_high_id),ls=week4(m.team_low_id);const both=hs?.official_total!=null&&ls?.official_total!=null;const liveWinner=both&&Number(hs?.official_total)!==Number(ls?.official_total)?(Number(hs?.official_total)>Number(ls?.official_total)?m.team_high_id:m.team_low_id):null;const winner=m.winner_team_id||liveWinner;const tiedScore=both&&Number(hs?.official_total)===Number(ls?.official_total);return <tr key={m.id}><td>{m.seed_high} vs {m.seed_low}</td><td>{teamName(m.team_high_id)}</td><td>{hs?.official_total==null?'—':Number(hs.official_total).toFixed(1)}</td><td>{teamName(m.team_low_id)}</td><td>{ls?.official_total==null?'—':Number(ls.official_total).toFixed(1)}</td><td>{winner?<strong>{teamName(winner)} wins</strong>:tiedScore?<div><strong>Tied — choose winner</strong><div style={{display:'flex',gap:'.5rem',flexWrap:'wrap',marginTop:'.5rem'}}><button className="btn secondary small" disabled={busy} onClick={()=>resolveTie(m,m.team_high_id)}>{teamName(m.team_high_id)}</button><button className="btn secondary small" disabled={busy} onClick={()=>resolveTie(m,m.team_low_id)}>{teamName(m.team_low_id)}</button></div></div>:'Pending'}</td></tr>})}</tbody></table></div><p className="muted">Cup awards: 1000/800, 700/600, 500/400, 300/200, and 100/0. Completed matchup points appear on the Cup Standings immediately.</p></div>}
   </section>
 }
