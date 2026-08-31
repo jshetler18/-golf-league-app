@@ -44,13 +44,14 @@ export default function Week4Cup({seasonId,teams}:{seasonId:string;teams:Team[]}
   }).sort((a,b)=>b.total-a.total||a.team.name.localeCompare(b.team.name)),[scores,teams])
 
   const allThree=teams.length===10&&seedRows.every(r=>r.played===3)
-  const tied=seedRows.some((r,i)=>i>0&&r.total===seedRows[i-1].total)
+  const tiedPairs=seedRows.flatMap((r,i)=>i>0&&r.total===seedRows[i-1].total?[`${seedRows[i-1].team.name} and ${r.team.name} (${r.total.toFixed(1)})`]:[])
+  const tied=tiedPairs.length>0
   const teamName=(id:string)=>teams.find(t=>t.id===id)?.name||'Team'
   const week4=(id:string)=>scores.find(s=>s.team_id===id&&s.week_number===4)
 
   async function generate(){
     if(!allThree){setMsg('All 10 teams need Weeks 1–3 scores before Week 4 matchups can be generated.');return}
-    if(tied){setMsg('There is a tie in the Weeks 1–3 seeding totals. Resolve the tie before generating Week 4 matchups.');return}
+    if(tied){setMsg(`Tie in Weeks 1–3 seeding: ${tiedPairs.join(', ')}. Adjust the tied score or use your league tiebreaker before generating matchups.`);return}
     setBusy(true);setMsg('')
     const pairs:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[[1,2],[3,4],[5,6],[7,8],[9,10]]
     const payload=pairs.map(([hi,lo])=>({league_month_id:monthId,seed_high:hi,seed_low:lo,team_high_id:seedRows[hi-1].team.id,team_low_id:seedRows[lo-1].team.id,winner_team_id:null,high_points_awarded:null,low_points_awarded:null}))
@@ -101,8 +102,9 @@ export default function Week4Cup({seasonId,teams}:{seasonId:string;teams:Team[]}
       {!month?<p className="muted">Save a Monthly League Setup first.</p>:<>
         <h3>Weeks 1–3 Seeding</h3>
         <div className="table-wrap"><table><thead><tr><th>Seed</th><th>Team</th><th>Rounds</th><th>Adjusted Total</th></tr></thead><tbody>{seedRows.map((r,i)=><tr key={r.team.id}><td className="rank">{i+1}</td><td>{r.team.name}</td><td>{r.played}/3</td><td><strong>{r.total.toFixed(1)}</strong></td></tr>)}</tbody></table></div>
-        <p className="muted">Matchups: 1 vs 2, 3 vs 4, 5 vs 6, 7 vs 8, 9 vs 10. If seeding totals are tied, resolve the tie before generating matchups.</p>
-        <button className="btn" disabled={busy||!allThree||tied} onClick={generate}>{matchups.length?'Regenerate Week 4 Matchups':'Generate Week 4 Matchups'}</button>
+        <p className="muted">Matchups: 1 vs 2, 3 vs 4, 5 vs 6, 7 vs 8, 9 vs 10.</p>
+        {tied&&<p className="message"><strong>Seeding tie:</strong> {tiedPairs.join(', ')}. The button stays available so the reason is visible when clicked, but the tie must be resolved before matchups are created.</p>}
+        <button className="btn" disabled={busy||!allThree} onClick={generate}>{matchups.length?'Regenerate Week 4 Matchups':'Generate Week 4 Matchups'}</button>
       </>}
     </div>
     {matchups.length>0&&<div className="card"><h3>Week 4 Head-to-Head</h3><div className="table-wrap"><table><thead><tr><th>Matchup</th><th>Higher Seed</th><th>W4 Score</th><th>Lower Seed</th><th>W4 Score</th><th>Result</th></tr></thead><tbody>{matchups.map(m=>{const hs=week4(m.team_high_id),ls=week4(m.team_low_id);const winner=m.winner_team_id;return <tr key={m.id}><td>{m.seed_high} vs {m.seed_low}</td><td>{teamName(m.team_high_id)}</td><td>{hs?.official_total==null?'—':Number(hs.official_total).toFixed(1)}</td><td>{teamName(m.team_low_id)}</td><td>{ls?.official_total==null?'—':Number(ls.official_total).toFixed(1)}</td><td>{winner?<strong>{teamName(winner)} wins</strong>:'Pending'}</td></tr>})}</tbody></table></div><p className="muted">Cup awards: 1000/800, 700/600, 500/400, 300/200, and 100/0.</p><button className="btn" disabled={busy} onClick={finalize}>Finalize Week 4 & Award Cup Points</button></div>}

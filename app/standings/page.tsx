@@ -67,7 +67,7 @@ export default function Standings(){
     {!m?<div className="card">Monthly league setup has not been entered yet.</div>:
       <div className="card table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Team</th><th>Handicap</th><th>W1</th><th>W2</th><th>W3</th><th>Rounds</th><th>Total</th></tr></thead>
+          <thead><tr><th>#</th><th>Team</th><th>Handicap</th><th>W1</th><th>W2</th><th>W3</th><th>Total</th></tr></thead>
           <tbody>{rows.map((r,i)=><tr key={r.t.id}>
             <td className="rank">{i+1}</td>
             <td><strong>{r.t.name}</strong></td>
@@ -75,7 +75,6 @@ export default function Standings(){
             <td>{r.w1==null?'—':Number(r.w1).toFixed(1)}</td>
             <td>{r.w2==null?'—':Number(r.w2).toFixed(1)}</td>
             <td>{r.w3==null?'—':Number(r.w3).toFixed(1)}</td>
-            <td>{r.played}</td>
             <td><strong>{r.total.toFixed(1)}</strong></td>
           </tr>)}</tbody>
         </table>
