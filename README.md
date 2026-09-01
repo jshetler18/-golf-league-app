@@ -1,3 +1,7 @@
+Version 11.2
+
+TV leaderboard viewport fix: reserves a larger right-side safe area and makes the month/year + week panel responsive so it cannot be clipped off-screen.
+
 Version 10.2
 
 Changes:
