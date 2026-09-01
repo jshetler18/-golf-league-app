@@ -10,3 +10,8 @@ Changes:
 - Reading a message updates unread badges immediately.
 
 Push notifications / operating-system alerts are not included in this version; those remain a separate next step.
+
+## Version 12.9 — phone push notifications
+Players can enable/disable notifications from Settings. On iPhone, the site must first be added to the Home Screen and opened as the installed web app. Admin announcements can optionally send a phone alert; tapping the alert opens Messages.
+
+Vercel requires the server-only `VAPID_PRIVATE_KEY` environment variable before push delivery will work. The matching public key is already compiled into the app. `VAPID_SUBJECT` is optional and defaults to the production site URL.

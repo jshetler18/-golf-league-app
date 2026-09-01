@@ -16,6 +16,7 @@ export default function AdminAnnouncements(){
   const [title,setTitle]=useState('')
   const [body,setBody]=useState('')
   const [pinned,setPinned]=useState(false)
+  const [sendPush,setSendPush]=useState(true)
   const [expires,setExpires]=useState('')
   const [rows,setRows]=useState<Announcement[]>([])
   const [message,setMessage]=useState('')
@@ -43,19 +44,26 @@ export default function AdminAnnouncements(){
     const {data:{user}}=await supabase.auth.getUser()
     if(!user){setMessage('Please sign in again.');setSaving(false);return}
     const expiresAt=expires?new Date(`${expires}T23:59:59`).toISOString():null
-    const {error}=await supabase.from('announcements').insert({
+    const {data:created,error}=await supabase.from('announcements').insert({
       title:cleanTitle,
       body:cleanBody,
       audience:'everyone',
       team_id:null,
       is_pinned:pinned,
-      send_push:false,
+      send_push:sendPush,
       expires_at:expiresAt,
       created_by:user.id
-    })
+    }).select('id').single()
     if(error){setMessage(error.message)}else{
       setTitle('');setBody('');setPinned(false);setExpires('')
-      setMessage('Announcement published. Players will see it in Messages.')
+      let pushNote=''
+      if(sendPush&&created?.id){
+        const {data:{session}}=await supabase.auth.getSession()
+        if(session?.access_token){
+          try{const r=await fetch('/api/push/send',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({announcementId:created.id,title:cleanTitle,body:cleanBody})});const j=await r.json();pushNote=r.ok?` Phone alert sent to ${j.sent||0} registered device${j.sent===1?'':'s'}.`:` Phone alert was not sent: ${j.error||'push service error'}.`}catch{pushNote=' Announcement posted, but the phone alert could not be sent.'}
+        }
+      }
+      setMessage('Announcement published. Players will see it in Messages.'+pushNote)
       await load()
     }
     setSaving(false)
@@ -79,6 +87,7 @@ export default function AdminAnnouncements(){
           <label className="field">Title<input maxLength={120} required placeholder="Example: Simulator Closed Thursday" value={title} onChange={e=>setTitle(e.target.value)}/></label>
           <label className="field">Message<textarea required rows={5} placeholder="Enter the message players should see…" value={body} onChange={e=>setBody(e.target.value)}/></label>
           <label className="field">Expiration Date <span className="muted">(optional)</span><input type="date" value={expires} onChange={e=>setExpires(e.target.value)}/></label>
+          <label className="admin-check"><input type="checkbox" checked={sendPush} onChange={e=>setSendPush(e.target.checked)}/><span><strong>Send phone notification</strong><small>Alerts players who have enabled notifications on their device.</small></span></label>
           <label className="admin-check"><input type="checkbox" checked={pinned} onChange={e=>setPinned(e.target.checked)}/><span><strong>Pin this message</strong><small>Pinned messages stay at the top of the player Messages page.</small></span></label>
           <button className="btn" disabled={saving}>{saving?'Publishing…':'Publish Announcement'}</button>
         </form>
