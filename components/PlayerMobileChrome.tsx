@@ -45,7 +45,6 @@ export function PlayerMobileHeader({title}:{title:string}){
       <span className="player-mobile-back-arrow" aria-hidden="true">‹</span>
       <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" />
     </button>
-    {title&&<div className="player-mobile-title">{title}</div>}
     <div className="profile-wrap player-mobile-profile" ref={wrap}>
       <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">
         {profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}

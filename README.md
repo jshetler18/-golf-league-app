@@ -118,3 +118,16 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Week 4 match result and Cup points appear under the team name when available.
 - Monthly Champion trophy uses the existing silver/grayscale monthly trophy style from the Teams page.
 - This is a presentation-only trial and requires no database migration.
+
+
+## Version 12.26
+- Results leaderboard title now uses the selected month (for example, November Leaderboard).
+- Removed the “Official totals” label above the leaderboard.
+- On phones, Rank and Team stay frozen while players scroll horizontally through Week 1–4 and Total.
+
+
+## Version 12.27
+- Removed page-title text from the top player header globally; the logo/profile header no longer shows page names.
+- Results page: removed “League history” above Results.
+- Results page: removed the descriptive sentence under Results.
+- Preserves the Version 12.26 leaderboard layout and frozen Rank/Team columns.

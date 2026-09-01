@@ -288,3 +288,20 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 /* v12.25 Results leaderboard trial */
 .results-heading-v1225{gap:18px}.results-leaderboard{padding:0;overflow:hidden}.results-leaderboard-head{display:flex;justify-content:space-between;align-items:end;padding:16px 16px 12px}.results-leaderboard-head h2{margin:2px 0 0}.results-leaderboard-head small{color:var(--muted);font-weight:800}.results-grid{display:grid;grid-template-columns:40px minmax(140px,1.8fr) repeat(4,minmax(58px,.7fr)) minmax(70px,.8fr);align-items:center}.results-grid.header{background:#173759;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.results-grid.header span{padding:10px 8px}.results-grid.row{border-top:1px solid var(--line);min-height:58px}.results-grid.row>span{padding:10px 8px;text-align:center}.results-grid.row .team-cell{text-align:left;display:grid;gap:2px}.team-cell small{font-size:11px;color:var(--muted);font-weight:750}.rank-number{font-weight:900}.month-total{font-size:17px;font-weight:900;color:var(--accent)}.monthly-champion-banner .trophy-monthly{filter:grayscale(1);opacity:.72}
 @media(max-width:620px){.results-leaderboard{overflow-x:auto}.results-grid{min-width:610px}.results-leaderboard-head{position:sticky;left:0;min-width:calc(100vw - 48px);background:#fff}.results-grid.row>span,.results-grid.header span{padding-left:6px;padding-right:6px}}
+
+/* v12.26 Results leaderboard refinements */
+.results-grid.header>span:nth-child(1),
+.results-grid.row>span:nth-child(1){position:sticky;left:0;z-index:4}
+.results-grid.header>span:nth-child(2),
+.results-grid.row>span:nth-child(2){position:sticky;left:40px;z-index:4}
+.results-grid.header>span:nth-child(1),
+.results-grid.header>span:nth-child(2){background:#173759}
+.results-grid.row>span:nth-child(1),
+.results-grid.row>span:nth-child(2){background:#fff}
+.results-grid.row>span:nth-child(2){box-shadow:8px 0 10px -10px rgba(0,0,0,.45)}
+@media(max-width:620px){
+  .results-grid{grid-template-columns:40px 150px repeat(4,58px) 70px;min-width:492px}
+  .results-leaderboard-head{position:sticky;left:0;z-index:6;min-width:calc(100vw - 48px);background:#fff}
+  .results-grid.header>span:nth-child(1),.results-grid.header>span:nth-child(2){z-index:8}
+  .results-grid.row>span:nth-child(1),.results-grid.row>span:nth-child(2){z-index:5}
+}
