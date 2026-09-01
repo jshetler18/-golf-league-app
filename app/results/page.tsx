@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Team = { id:string; name:string }
 type Month = { id:string; month_start:string; course_name:string; bonus_birdie_value:number }
@@ -89,9 +90,9 @@ export default function WeeklyResults(){
     return a.team.name.localeCompare(b.team.name)
   }),[teams,scores,week,matchups])
 
-  if(loading) return <p>Loading…</p>
+  if(loading) return <PlayerPage title="Results"><p>Loading…</p></PlayerPage>
 
-  return <>
+  return <PlayerPage title="Results">
     <div className="section-title results-heading">
       <div>
         <div className="eyebrow">Player results</div>
@@ -120,7 +121,7 @@ export default function WeeklyResults(){
         <div><span className="eyebrow">Bonus birdie</span><strong>+{Number(month.bonus_birdie_value).toFixed(1)}</strong></div>
       </div>
 
-      <div className="card table-wrap results-table-card">
+      <div className="card table-wrap results-table-card player-mobile-cards">
         <table className="results-table">
           <thead><tr>
             <th>Team</th>
@@ -132,20 +133,20 @@ export default function WeeklyResults(){
             {week===4&&<><th>Opponent</th><th>Result</th></>}
           </tr></thead>
           <tbody>{rows.map(r=><tr key={r.team.id} className={r.result==='Winner'?'week4-winner':undefined}>
-            <td><strong>{r.team.name}</strong></td>
-            <td>{fmt(r.score?.raw_stableford)}</td>
-            <td>{r.score?Number(r.score.bonus_birdies):'—'}</td>
-            <td>{fmt(r.score?.bonus_points)}</td>
-            <td>{signed(r.score?.handicap_points)}</td>
-            <td className="official-score"><strong>{fmt(r.score?.official_total)}</strong></td>
+            <td data-primary="true"><strong>{r.team.name}</strong></td>
+            <td data-label="Raw Stableford">{fmt(r.score?.raw_stableford)}</td>
+            <td data-label="Bonus Birdies">{r.score?Number(r.score.bonus_birdies):'—'}</td>
+            <td data-label="Bonus Points">{fmt(r.score?.bonus_points)}</td>
+            <td data-label="Handicap">{signed(r.score?.handicap_points)}</td>
+            <td className="official-score" data-label="Adjusted Total" data-total="true"><strong>{fmt(r.score?.official_total)}</strong></td>
             {week===4&&<>
-              <td>{r.opponentId?teamName(r.opponentId):'—'}</td>
-              <td>{r.matchup?<span className={`result-pill ${r.result==='Winner'?'winner':r.result==='Lost'?'lost':'pending'}`}>{r.result}</span>:'—'}</td>
+              <td data-label="Opponent">{r.opponentId?teamName(r.opponentId):'—'}</td>
+              <td data-label="Result">{r.matchup?<span className={`result-pill ${r.result==='Winner'?'winner':r.result==='Lost'?'lost':'pending'}`}>{r.result}</span>:'—'}</td>
             </>}
           </tr>)}</tbody>
         </table>
       </div>
       <p className="muted results-note">Official Total = Raw Stableford + bonus points + monthly team handicap. Week 4 winners and Cup points are determined from the official adjusted totals.</p>
     </>}
-  </>
+  </PlayerPage>
 }

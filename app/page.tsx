@@ -1,17 +1,20 @@
 'use client'
 import Link from 'next/link'
 import {useEffect,useRef,useState} from 'react'
+import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
+import {CalendarIcon,StandingsIcon,TrophyIcon,MatchPlayIcon,MessagesIcon,FlagIcon,TeamsIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
 
-const items=[
- ['/my-bookings','▦','My Bookings','View and manage your simulator bookings'],
- ['/standings','▥','Monthly Standings','View monthly standings and team rankings'],
- ['/cup','♛','Cup Standings','View Cup Points and monthly totals'],
- ['/cup#match-play','⌁','Match Play','View your Week 4 matchups and results'],
- ['/messages','●●●','Messages','Read league messages and announcements'],
- ['/results','⚑','Results','View past results and round history'],
- ['/teams','●●','Teams','View league teams and players'],
- ['/rules','▤','Rules','View league rules and point system']
+type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string;desc:string}
+const items:MenuItem[]=[
+ {href:'/my-bookings',Icon:CalendarIcon,title:'My Bookings',desc:'View and manage your simulator bookings'},
+ {href:'/standings',Icon:StandingsIcon,title:'Monthly Standings',desc:'View monthly standings and team rankings'},
+ {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
+ {href:'/cup#match-play',Icon:MatchPlayIcon,title:'Match Play',desc:'View your Week 4 matchups and results'},
+ {href:'/messages',Icon:MessagesIcon,title:'Messages',desc:'Read league messages and announcements'},
+ {href:'/results',Icon:FlagIcon,title:'Results',desc:'View past results and round history'},
+ {href:'/teams',Icon:TeamsIcon,title:'Teams',desc:'View league teams and players'},
+ {href:'/rules',Icon:RulesIcon,title:'Rules',desc:'View league rules and point system'}
 ]
 export default function Home(){
  const [profile,setProfile]=useState<any>(null),[open,setOpen]=useState(false),[unread,setUnread]=useState(0); const wrap=useRef<HTMLDivElement>(null)
@@ -20,8 +23,8 @@ export default function Home(){
  async function logout(){await supabase.auth.signOut();location.href='/login'}
  return <div className="mobile-home">
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
-  <nav className="mobile-menu">{items.map(([href,icon,title,desc])=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon">{icon}</span><span className="menu-copy"><strong>{title}</strong><small>{desc}</small></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}<span className="menu-arrow">›</span></Link>)}</nav>
+  <nav className="mobile-menu">{items.map(({href,Icon,title,desc})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><strong>{title}</strong><small>{desc}</small></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}<span className="menu-arrow">›</span></Link>)}</nav>
   <Bottom unread={unread}/>
  </div>
 }
-function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span>⌂</span><b>Home</b></Link><Link href="/my-bookings"><span>▦</span><b>My Bookings</b></Link><Link href="/messages" className="bottom-message"><span>●●●</span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}
+function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>My Bookings</b></Link><Link href="/messages" className="bottom-message"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}

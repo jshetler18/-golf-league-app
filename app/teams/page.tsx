@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Season={id:string;name:string}
 type Team={id:string;name:string}
@@ -68,9 +69,9 @@ export default function Teams(){
     players:players.filter(p=>p.team_id===team.id).sort((a,b)=>a.full_name.localeCompare(b.full_name))
   })),[teams,players])
 
-  if(loading)return <p>Loading…</p>
+  if(loading)return <PlayerPage title="Teams"><p>Loading…</p></PlayerPage>
 
-  return <>
+  return <PlayerPage title="Teams">
     <div className="section-title">
       <div>
         <div className="eyebrow">{season?.name||'Current season'}</div>
@@ -113,5 +114,5 @@ export default function Teams(){
           </div>:<p className="muted">No active players are assigned to this team.</p>}
         </section>)}
       </div></>}
-  </>
+  </PlayerPage>
 }

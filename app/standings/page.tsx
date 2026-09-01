@@ -1,6 +1,7 @@
 'use client'
 import { useEffect,useMemo,useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Team={id:string;name:string}
 type Month={id:string;month_start:string;course_name:string}
@@ -50,7 +51,7 @@ export default function Standings(){
 
   const m=months.find(x=>x.id===monthId)
 
-  return <>
+  return <PlayerPage title="Monthly Standings">
     <div className="section-title">
       <div>
         <div className="eyebrow">Weeks 1–3 determine Week 4 seeding</div>
@@ -65,20 +66,20 @@ export default function Standings(){
     </div>
 
     {!m?<div className="card">Monthly league setup has not been entered yet.</div>:
-      <div className="card table-wrap">
+      <div className="card table-wrap player-mobile-cards">
         <table>
           <thead><tr><th>#</th><th>Team</th><th>Handicap</th><th>W1</th><th>W2</th><th>W3</th><th>Total</th></tr></thead>
           <tbody>{rows.map((r,i)=><tr key={r.t.id}>
-            <td className="rank">{i+1}</td>
-            <td><strong>{r.t.name}</strong></td>
-            <td><strong>{r.handicap==null?'—':`${r.handicap>=0?'+':''}${r.handicap.toFixed(1)}`}</strong></td>
-            <td>{r.w1==null?'—':Number(r.w1).toFixed(1)}</td>
-            <td>{r.w2==null?'—':Number(r.w2).toFixed(1)}</td>
-            <td>{r.w3==null?'—':Number(r.w3).toFixed(1)}</td>
-            <td><strong>{r.total.toFixed(1)}</strong></td>
+            <td className="rank" data-label="Rank">{i+1}</td>
+            <td data-primary="true"><strong>{r.t.name}</strong></td>
+            <td data-label="Handicap"><strong>{r.handicap==null?'—':`${r.handicap>=0?'+':''}${r.handicap.toFixed(1)}`}</strong></td>
+            <td data-label="Week 1">{r.w1==null?'—':Number(r.w1).toFixed(1)}</td>
+            <td data-label="Week 2">{r.w2==null?'—':Number(r.w2).toFixed(1)}</td>
+            <td data-label="Week 3">{r.w3==null?'—':Number(r.w3).toFixed(1)}</td>
+            <td data-label="Total" data-total="true"><strong>{r.total.toFixed(1)}</strong></td>
           </tr>)}</tbody>
         </table>
       </div>}
     <p className="muted">Week 4 remains a full scoring round and will be used for the head-to-head placement matches and Cup points.</p>
-  </>
+  </PlayerPage>
 }
