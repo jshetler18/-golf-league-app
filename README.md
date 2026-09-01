@@ -154,3 +154,9 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Added editable Rules Page management in Admin. Admins can change the Rules page title, add/remove/reorder sections, and edit each section's heading and text.
 - Added `league_rules` database migration with public read access and admin-only write access.
 - Restyled sign-in, account, and signed-out experiences to match the mobile league app branding and layout.
+
+
+## Version 12.31
+- Restores a clear Admin Login option on the app-styled sign-in screen. Admin Login verifies an approved admin role and sends administrators directly to /admin.
+- Refreshes Cup Standings into a season leaderboard with a current leader card, month-by-month Cup points, total points, and frozen Rank/Team columns on phones.
+- Keeps Match Play on the Cup page and now shows awarded points for both teams when available.
