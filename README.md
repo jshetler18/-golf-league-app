@@ -29,3 +29,16 @@ The production Supabase project now has `profiles.player_id` linked to `players.
 
 
 Hotfix 12.14.1: reply posting now verifies the parent message still exists, inherits the original message audience/team automatically, refreshes stale chat state, and shows a friendly message instead of a foreign-key error if the original post was removed.
+
+
+Version 12.15: Reply boxes now open directly beneath the message being replied to, so players no longer need to scroll to the top. Nested replies remain visible in the thread.
+
+
+## Version 12.16 — 7-Day League Chat Retention
+
+- League Chat threads automatically delete after 7 days.
+- Deleting an expired main post automatically removes its replies and reactions through database cascade rules.
+- The cleanup runs automatically in Supabase Cron every hour; no player or admin action is required.
+- League Chat now displays a note explaining the 7-day retention period.
+- All Version 12.15 inline reply boxes, unread badges, reactions, team chat, and push notification features are preserved.
+- The existing simulator reservation reminder Cron endpoint was corrected to `/api/reminders`.
