@@ -1,9 +1,27 @@
+'use client'
 import Link from 'next/link'
+import {useEffect,useRef,useState} from 'react'
+import {supabase} from '@/lib/supabase'
 
+const items=[
+ ['/my-bookings','▦','My Bookings','View and manage your simulator bookings'],
+ ['/standings','▥','Monthly Standings','View monthly standings and team rankings'],
+ ['/cup','♛','Cup Standings','View Cup Points and monthly totals'],
+ ['/cup#match-play','⌁','Match Play','View your Week 4 matchups and results'],
+ ['/messages','●●●','Messages','Read league messages and announcements'],
+ ['/results','⚑','Results','View past results and round history'],
+ ['/teams','●●','Teams','View league teams and players'],
+ ['/rules','▤','Rules','View league rules and point system']
+]
 export default function Home(){
- return <>
-  <section className="hero"><div className="eyebrow">Laurel View Village</div><h1>Tom Krise 19th Hole Golf Simulator</h1><p>Simulator reservations and indoor golf league information in one place.</p><div className="hero-actions"><Link className="btn light" href="/book">Book the Sim</Link><Link className="btn ghost" href="/standings">League Standings</Link></div></section>
-  <div className="grid"><Link className="card clickable" href="/book"><h2>Book the Sim</h2><p>View open times and reserve 1–3 hours. League team reservations are labeled on the calendar.</p></Link><Link className="card clickable" href="/my-bookings"><h2>My Bookings</h2><p>See your upcoming reservations and cancel if your plans change.</p></Link><Link className="card clickable" href="/results"><h2>Weekly Results</h2><p>See every team&apos;s weekly Stableford, bonus, handicap, and adjusted official score.</p></Link><Link className="card clickable" href="/cup"><h2>19th Hole Cup</h2><p>Follow monthly Cup points and the season-long championship race.</p></Link><Link className="card clickable" href="/setup"><h2>Round Setup</h2><p>Course, simulator settings, bonus par-3 holes, and monthly tee assignments.</p></Link><Link className="card clickable" href="/teams"><h2>Teams & Rosters</h2><p>View every team and the current season player roster.</p></Link><Link className="card clickable" href="/history"><h2>League History</h2><p>Past Cup champions, monthly champions, and archived season standings.</p></Link></div>
-  <section className="card notice home-note"><h2>Booking rules</h2><p>Open every day from <strong>7:00 AM to 9:00 PM</strong>. Book in 1-hour increments, up to <strong>3 hours per day</strong>, and up to <strong>30 days ahead</strong>. New accounts require admin approval before booking.</p></section>
- </>
+ const [profile,setProfile]=useState<any>(null),[open,setOpen]=useState(false),[unread,setUnread]=useState(0); const wrap=useRef<HTMLDivElement>(null)
+ useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return; const {data:p}=await supabase.from('profiles').select('full_name,avatar_url').eq('id',user.id).single();setProfile(p); const {data:a}=await supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`); const {data:r}=await supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id); const read=new Set((r||[]).map(x=>x.announcement_id));setUnread((a||[]).filter(x=>!read.has(x.id)).length)})()},[])
+ useEffect(()=>{const fn=(e:MouseEvent)=>{if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',fn);return()=>document.removeEventListener('mousedown',fn)},[])
+ async function logout(){await supabase.auth.signOut();location.href='/login'}
+ return <div className="mobile-home">
+  <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
+  <nav className="mobile-menu">{items.map(([href,icon,title,desc])=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon">{icon}</span><span className="menu-copy"><strong>{title}</strong><small>{desc}</small></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}<span className="menu-arrow">›</span></Link>)}</nav>
+  <Bottom unread={unread}/>
+ </div>
 }
+function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span>⌂</span><b>Home</b></Link><Link href="/my-bookings"><span>▦</span><b>My Bookings</b></Link><Link href="/messages" className="bottom-message"><span>●●●</span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}
