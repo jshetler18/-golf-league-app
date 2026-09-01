@@ -1,29 +1,12 @@
-# Tom Krise 19th Hole Golf League
+# Golf League App Version 12.8
 
-Version 12.2 mobile player-page update.
+Version 12.8 fixes player announcement refresh behavior on phones and installed home-screen apps.
 
-Changes in 12.2:
-- Keeps the Version 12.1 mobile Home screen and PWA/home-screen icon.
-- Adds a consistent mobile header and bottom navigation to My Bookings, Monthly Standings, Cup/Match Play, Messages, Results, Teams, Rules, My Profile, and Settings.
-- Converts player-facing standings/results tables into phone-friendly cards on screens 760px wide and below.
-- Keeps the existing desktop layouts on larger screens.
-- Keeps unread Messages count visible in the mobile bottom navigation and updates it when a message is read.
+Changes:
+- Messages refresh on page load, app focus, and when the installed app returns to the foreground.
+- Unread badges refresh on Home and the persistent bottom navigation.
+- Adds Supabase realtime listeners for announcements and read-state changes when realtime is available.
+- Adds a 15-second fallback refresh so messages still appear even if realtime replication is not enabled.
+- Reading a message updates unread badges immediately.
 
-Version 12.4
-- Keeps the signed-in player's profile photo/menu visible in the mobile header on all player pages.
-- The Golf League logo on inner pages is now the back button.
-- Home screen header behavior remains unchanged.
-
-
-## Version 12.5
-- Adds Reserve Sim to the top of the mobile Home menu and links directly to the simulator booking calendar.
-- Adds a matching calendar-plus booking icon.
-- Renames My Bookings to My Sim Reservations throughout the player UI and bottom navigation.
-- Gives the booking page the same mobile player header, persistent profile photo, back-logo behavior, and bottom navigation as the other player pages.
-
-## Version 12.7
-- Adds Admin Messages & Announcements publishing.
-- Admin can enter a title and message, optionally pin it, and optionally set an expiration date.
-- Published announcements appear on the existing player Messages page and feed its persistent unread badge.
-- Admin can review recent announcements and delete them.
-- Push notifications are still intentionally not enabled in this version.
+Push notifications / operating-system alerts are not included in this version; those remain a separate next step.

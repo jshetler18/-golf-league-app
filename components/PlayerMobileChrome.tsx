@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { HomeIcon, CalendarIcon, MessagesIcon } from '@/components/PlayerIcons'
@@ -63,19 +63,32 @@ export function PlayerMobileHeader({title}:{title:string}){
 export function PlayerMobileBottom(){
   const path=usePathname()
   const [unread,setUnread]=useState(0)
+  const load=useCallback(async()=>{
+    const {data:{user}}=await supabase.auth.getUser()
+    if(!user){setUnread(0);return}
+    const [{data:a},{data:r}]=await Promise.all([
+      supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
+      supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id)
+    ])
+    const read=new Set((r||[]).map(x=>x.announcement_id))
+    setUnread((a||[]).filter(x=>!read.has(x.id)).length)
+  },[])
   useEffect(()=>{
-    const load=async()=>{
-      const {data:{user}}=await supabase.auth.getUser()
-      if(!user){setUnread(0);return}
-      const {data:a}=await supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-      const {data:r}=await supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id)
-      const read=new Set((r||[]).map(x=>x.announcement_id))
-      setUnread((a||[]).filter(x=>!read.has(x.id)).length)
-    }
     load()
+    const visible=()=>{if(document.visibilityState==='visible')load()}
+    const timer=window.setInterval(load,15000)
     window.addEventListener('league-unread-changed',load)
-    return()=>window.removeEventListener('league-unread-changed',load)
-  },[path])
+    window.addEventListener('focus',load)
+    document.addEventListener('visibilitychange',visible)
+    const channel=supabase.channel(`bottom-announcements-live-${path}`).on('postgres_changes',{event:'*',schema:'public',table:'announcements'},()=>load()).on('postgres_changes',{event:'*',schema:'public',table:'announcement_reads'},()=>load()).subscribe()
+    return()=>{
+      window.clearInterval(timer)
+      window.removeEventListener('league-unread-changed',load)
+      window.removeEventListener('focus',load)
+      document.removeEventListener('visibilitychange',visible)
+      supabase.removeChannel(channel)
+    }
+  },[path,load])
   return <nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
     <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Sim Reservations</b></Link>

@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import {useEffect,useRef,useState} from 'react'
+import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
 import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MatchPlayIcon,MessagesIcon,FlagIcon,TeamsIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
@@ -19,7 +19,8 @@ const items:MenuItem[]=[
 ]
 export default function Home(){
  const [profile,setProfile]=useState<any>(null),[open,setOpen]=useState(false),[unread,setUnread]=useState(0); const wrap=useRef<HTMLDivElement>(null)
- useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return; const {data:p}=await supabase.from('profiles').select('full_name,avatar_url').eq('id',user.id).single();setProfile(p); const {data:a}=await supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`); const {data:r}=await supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id); const read=new Set((r||[]).map(x=>x.announcement_id));setUnread((a||[]).filter(x=>!read.has(x.id)).length)})()},[])
+ const loadPlayer=useCallback(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){setProfile(null);setUnread(0);return}; const [{data:p},{data:a},{data:r}]=await Promise.all([supabase.from('profiles').select('full_name,avatar_url').eq('id',user.id).single(),supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id)]);setProfile(p); const read=new Set((r||[]).map(x=>x.announcement_id));setUnread((a||[]).filter(x=>!read.has(x.id)).length)},[])
+ useEffect(()=>{loadPlayer(); const refresh=()=>loadPlayer(); const visible=()=>{if(document.visibilityState==='visible')loadPlayer()}; const timer=window.setInterval(loadPlayer,15000); window.addEventListener('focus',refresh); window.addEventListener('league-unread-changed',refresh); document.addEventListener('visibilitychange',visible); const channel=supabase.channel('home-announcements-live').on('postgres_changes',{event:'*',schema:'public',table:'announcements'},refresh).on('postgres_changes',{event:'*',schema:'public',table:'announcement_reads'},refresh).subscribe(); return()=>{window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('league-unread-changed',refresh);document.removeEventListener('visibilitychange',visible);supabase.removeChannel(channel)}},[loadPlayer])
  useEffect(()=>{const fn=(e:MouseEvent)=>{if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',fn);return()=>document.removeEventListener('mousedown',fn)},[])
  async function logout(){await supabase.auth.signOut();location.href='/login'}
  return <div className="mobile-home">
