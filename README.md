@@ -28,3 +28,11 @@ No database migration is required for Version 10.
 - Signup success text now tells users their account is waiting for administrator approval; no email-confirmation instruction is shown.
 - Teams page top-right summary now shows only the number of teams, not the total player count.
 - To complete the no-confirmation signup flow, disable Confirm email in Supabase Authentication > Providers > Email. Admin approval remains the access gate.
+
+## Version 11 — Live TV Monthly Leaderboard
+- New `/tv` full-screen 1920x1080 monthly standings display.
+- Shows Rank, Team, Handicap, Week 1–3 adjusted scores, and Total Adjusted.
+- Rank movement indicator appears beside Total only.
+- Supabase Realtime subscriptions refresh the board when weekly scores or monthly handicaps change.
+- Recently changed team row briefly highlights.
+- TV route automatically hides normal app navigation.
