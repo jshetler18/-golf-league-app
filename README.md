@@ -36,3 +36,11 @@ No database migration is required for Version 10.
 - Supabase Realtime subscriptions refresh the board when weekly scores or monthly handicaps change.
 - Recently changed team row briefly highlights.
 - TV route automatically hides normal app navigation.
+
+## Version 11.1 – Approved TV Design Match
+- Rebuilt `/tv` to closely match the final approved 1920×1080 mockup.
+- Uses the Tom Krise 19th Hole Golf Simulator logo at upper left with transparent/high-contrast treatment.
+- Exact seven-column approved layout: Rank, Team, Handicap, Week 1/2/3 Adjusted, Total Adjusted.
+- White weekly scores; green handicap and total; enlarged total; movement only beside total.
+- Removed footer/course/live-leaderboard elements that were not part of the approved design.
+- Retains Supabase Realtime score/handicap refresh and changed-team flash.
