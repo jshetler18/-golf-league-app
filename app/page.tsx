@@ -3,7 +3,7 @@ import Link from 'next/link'
 import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
-import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MatchPlayIcon,MessagesIcon,FlagIcon,TeamsIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
+import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MatchPlayIcon,MessagesIcon,ChatIcon,FlagIcon,TeamsIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
 
 type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string;desc:string}
 const items:MenuItem[]=[
@@ -13,7 +13,7 @@ const items:MenuItem[]=[
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
  {href:'/cup#match-play',Icon:MatchPlayIcon,title:'Match Play',desc:'View your Week 4 matchups and results'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages',desc:'Read league messages and announcements'},
- {href:'/chat',Icon:MessagesIcon,title:'League Chat',desc:'Chat with the entire league or just your team'},
+ {href:'/chat',Icon:ChatIcon,title:'League Chat',desc:'Chat with the entire league or just your team'},
  {href:'/results',Icon:FlagIcon,title:'Results',desc:'View past results and round history'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams',desc:'View league teams and players'},
  {href:'/rules',Icon:RulesIcon,title:'Rules',desc:'View league rules and point system'}

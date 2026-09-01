@@ -81,3 +81,9 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 ## Version 12.21
 - Adds a small colored circle before each roster player's tee-box name on My Team.
 - Match Play now displays Cup points earned by each team once points have been awarded.
+
+
+## Version 12.22
+- Updated Match Play home icon to a head-to-head two-player design.
+- Added a distinct two-conversation-bubble icon for League Chat.
+- Kept the existing icon weight and visual theme.

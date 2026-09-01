@@ -31,11 +31,15 @@ export function TrophyIcon(props: IconProps){
 }
 
 export function MatchPlayIcon(props: IconProps){
-  return <svg {...base(props)}><path d="M15 12 47 51M49 12 17 51"/><path d="M12 10c4 1 7 3 10 7M52 10c-4 1-7 3-10 7"/><circle cx="14" cy="50" r="7" fill="currentColor" stroke="none"/><circle cx="50" cy="50" r="7" fill="currentColor" stroke="none"/></svg>
+  return <svg {...base(props)}><circle cx="19" cy="23" r="8"/><circle cx="45" cy="23" r="8"/><path d="M8 50c1-10 5-16 11-16s10 6 11 16M56 50c-1-10-5-16-11-16s-10 6-11 16"/><path d="M28 27h8M32 23l4 4-4 4"/></svg>
 }
 
 export function MessagesIcon(props: IconProps){
   return <svg {...base(props)}><path d="M9 13h46v31H31L18 54v-10H9V13Z" fill="currentColor" stroke="none"/><circle cx="21" cy="29" r="3" fill="white" stroke="none"/><circle cx="32" cy="29" r="3" fill="white" stroke="none"/><circle cx="43" cy="29" r="3" fill="white" stroke="none"/></svg>
+}
+
+export function ChatIcon(props: IconProps){
+  return <svg {...base(props)}><path d="M8 12h33v24H22L12 44v-8H8V12Z"/><path d="M29 29h27v19H45l-9 7v-7h-7V29Z"/><circle cx="18" cy="24" r="2" fill="currentColor" stroke="none"/><circle cx="27" cy="24" r="2" fill="currentColor" stroke="none"/><circle cx="40" cy="38" r="2" fill="currentColor" stroke="none"/><circle cx="48" cy="38" r="2" fill="currentColor" stroke="none"/></svg>
 }
 
 export function FlagIcon(props: IconProps){
