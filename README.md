@@ -131,3 +131,11 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Results page: removed “League history” above Results.
 - Results page: removed the descriptive sentence under Results.
 - Preserves the Version 12.26 leaderboard layout and frozen Rank/Team columns.
+
+## Version 12.28 — Monthly Standings live race
+- Reworked Monthly Standings as a live Weeks 1–3 seeding race instead of another week-by-week results table.
+- Shows current rank, team, seeding rounds completed, monthly handicap, cumulative Weeks 1–3 total, and projected Week 4 seed.
+- Logged-in player's team is highlighted with a MY TEAM badge.
+- Rank and Team stay frozen on phones while scrolling horizontally.
+- Added a compact Week 4 seeding progress card.
+- No database migration or new environment variables required.

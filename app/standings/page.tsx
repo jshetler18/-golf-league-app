@@ -14,17 +14,37 @@ export default function Standings(){
   const [monthId,setMonthId]=useState('')
   const [scores,setScores]=useState<Score[]>([])
   const [handicaps,setHandicaps]=useState<Handicap[]>([])
+  const [myTeamId,setMyTeamId]=useState<string|null>(null)
 
   useEffect(()=>{(async()=>{
+    const {data:{user}}=await supabase.auth.getUser()
     const {data:s}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     if(!s)return
-    const [{data:t},{data:m}]=await Promise.all([
+
+    const requests:any[]=[
       supabase.from('teams').select('id,name').eq('season_id',s.id).eq('is_active',true),
       supabase.from('league_months').select('id,month_start,course_name').eq('season_id',s.id).order('month_start')
-    ])
+    ]
+    const [{data:t},{data:m}]=await Promise.all(requests)
     setTeams((t||[]) as Team[])
     setMonths((m||[]) as Month[])
-    if(m?.length)setMonthId(m[0].id)
+
+    if(m?.length){
+      const today=new Date()
+      const current=(m as Month[]).find((x:any)=>{
+        const d=new Date(x.month_start+'T12:00:00')
+        return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()
+      })
+      setMonthId((current||m[0]).id)
+    }
+
+    if(user){
+      const {data:p}=await supabase.from('profiles').select('player_id').eq('id',user.id).maybeSingle()
+      if(p?.player_id){
+        const {data:player}=await supabase.from('players').select('team_id').eq('id',p.player_id).maybeSingle()
+        if(player?.team_id)setMyTeamId(player.team_id)
+      }
+    }
   })()},[])
 
   useEffect(()=>{if(monthId)(async()=>{
@@ -37,49 +57,71 @@ export default function Standings(){
   })()},[monthId])
 
   const rows=useMemo(()=>teams.map(t=>{
-    const ss=scores.filter(s=>s.team_id===t.id&&s.week_number<=3)
-    const wk=(n:number)=>ss.find(s=>s.week_number===n)?.official_total
+    const seedingScores=scores.filter(s=>s.team_id===t.id&&s.week_number<=3)
     const handicap=handicaps.find(h=>h.team_id===t.id)?.handicap_points
     return {
       t,
       handicap:handicap==null?null:Number(handicap),
-      w1:wk(1),w2:wk(2),w3:wk(3),
-      played:ss.length,
-      total:ss.reduce((a,s)=>a+Number(s.official_total||0),0)
+      played:seedingScores.length,
+      total:seedingScores.reduce((a,s)=>a+Number(s.official_total||0),0)
     }
-  }).sort((a,b)=>b.total-a.total),[teams,scores,handicaps])
+  }).sort((a,b)=>b.total-a.total||a.t.name.localeCompare(b.t.name)),[teams,scores,handicaps])
 
   const m=months.find(x=>x.id===monthId)
+  const maxRounds=Math.max(0,...rows.map(r=>r.played))
+  const monthName=m?new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long'}):''
 
-  return <PlayerPage title="Monthly Standings">
-    <div className="section-title">
-      <div>
-        <div className="eyebrow">Weeks 1–3 determine Week 4 seeding</div>
-        <h1>Monthly Standings</h1>
-        <p className="muted">Adjusted totals include bonus points and the month's team handicap. The handicap shown is added to every round that month.</p>
+  return <PlayerPage title="">
+    <div className="standings-v1228">
+      <div className="standings-top-v1228">
+        <div>
+          <h1>Monthly Standings</h1>
+          {m&&<p className="muted">{monthName} at {m.course_name}</p>}
+        </div>
+        <label className="field standings-month-select">Month
+          <select value={monthId} onChange={e=>setMonthId(e.target.value)}>
+            {months.map(x=><option key={x.id} value={x.id}>{new Date(x.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long'})} — {x.course_name}</option>)}
+          </select>
+        </label>
       </div>
-      <label className="field">Month
-        <select value={monthId} onChange={e=>setMonthId(e.target.value)}>
-          {months.map(x=><option key={x.id} value={x.id}>{new Date(x.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long'})} — {x.course_name}</option>)}
-        </select>
-      </label>
-    </div>
 
-    {!m?<div className="card">Monthly league setup has not been entered yet.</div>:
-      <div className="card table-wrap player-mobile-cards">
-        <table>
-          <thead><tr><th>#</th><th>Team</th><th>Handicap</th><th>W1</th><th>W2</th><th>W3</th><th>Total</th></tr></thead>
-          <tbody>{rows.map((r,i)=><tr key={r.t.id}>
-            <td className="rank" data-label="Rank">{i+1}</td>
-            <td data-primary="true"><strong>{r.t.name}</strong></td>
-            <td data-label="Handicap"><strong>{r.handicap==null?'—':`${r.handicap>=0?'+':''}${r.handicap.toFixed(1)}`}</strong></td>
-            <td data-label="Week 1">{r.w1==null?'—':Number(r.w1).toFixed(1)}</td>
-            <td data-label="Week 2">{r.w2==null?'—':Number(r.w2).toFixed(1)}</td>
-            <td data-label="Week 3">{r.w3==null?'—':Number(r.w3).toFixed(1)}</td>
-            <td data-label="Total" data-total="true"><strong>{r.total.toFixed(1)}</strong></td>
-          </tr>)}</tbody>
-        </table>
-      </div>}
-    <p className="muted">Week 4 remains a full scoring round and will be used for the head-to-head placement matches and Cup points.</p>
+      {!m?<div className="card">Monthly league setup has not been entered yet.</div>:<>
+        <div className="standings-progress-v1228 card">
+          <div>
+            <small>WEEK 4 SEEDING</small>
+            <strong>{maxRounds>=3?'Seeding Complete':`${maxRounds} of 3 rounds complete`}</strong>
+          </div>
+          <span>{maxRounds>=3?'Seeds are set for Match Play':'Standings update as approved scores are posted'}</span>
+        </div>
+
+        <div className="card standings-board-v1228">
+          <div className="standings-board-head-v1228">
+            <div>
+              <small>LIVE RACE</small>
+              <h2>{monthName} Standings</h2>
+            </div>
+            <span>Weeks 1–3</span>
+          </div>
+          <div className="standings-scroll-v1228">
+            <div className="standings-grid-v1228 header">
+              <span>Rank</span><span>Team</span><span>Rounds</span><span>HCP</span><span>Total</span><span>W4 Seed</span>
+            </div>
+            {rows.map((r,i)=>{
+              const isMine=r.t.id===myTeamId
+              return <div className={'standings-grid-v1228 row '+(isMine?'my-team-row':'')} key={r.t.id}>
+                <span className="standings-rank-v1228">{i+1}</span>
+                <span className="standings-team-v1228"><strong>{r.t.name}</strong>{isMine&&<small>MY TEAM</small>}</span>
+                <span>{r.played}/3</span>
+                <span>{r.handicap==null?'—':`${r.handicap>=0?'+':''}${r.handicap.toFixed(1)}`}</span>
+                <span className="standings-total-v1228">{r.played?Number(r.total).toFixed(1):'—'}</span>
+                <span className="standings-seed-v1228">#{i+1}</span>
+              </div>
+            })}
+          </div>
+        </div>
+
+        <p className="muted standings-note-v1228">The Week 4 seed is the team's projected seed based on the current Weeks 1–3 total. Week 4 is a separate head-to-head match and still counts as a full scoring round.</p>
+      </>}
+    </div>
   </PlayerPage>
 }
