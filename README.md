@@ -16,3 +16,13 @@ Version 12.12 adds account-to-player linking and team-specific messaging while p
 ## Database change already applied
 
 The production Supabase project now has `profiles.player_id` linked to `players.id`, a unique link per player, and an updated announcements read policy for team targeting.
+
+## Version 12.14 — League Chat Notifications & Unread Badges
+- Home screen League Chat unread-count badge for new visible posts/replies from other players.
+- Opening League Chat marks currently visible chat activity as viewed.
+- Push alerts for new Entire League posts, My Team posts, and replies.
+- Entire League alerts target approved linked players; My Team alerts target that team only; replies target the original post author.
+- Posters never notify themselves and reactions never generate push alerts.
+- Notification taps deep-link to the chat post/reply.
+- Settings includes a separate League Chat alert on/off preference without disabling official announcements or reservation reminders.
+- Requires the `add_league_chat_unread_and_notification_preferences` Supabase migration (already applied to production when this package was prepared).
