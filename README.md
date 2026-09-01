@@ -87,3 +87,9 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Updated Match Play home icon to a head-to-head two-player design.
 - Added a distinct two-conversation-bubble icon for League Chat.
 - Kept the existing icon weight and visual theme.
+
+## Version 12.23
+- Added a compact Current League Snapshot to the player Home page.
+- Snapshot shows the logged-in player's team, current course/month/week, monthly position, Cup position/points, and Week 4 opponent when available.
+- Snapshot cells link directly to My Team, Monthly Standings, Cup Standings, and Match Play.
+- Redesigned the Match Play icon with wider-separated player silhouettes and a centered VS-style badge so the faces no longer appear to touch.

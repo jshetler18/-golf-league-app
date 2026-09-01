@@ -31,7 +31,7 @@ export function TrophyIcon(props: IconProps){
 }
 
 export function MatchPlayIcon(props: IconProps){
-  return <svg {...base(props)}><circle cx="19" cy="23" r="8"/><circle cx="45" cy="23" r="8"/><path d="M8 50c1-10 5-16 11-16s10 6 11 16M56 50c-1-10-5-16-11-16s-10 6-11 16"/><path d="M28 27h8M32 23l4 4-4 4"/></svg>
+  return <svg {...base(props)}><circle cx="16" cy="20" r="7"/><circle cx="48" cy="20" r="7"/><path d="M5 50c1-11 5-17 11-17s10 6 11 17M59 50c-1-11-5-17-11-17s-10 6-11 17"/><rect x="26" y="22" width="12" height="12" rx="3"/><path d="M29 26l3 4 3-4" strokeWidth="3"/></svg>
 }
 
 export function MessagesIcon(props: IconProps){
