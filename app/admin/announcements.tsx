@@ -3,18 +3,23 @@
 import {FormEvent, useEffect, useState} from 'react'
 import {supabase} from '@/lib/supabase'
 
+type Team={id:string;name:string}
 type Announcement={
   id:string
   title:string
   body:string
+  audience:'everyone'|'team'
+  team_id:string|null
   is_pinned:boolean
   expires_at:string|null
   created_at:string
 }
 
-export default function AdminAnnouncements(){
+export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [title,setTitle]=useState('')
   const [body,setBody]=useState('')
+  const [audience,setAudience]=useState<'everyone'|'team'>('everyone')
+  const [teamId,setTeamId]=useState('')
   const [pinned,setPinned]=useState(false)
   const [sendPush,setSendPush]=useState(true)
   const [expires,setExpires]=useState('')
@@ -25,7 +30,7 @@ export default function AdminAnnouncements(){
   async function load(){
     const {data,error}=await supabase
       .from('announcements')
-      .select('id,title,body,is_pinned,expires_at,created_at')
+      .select('id,title,body,audience,team_id,is_pinned,expires_at,created_at')
       .order('is_pinned',{ascending:false})
       .order('created_at',{ascending:false})
       .limit(20)
@@ -34,21 +39,24 @@ export default function AdminAnnouncements(){
   }
 
   useEffect(()=>{load()},[])
+  useEffect(()=>{if(!teamId&&teams[0])setTeamId(teams[0].id)},[teams,teamId])
 
   async function publish(e:FormEvent){
     e.preventDefault()
     const cleanTitle=title.trim()
     const cleanBody=body.trim()
     if(!cleanTitle||!cleanBody){setMessage('Please enter both a title and a message.');return}
+    if(audience==='team'&&!teamId){setMessage('Please choose a team.');return}
     setSaving(true);setMessage('')
     const {data:{user}}=await supabase.auth.getUser()
     if(!user){setMessage('Please sign in again.');setSaving(false);return}
     const expiresAt=expires?new Date(`${expires}T23:59:59`).toISOString():null
+    const targetTeamId=audience==='team'?teamId:null
     const {data:created,error}=await supabase.from('announcements').insert({
       title:cleanTitle,
       body:cleanBody,
-      audience:'everyone',
-      team_id:null,
+      audience,
+      team_id:targetTeamId,
       is_pinned:pinned,
       send_push:sendPush,
       expires_at:expiresAt,
@@ -60,10 +68,19 @@ export default function AdminAnnouncements(){
       if(sendPush&&created?.id){
         const {data:{session}}=await supabase.auth.getSession()
         if(session?.access_token){
-          try{const r=await fetch('/api/push/send',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({announcementId:created.id,title:cleanTitle,body:cleanBody})});const j=await r.json();pushNote=r.ok?` Phone alert sent to ${j.sent||0} registered device${j.sent===1?'':'s'}.`:` Phone alert was not sent: ${j.error||'push service error'}.`}catch{pushNote=' Announcement posted, but the phone alert could not be sent.'}
+          try{
+            const r=await fetch('/api/push/send',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+              body:JSON.stringify({announcementId:created.id})
+            })
+            const j=await r.json()
+            pushNote=r.ok?` Phone alert sent to ${j.sent||0} registered device${j.sent===1?'':'s'}.`:` Phone alert was not sent: ${j.error||'push service error'}.`
+          }catch{pushNote=' Announcement posted, but the phone alert could not be sent.'}
         }
       }
-      setMessage('Announcement published. Players will see it in Messages.'+pushNote)
+      const target=audience==='team'?(teams.find(t=>t.id===targetTeamId)?.name||'selected team'):'all players'
+      setMessage(`Announcement published to ${target}.`+pushNote)
       await load()
     }
     setSaving(false)
@@ -78,16 +95,17 @@ export default function AdminAnnouncements(){
 
   const now=Date.now()
   return <section className="admin-announcements-section">
-    <div className="section-title"><div><h2>Messages & Announcements</h2><p className="muted">Publish league messages that appear in each player’s Messages page and unread badge.</p></div></div>
+    <div className="section-title"><div><h2>Messages & Announcements</h2><p className="muted">Send a message to everyone or only to one league team. Team messages are visible only to accounts linked to that team.</p></div></div>
     {message&&<p className="message">{message}</p>}
     <div className="admin-announcement-grid">
       <div className="card">
         <h3>Post Announcement</h3>
         <form onSubmit={publish} className="form-grid single">
+          <label className="field">Send To<select value={audience==='everyone'?'everyone':teamId} onChange={e=>{const v=e.target.value;if(v==='everyone')setAudience('everyone');else{setAudience('team');setTeamId(v)}}}><option value="everyone">Everyone</option>{teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           <label className="field">Title<input maxLength={120} required placeholder="Example: Simulator Closed Thursday" value={title} onChange={e=>setTitle(e.target.value)}/></label>
           <label className="field">Message<textarea required rows={5} placeholder="Enter the message players should see…" value={body} onChange={e=>setBody(e.target.value)}/></label>
           <label className="field">Expiration Date <span className="muted">(optional)</span><input type="date" value={expires} onChange={e=>setExpires(e.target.value)}/></label>
-          <label className="admin-check"><input type="checkbox" checked={sendPush} onChange={e=>setSendPush(e.target.checked)}/><span><strong>Send phone notification</strong><small>Alerts players who have enabled notifications on their device.</small></span></label>
+          <label className="admin-check"><input type="checkbox" checked={sendPush} onChange={e=>setSendPush(e.target.checked)}/><span><strong>Send phone notification</strong><small>{audience==='team'?'Alerts only registered devices for players linked to the selected team.':'Alerts players who have enabled notifications on their device.'}</small></span></label>
           <label className="admin-check"><input type="checkbox" checked={pinned} onChange={e=>setPinned(e.target.checked)}/><span><strong>Pin this message</strong><small>Pinned messages stay at the top of the player Messages page.</small></span></label>
           <button className="btn" disabled={saving}>{saving?'Publishing…':'Publish Announcement'}</button>
         </form>
@@ -97,9 +115,10 @@ export default function AdminAnnouncements(){
         <div className="admin-announcement-list">
           {rows.length===0?<p className="muted">No announcements have been posted yet.</p>:rows.map(a=>{
             const expired=!!a.expires_at&&new Date(a.expires_at).getTime()<now
+            const teamName=a.team_id?teams.find(t=>t.id===a.team_id)?.name:null
             return <div className="admin-announcement-item" key={a.id}>
               <div className="admin-announcement-copy">
-                <div className="admin-announcement-title"><strong>{a.title}</strong>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
+                <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
                 <p>{a.body}</p>
                 <small>Posted {new Date(a.created_at).toLocaleDateString()}{a.expires_at?` · Expires ${new Date(a.expires_at).toLocaleDateString()}`:''}</small>
               </div>

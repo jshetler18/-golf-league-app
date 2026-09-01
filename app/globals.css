@@ -254,3 +254,8 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 .message-detail{display:grid;gap:12px}.message-back{justify-self:start;border:0;background:transparent;color:#173a63;font-weight:800;font-size:15px;padding:6px 0;cursor:pointer}.message-card-open{width:100%;text-align:left;cursor:default}.message-card-open strong{font-size:18px}.message-card-open p{white-space:pre-wrap}
 
 .reminder-cancel-note{display:grid;gap:4px;margin:0 0 14px;padding:13px 15px;border:1px solid #cdd8d0;border-radius:14px;background:#f7faf8}.reminder-cancel-note strong{font-size:16px}.reminder-cancel-note span{font-size:14px;color:var(--muted)}.booking-row-highlight{outline:3px solid rgba(74,145,92,.28);border-color:#4a915c!important;box-shadow:0 8px 24px rgba(29,72,43,.12)}
+
+/* Account-to-player linking + team messaging */
+.account-player-select{min-width:210px;max-width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:inherit;font:inherit}
+.admin-announcement-pill.audience{background:#edf1f7;color:#243c5a}
+.message-audience-pill{display:inline-flex;margin-left:7px;padding:2px 7px;border-radius:999px;background:#edf1f7;color:#243c5a;font-size:11px;font-weight:800;vertical-align:middle}
