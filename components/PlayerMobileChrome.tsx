@@ -91,7 +91,7 @@ export function PlayerMobileBottom(){
   },[path,load])
   return <nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
-    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Reservations</b></Link>
+    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
     <Link className={path==='/my-team'?'active':''} href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link>
     <Link className={`${path==='/messages'?'active':''} player-bottom-message`} href="/messages"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link>
   </nav>

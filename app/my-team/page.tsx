@@ -43,12 +43,12 @@ export default function MyTeam(){
     setTeam(teamData as Team)
 
     const [{data:rosterData},{data:teamDataAll},{data:monthData}]=await Promise.all([
-      supabase.from('players').select('id,full_name,team_id,official_tee_color,is_active').eq('team_id',teamData.id).eq('is_active',true).order('full_name'),
+      supabase.from('players').select('id,full_name,team_id,official_tee_color,is_active').eq('season_id',teamData.season_id).eq('is_active',true).order('full_name'),
       supabase.from('teams').select('id,name,season_id').eq('season_id',teamData.season_id).eq('is_active',true),
       supabase.from('league_months').select('id,month_start,course_name').eq('season_id',teamData.season_id).order('month_start')
     ])
     setRoster((rosterData||[]) as Player[])
-    const {data:avatarData}=await supabase.rpc('get_my_team_player_avatars')
+    const {data:avatarData}=await supabase.rpc('get_league_player_avatars')
     const avatarMap:Record<string,string>={}
     ;((avatarData||[]) as PlayerAvatar[]).forEach(a=>{if(a.avatar_url)avatarMap[a.player_id]=a.avatar_url})
     setPlayerAvatars(avatarMap)
@@ -105,7 +105,7 @@ export default function MyTeam(){
 
   return <PlayerPage title="">
     <div className="my-team-hero card">
-      <div><div className="eyebrow">Your team</div><h1>{team.name}</h1><p className="muted">Welcome, {linkedPlayer.full_name}. Here is your team's league snapshot.</p></div>
+      <div><div className="eyebrow">Team</div><select className="my-team-select" value={team.id} onChange={e=>{const next=teams.find(t=>t.id===e.target.value);if(next)setTeam(next)}} aria-label="Select team">{teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select><p className="muted">Here is your team's league snapshot.</p></div>
     </div>
 
     <div className="my-team-stats">
@@ -124,14 +124,14 @@ export default function MyTeam(){
 
       <div className="card">
         <div className="section-title compact"><div><div className="eyebrow">Week 4</div><h2>Match Play</h2></div></div>
-        {!monthInfo?.matchup?<p className="muted">Your Week 4 matchup has not been set yet.</p>:<div className="my-team-matchup"><strong>{team.name}</strong><span>vs</span><strong>{monthInfo.opponent||'Opponent'}</strong>{monthInfo.matchup.winner_team_id&&<small>{monthInfo.matchup.winner_team_id===team.id?'🏆 Your team won':'Match completed'}</small>}</div>}
+        {!monthInfo?.matchup?<p className="muted">This team's Week 4 matchup has not been set yet.</p>:<div className="my-team-matchup"><strong>{team.name}</strong><span>vs</span><strong>{monthInfo.opponent||'Opponent'}</strong>{monthInfo.matchup.winner_team_id&&<small>{monthInfo.matchup.winner_team_id===team.id?'🏆 Team won':'Match completed'}</small>}</div>}
         <Link href="/cup#match-play" className="my-team-link">View Match Play ›</Link>
       </div>
     </div>
 
     <div className="card">
       <div className="section-title compact"><div><div className="eyebrow">Roster</div><h2>{team.name} Players</h2></div></div>
-      <div className="my-team-roster">{roster.map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small>{p.official_tee_color?`${p.official_tee_color.charAt(0).toUpperCase()+p.official_tee_color.slice(1)} tees`:'Tee not set'}</small></div></div>)}</div>
+      <div className="my-team-roster">{roster.filter(p=>p.team_id===team.id).map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small>{p.official_tee_color?`${p.official_tee_color.charAt(0).toUpperCase()+p.official_tee_color.slice(1)} tees`:'Tee not set'}</small></div></div>)}</div>
     </div>
   </PlayerPage>
 }

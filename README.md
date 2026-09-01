@@ -59,3 +59,12 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Removed the Full Team List button from My Team.
 - Team roster now uses each linked player's profile photo when available, with a generic profile fallback.
 - Added `get_my_team_player_avatars()` RPC so approved players can see profile photos for their own team only.
+
+
+## Version 12.19
+- Bottom navigation label shortened from **My Reservations** to **Reservations**.
+- My Team page removes the personal welcome line and keeps the league snapshot message.
+- Team name is now a dropdown containing all active teams in the player's season.
+- The player's own team is selected automatically when the page opens.
+- Players can switch teams to view that team's standings, Cup points, handicap, latest round, Week 4 matchup, monthly scores, roster, tee assignments, and profile photos.
+- Added `get_league_player_avatars()` RPC for approved users so roster photos can display while browsing other teams.
