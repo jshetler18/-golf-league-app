@@ -48,3 +48,13 @@ No database migration is required for Version 10.
 - White weekly scores; green handicap and total; enlarged total; movement only beside total.
 - Removed footer/course/live-leaderboard elements that were not part of the approved design.
 - Retains Supabase Realtime score/handicap refresh and changed-team flash.
+
+
+## Version 11.3
+- Adds the approved Week 4 Match Play TV mode to `/tv`.
+- Automatically switches to Match Play when all five Week 4 matchups have been generated.
+- Keeps the finalized Weeks 1–3 Monthly Standings design unchanged.
+- Uses the same Tom Krise logo as Monthly Standings.
+- Shows each team’s actual awarded Cup points beneath its name only after the matchup is finalized.
+- Cup awards come from the saved matchup values (1000/800, 700/600, 500/400, 300/200, 100/0), including admin-resolved ties.
+- Realtime updates listen for Week 4 scores, matchup decisions, and Cup-point changes.
