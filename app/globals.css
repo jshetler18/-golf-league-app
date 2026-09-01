@@ -225,3 +225,18 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
   .player-mobile-profile .profile-button b{font-size:19px}
   .player-mobile-profile .profile-menu{top:57px;width:195px}
 }
+
+/* Version 12.6: simplified Reserve Sim flow */
+.booking-layout-single{grid-template-columns:minmax(0,1fr);max-width:760px;margin:0 auto}
+.choose-day-card{width:100%}
+.booking-date-field{align-items:center;text-align:center}
+.booking-date-field input{width:min(100%,320px)!important;text-align:center;margin:0 auto}
+.booking-confirm-area{display:grid;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.booking-selection-summary{margin:0;text-align:center;font-size:16px;color:#20352a}
+.booking-confirm-btn{width:100%;max-width:360px;margin:0 auto}
+.booking-availability-note{margin:0}
+@media(max-width:760px){
+  .booking-layout-single{max-width:none}
+  .booking-date-field input{width:min(100%,280px)!important}
+  .booking-confirm-area{margin-top:16px;padding-top:16px}
+}

@@ -122,12 +122,18 @@ export default function BookPage(){
     <section className="hero"><div className="eyebrow">Simulator Calendar</div><h1>Reserve Sim</h1><p>Open daily 7:00 AM–9:00 PM. Reserve up to 3 hours per day, up to 30 days ahead.</p></section>
     {!canBook && profile && <div className="card notice"><strong>Booking access is {profile.status}.</strong><p className="muted">You can view the calendar, but an admin must approve your account before you can reserve time.</p></div>}
     {confirmation&&<div className="booking-confirmation" role="status"><strong>✓ Booking captured</strong><span>{confirmation}</span><Link href="/my-bookings">View My Sim Reservations</Link></div>}
-    <div className="booking-layout">
-      <div className="card"><h2>Choose a Day</h2><label className="field">Date<input type="date" min={today} max={maxDate} value={date} onChange={e=>setDate(e.target.value)} /></label>
+    <div className="booking-layout booking-layout-single">
+      <form onSubmit={book} className="card choose-day-card"><h2>Choose a Day</h2><label className="field booking-date-field">Date<input type="date" min={today} max={maxDate} value={date} onChange={e=>setDate(e.target.value)} /></label>
         <p className="muted slot-help">Tap or click any green available time to select it. Tap the next consecutive hour to extend the reservation, up to 3 hours.</p>
         <div className="slot-list">{hours.map(h=>{const busy=overlaps(h);const selected=!busy&&startHour!==null&&h>=startHour&&h<startHour+duration;return <button type="button" onClick={()=>chooseSlot(h)} disabled={!!busy||!canBook} className={`slot ${busy?busy.kind:'open'} ${selected?'selected':''} ${!busy&&canBook?'slot-clickable':''}`} key={h}><span><strong>{hourLabel(h)}</strong>–{hourLabel(h+1)}</span><span>{busy?(busy.kind==='league'?busy.display_title:busy.is_own?'My Reservation':'Unavailable'):selected?'Selected':'Available'}</span></button>})}</div>
-      </div>
-      <div className="card"><h2>Reserve Time</h2><form onSubmit={book} className="form-grid single"><label className="field">Start time<select value={startHour??''} onChange={e=>{setStartHour(e.target.value===''?null:Number(e.target.value));setDuration(1);setMessage('');setConfirmation('')}}><option value="">Select a time</option>{hours.map(h=>{const busy=overlaps(h);return <option key={h} value={h} disabled={!!busy}>{hourLabel(h)}{busy?' — Unavailable':''}</option>})}</select></label><label className="field">Length<select value={duration} onChange={e=>setDuration(Number(e.target.value))}><option value={1}>1 hour</option><option value={2}>2 hours</option><option value={3}>3 hours</option></select></label><button className="btn" disabled={!canBook}>Confirm Reservation</button></form>{message&&<p className="message booking-error">{message}</p>}<p className="muted">Reserved personal time is shown in light red as unavailable. League reservations continue to show the team name.</p><Link href="/my-bookings" className="text-link">View My Sim Reservations →</Link></div>
+        <div className="booking-confirm-area">
+          {startHour!==null&&<p className="booking-selection-summary"><strong>Selected:</strong> {hourLabel(startHour)}–{hourLabel(startHour+duration)} ({duration} {duration===1?'hour':'hours'})</p>}
+          <button className="btn booking-confirm-btn" disabled={!canBook||startHour===null}>Confirm Reservation</button>
+          {message&&<p className="message booking-error">{message}</p>}
+          <p className="muted booking-availability-note">Reserved personal time is shown in light red as unavailable. League reservations continue to show the team name.</p>
+          <Link href="/my-bookings" className="text-link">View My Sim Reservations →</Link>
+        </div>
+      </form>
     </div>
   </PlayerPage>
 }
