@@ -42,3 +42,11 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - League Chat now displays a note explaining the 7-day retention period.
 - All Version 12.15 inline reply boxes, unread badges, reactions, team chat, and push notification features are preserved.
 - The existing simulator reservation reminder Cron endpoint was corrected to `/api/reminders`.
+
+## Version 12.17 — Personalized My Team Dashboard
+- Added a new My Team item to the player home menu.
+- Uses the signed-in account's player link to automatically identify the player's team.
+- Shows current monthly position, Cup position/points, monthly handicap, and latest approved round.
+- Shows all four monthly round scores, current course, Week 4 opponent/result, and team roster/tee assignments.
+- Links directly to Monthly Standings, Match Play, and the full Teams page.
+- No database migration or new environment variables are required.

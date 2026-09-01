@@ -9,6 +9,7 @@ type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:str
 const items:MenuItem[]=[
  {href:'/book',Icon:ReserveIcon,title:'Reserve Sim',desc:'Check availability and reserve simulator time'},
  {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations',desc:'View and manage your simulator reservations'},
+ {href:'/my-team',Icon:TeamsIcon,title:'My Team',desc:'See your team, standings, scores and matchup'},
  {href:'/standings',Icon:StandingsIcon,title:'Monthly Standings',desc:'View monthly standings and team rankings'},
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
  {href:'/cup#match-play',Icon:MatchPlayIcon,title:'Match Play',desc:'View your Week 4 matchups and results'},
