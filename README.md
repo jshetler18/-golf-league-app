@@ -61,10 +61,23 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Added `get_my_team_player_avatars()` RPC so approved players can see profile photos for their own team only.
 
 
-## Version 12.19
+## Version 12.20
 - Bottom navigation label shortened from **My Reservations** to **Reservations**.
 - My Team page removes the personal welcome line and keeps the league snapshot message.
 - Team name is now a dropdown containing all active teams in the player's season.
 - The player's own team is selected automatically when the page opens.
 - Players can switch teams to view that team's standings, Cup points, handicap, latest round, Week 4 matchup, monthly scores, roster, tee assignments, and profile photos.
 - Added `get_league_player_avatars()` RPC for approved users so roster photos can display while browsing other teams.
+
+
+## Version 12.20 – My Team Championships & Tee Names
+- Bottom navigation keeps the shortened **Reservations** label.
+- Removed the league snapshot helper sentence from the top of My Team.
+- Roster tee assignments now use official tee-box names: Forward Tees, Senior Tees, Middle Tees, Back Tees, and Tips.
+- Added a Championships section above the roster with separate Cup Championship and Monthly Championship trophy counts.
+- Championship totals follow the same historical team-name matching and trophy logic used on the Teams page.
+
+
+## Version 12.21
+- Adds a small colored circle before each roster player's tee-box name on My Team.
+- Match Play now displays Cup points earned by each team once points have been awarded.
