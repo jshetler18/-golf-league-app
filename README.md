@@ -19,3 +19,14 @@ Vercel requires the server-only `VAPID_PRIVATE_KEY` environment variable before 
 
 ## Version 12.10
 Push notifications now deep-link to the exact announcement. Tapping a notification opens that message directly and marks it read; players can return to All Messages.
+
+## Version 12.11 — Simulator reservation reminders
+- Adds automatic push reminders about 24 hours and 1 hour before active personal simulator reservations.
+- Reminder notification opens My Sim Reservations when tapped.
+- Uses the same phone notification permission/subscription already enabled in Settings.
+- Requires server-only Vercel variables `SUPABASE_SECRET_KEY` and `CRON_SECRET`.
+- The reminder endpoint is `/api/reminders`; schedule it from Supabase Cron every 10 minutes with `Authorization: Bearer <CRON_SECRET>`.
+
+
+### Reminder cancellation flow
+Reservation push notifications now deep-link to the specific reservation on My Sim Reservations. The reservation is highlighted, the Cancel Reservation button is immediately available, and cancellation still requires confirmation before the time is released.
