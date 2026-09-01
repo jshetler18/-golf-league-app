@@ -9,7 +9,6 @@ type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:str
 const items:MenuItem[]=[
  {href:'/book',Icon:ReserveIcon,title:'Reserve Sim',desc:'Check availability and reserve simulator time'},
  {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations',desc:'View and manage your simulator reservations'},
- {href:'/my-team',Icon:TeamsIcon,title:'My Team',desc:'See your team, standings, scores and matchup'},
  {href:'/standings',Icon:StandingsIcon,title:'Monthly Standings',desc:'View monthly standings and team rankings'},
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
  {href:'/cup#match-play',Icon:MatchPlayIcon,title:'Match Play',desc:'View your Week 4 matchups and results'},
@@ -31,4 +30,4 @@ export default function Home(){
   <Bottom unread={unread}/>
  </div>
 }
-function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>My Sim Reservations</b></Link><Link href="/messages" className="bottom-message"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}
+function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>My Reservations</b></Link><Link href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link><Link href="/messages" className="bottom-message"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}

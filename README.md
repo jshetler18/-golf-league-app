@@ -50,3 +50,12 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Shows all four monthly round scores, current course, Week 4 opponent/result, and team roster/tee assignments.
 - Links directly to Monthly Standings, Match Play, and the full Teams page.
 - No database migration or new environment variables are required.
+
+
+## Version 12.18 – My Team navigation and roster photos
+- Bottom navigation now reads Home / My Reservations / My Team / Messages.
+- My Team was removed from the middle Home menu and moved to the bottom navigation.
+- My Team page no longer shows a title beside the logo.
+- Removed the Full Team List button from My Team.
+- Team roster now uses each linked player's profile photo when available, with a generic profile fallback.
+- Added `get_my_team_player_avatars()` RPC so approved players can see profile photos for their own team only.

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
-import { HomeIcon, CalendarIcon, MessagesIcon } from '@/components/PlayerIcons'
+import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
   const router=useRouter()
@@ -45,7 +45,7 @@ export function PlayerMobileHeader({title}:{title:string}){
       <span className="player-mobile-back-arrow" aria-hidden="true">‹</span>
       <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" />
     </button>
-    <div className="player-mobile-title">{title}</div>
+    {title&&<div className="player-mobile-title">{title}</div>}
     <div className="profile-wrap player-mobile-profile" ref={wrap}>
       <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">
         {profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}
@@ -91,7 +91,8 @@ export function PlayerMobileBottom(){
   },[path,load])
   return <nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
-    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Sim Reservations</b></Link>
+    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Reservations</b></Link>
+    <Link className={path==='/my-team'?'active':''} href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link>
     <Link className={`${path==='/messages'?'active':''} player-bottom-message`} href="/messages"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link>
   </nav>
 }

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Player={id:string;full_name:string;team_id:string|null;official_tee_color:string|null;is_active:boolean}
+type PlayerAvatar={player_id:string;avatar_url:string|null}
 type Team={id:string;name:string;season_id:string}
 type Month={id:string;month_start:string;course_name:string}
 type Score={league_month_id:string;team_id:string;week_number:number;official_total:number|null;status:string}
@@ -27,6 +28,7 @@ export default function MyTeam(){
   const [handicaps,setHandicaps]=useState<Handicap[]>([])
   const [cupPoints,setCupPoints]=useState<CupPoint[]>([])
   const [matchups,setMatchups]=useState<Matchup[]>([])
+  const [playerAvatars,setPlayerAvatars]=useState<Record<string,string>>({})
 
   useEffect(()=>{(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -46,6 +48,10 @@ export default function MyTeam(){
       supabase.from('league_months').select('id,month_start,course_name').eq('season_id',teamData.season_id).order('month_start')
     ])
     setRoster((rosterData||[]) as Player[])
+    const {data:avatarData}=await supabase.rpc('get_my_team_player_avatars')
+    const avatarMap:Record<string,string>={}
+    ;((avatarData||[]) as PlayerAvatar[]).forEach(a=>{if(a.avatar_url)avatarMap[a.player_id]=a.avatar_url})
+    setPlayerAvatars(avatarMap)
     setTeams((teamDataAll||[]) as Team[])
     setMonths((monthData||[]) as Month[])
     const monthIds=(monthData||[]).map(m=>m.id)
@@ -94,13 +100,12 @@ export default function MyTeam(){
     return {rank:rank<0?null:rank+1,total:totals.find(x=>x.id===team.id)?.total||0}
   },[team,teams,cupPoints])
 
-  if(loading)return <PlayerPage title="My Team"><div className="card">Loading your team…</div></PlayerPage>
-  if(!linkedPlayer||!team)return <PlayerPage title="My Team"><div className="card my-team-empty"><h2>Team link needed</h2><p>Your account has not been linked to a league player/team yet. Ask the league administrator to link your account.</p></div></PlayerPage>
+  if(loading)return <PlayerPage title=""><div className="card">Loading your team…</div></PlayerPage>
+  if(!linkedPlayer||!team)return <PlayerPage title=""><div className="card my-team-empty"><h2>Team link needed</h2><p>Your account has not been linked to a league player/team yet. Ask the league administrator to link your account.</p></div></PlayerPage>
 
-  return <PlayerPage title="My Team">
+  return <PlayerPage title="">
     <div className="my-team-hero card">
       <div><div className="eyebrow">Your team</div><h1>{team.name}</h1><p className="muted">Welcome, {linkedPlayer.full_name}. Here is your team's league snapshot.</p></div>
-      <Link className="btn" href="/teams">Full Team List</Link>
     </div>
 
     <div className="my-team-stats">
@@ -126,7 +131,7 @@ export default function MyTeam(){
 
     <div className="card">
       <div className="section-title compact"><div><div className="eyebrow">Roster</div><h2>{team.name} Players</h2></div></div>
-      <div className="my-team-roster">{roster.map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">⛳</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small>{p.official_tee_color?`${p.official_tee_color.charAt(0).toUpperCase()+p.official_tee_color.slice(1)} tees`:'Tee not set'}</small></div></div>)}</div>
+      <div className="my-team-roster">{roster.map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small>{p.official_tee_color?`${p.official_tee_color.charAt(0).toUpperCase()+p.official_tee_color.slice(1)} tees`:'Tee not set'}</small></div></div>)}</div>
     </div>
   </PlayerPage>
 }
