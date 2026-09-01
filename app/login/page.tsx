@@ -28,7 +28,7 @@ export default function LoginPage(){
     e.preventDefault(); setLoading(true); setMessage('')
     if(mode==='signup'){
       const { error } = await supabase.auth.signUp({email,password,options:{data:{full_name:name}}})
-      setMessage(error ? error.message : 'Account request created. If email confirmation is enabled, check your email. An admin must approve your account before you can book the simulator.')
+      setMessage(error ? error.message : 'Account created successfully. Your account is waiting for administrator approval. You’ll be able to book the simulator once approved.')
     }else{
       const { error } = await supabase.auth.signInWithPassword({email,password})
       setMessage(error ? error.message : 'Signed in successfully.')

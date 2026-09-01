@@ -77,7 +77,7 @@ export default function Teams(){
         <h1>Teams & Rosters</h1>
         <p className="muted">Current league teams and active player rosters.</p>
       </div>
-      {season&&<div className="pill">{teams.length} Teams • {players.length} Players</div>}
+      {season&&<div className="pill">{teams.length} Teams</div>}
     </div>
 
     {!season?<div className="card">There is no active league season right now.</div>:<>

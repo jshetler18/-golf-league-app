@@ -52,3 +52,21 @@ button{font:inherit;border:0;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-
 .booking-row-time{font-size:18px;font-weight:800;color:var(--accent);white-space:nowrap}
 .booking-row-cancel{flex:0 0 auto}
 @media(max-width:620px){.booking-row{align-items:flex-start;flex-direction:column}.booking-row-main{align-items:flex-start;flex-direction:column;gap:4px}.booking-row-cancel{width:100%}}
+
+/* Version 10: player-facing weekly results */
+.results-heading{align-items:flex-end}
+.results-filters{display:grid;grid-template-columns:minmax(180px,1fr) 130px;gap:10px;min-width:min(420px,100%)}
+.results-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:14px}
+.results-summary>div{display:grid;gap:4px}
+.results-summary strong{font-size:18px}
+.results-table-card{padding:0}
+.results-table th,.results-table td{white-space:nowrap}
+.results-table .official-score{font-size:18px;color:var(--accent)}
+.result-pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}
+.result-pill.winner{background:#dff3e7;color:#145f34}
+.result-pill.lost{background:#f8dede;color:#842929}
+.result-pill.pending{background:#fff4cf;color:#725700}
+.results-table tr.week4-winner td{background:#f4fbf6}
+.results-note{margin-top:10px}
+@media(max-width:820px){.results-heading{align-items:stretch;flex-direction:column}.results-filters{width:100%;min-width:0}.results-summary{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.results-filters{grid-template-columns:1fr}.results-summary{grid-template-columns:1fr 1fr}.results-summary strong{font-size:16px}}
