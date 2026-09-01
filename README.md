@@ -139,3 +139,11 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Rank and Team stay frozen on phones while scrolling horizontally.
 - Added a compact Week 4 seeding progress card.
 - No database migration or new environment variables required.
+
+
+## Version 12.29
+- The Results page is now the single Monthly Standings page.
+- Monthly Standings keeps the month selector and full W1-W4 leaderboard so it also serves as past-results history.
+- Removed the separate Results item from the Home menu.
+- Removed the old Monthly Standings experience; /standings now redirects to /results for compatibility.
+- Updated My Team and navigation links to use the combined Monthly Standings page.

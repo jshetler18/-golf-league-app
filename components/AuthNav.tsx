@@ -26,8 +26,7 @@ export default function AuthNav() {
 
   return <nav>
     <Link href="/">Home</Link>
-    <Link href="/standings">Standings</Link>
-    <Link href="/results">Results</Link>
+    <Link href="/results">Monthly Standings</Link>
     <Link href="/cup">Cup</Link>
     <Link href="/teams">Teams</Link>
     <Link href="/book">Reserve Sim</Link>

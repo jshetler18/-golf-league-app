@@ -158,7 +158,7 @@ export default function MyTeam(){
       <div className="card">
         <div className="section-title compact"><div><div className="eyebrow">Current month</div><h2>{selectedMonth?monthLabel(selectedMonth.month_start):'League Month'}</h2></div></div>
         {selectedMonth?<><p className="my-team-course">⛳ <strong>{selectedMonth.course_name}</strong></p><div className="my-team-rounds">{[1,2,3,4].map(w=>{const s=monthInfo?.myScores.find(x=>x.week_number===w);return <div key={w}><small>Week {w}</small><strong>{scoreText(s?.official_total)}</strong></div>})}</div></>:<p className="muted">Monthly setup has not been entered yet.</p>}
-        <Link href="/standings" className="my-team-link">View Monthly Standings ›</Link>
+        <Link href="/results" className="my-team-link">View Monthly Standings ›</Link>
       </div>
 
       <div className="card">
