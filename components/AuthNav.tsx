@@ -30,8 +30,8 @@ export default function AuthNav() {
     <Link href="/results">Results</Link>
     <Link href="/cup">Cup</Link>
     <Link href="/teams">Teams</Link>
-    <Link href="/book">Book the Sim</Link>
-    {signedIn && <Link href="/my-bookings">My Bookings</Link>}
+    <Link href="/book">Reserve Sim</Link>
+    {signedIn && <Link href="/my-bookings">My Sim Reservations</Link>}
     <Link href="/setup">Setup</Link>
     <Link href="/history">History</Link>
     {isAdmin && <Link href="/admin">Admin</Link>}

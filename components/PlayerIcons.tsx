@@ -13,6 +13,11 @@ const base = (props: IconProps) => ({
   ...props,
 })
 
+
+export function ReserveIcon(props: IconProps){
+  return <svg {...base(props)}><rect x="10" y="14" width="44" height="40" rx="4"/><path d="M10 25h44M21 8v12M43 8v12"/><path d="M32 31v16M24 39h16"/></svg>
+}
+
 export function CalendarIcon(props: IconProps){
   return <svg {...base(props)}><rect x="10" y="14" width="44" height="40" rx="4"/><path d="M10 25h44M21 8v12M43 8v12"/><circle cx="21" cy="35" r="2" fill="currentColor" stroke="none"/><circle cx="32" cy="35" r="2" fill="currentColor" stroke="none"/><circle cx="43" cy="35" r="2" fill="currentColor" stroke="none"/><circle cx="21" cy="45" r="2" fill="currentColor" stroke="none"/><circle cx="32" cy="45" r="2" fill="currentColor" stroke="none"/><circle cx="43" cy="45" r="2" fill="currentColor" stroke="none"/></svg>
 }

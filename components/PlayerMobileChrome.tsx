@@ -1,18 +1,62 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { HomeIcon, CalendarIcon, MessagesIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
+  const router=useRouter()
+  const [profile,setProfile]=useState<any>(null)
+  const [open,setOpen]=useState(false)
+  const wrap=useRef<HTMLDivElement>(null)
+
+  useEffect(()=>{
+    ;(async()=>{
+      const {data:{user}}=await supabase.auth.getUser()
+      if(!user)return
+      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url').eq('id',user.id).single()
+      setProfile(p)
+    })()
+  },[])
+
+  useEffect(()=>{
+    const close=(e:MouseEvent)=>{
+      if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)
+    }
+    document.addEventListener('mousedown',close)
+    return()=>document.removeEventListener('mousedown',close)
+  },[])
+
+  function goBack(){
+    if(window.history.length>1) router.back()
+    else router.push('/')
+  }
+
+  async function logout(){
+    await supabase.auth.signOut()
+    location.href='/login'
+  }
+
   return <header className="player-mobile-header">
-    <Link href="/" className="player-mobile-logo" aria-label="Golf League Home">
+    <button type="button" className="player-mobile-logo player-mobile-back" onClick={goBack} aria-label="Go back">
+      <span className="player-mobile-back-arrow" aria-hidden="true">‹</span>
       <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" />
-    </Link>
+    </button>
     <div className="player-mobile-title">{title}</div>
+    <div className="profile-wrap player-mobile-profile" ref={wrap}>
+      <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">
+        {profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}
+        <b>⌄</b>
+      </button>
+      {open&&<div className="profile-menu">
+        <Link href="/profile">My Profile</Link>
+        <Link href="/settings">Settings</Link>
+        <button onClick={logout}>Log Out ↪</button>
+      </div>}
+    </div>
   </header>
 }
 
@@ -34,7 +78,7 @@ export function PlayerMobileBottom(){
   },[path])
   return <nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
-    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Bookings</b></Link>
+    <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>My Sim Reservations</b></Link>
     <Link className={`${path==='/messages'?'active':''} player-bottom-message`} href="/messages"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link>
   </nav>
 }

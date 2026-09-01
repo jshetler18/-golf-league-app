@@ -162,3 +162,66 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 /* Version 12.3: approved mobile icon set */
 .menu-icon svg{width:54%;height:54%;display:block}.mobile-bottom a>span,.player-mobile-bottom a>span{display:grid;place-items:center}.mobile-bottom a>span svg{width:31px;height:31px;display:block}.player-mobile-bottom a>span svg{width:27px;height:27px;display:block}.bottom-message span svg,.player-bottom-message span svg{width:32px;height:32px}.mobile-bottom a.active>span svg,.player-mobile-bottom a.active>span svg{color:#238408}.mobile-bottom a:not(.active)>span svg,.player-mobile-bottom a:not(.active)>span svg{color:#4a5561}
 @media(max-width:520px){.menu-icon svg{width:56%;height:56%}.mobile-bottom a>span svg{width:28px;height:28px}.bottom-message span svg{width:30px;height:30px}}
+
+/* Version 12.4: keep the signed-in player profile in every mobile page header.
+   On inner pages the Golf League logo acts as the back button. */
+@media(max-width:760px){
+  .player-mobile-header{
+    display:grid;
+    grid-template-columns:minmax(118px,150px) 1fr auto;
+    align-items:center;
+    gap:10px;
+    min-height:92px;
+    padding:9px 14px;
+    text-align:left;
+  }
+  .player-mobile-logo{
+    width:100%;
+    max-width:150px;
+    margin:0;
+    border:0;
+    background:transparent;
+    padding:0 0 0 12px;
+    position:relative;
+    cursor:pointer;
+  }
+  .player-mobile-logo img{width:100%;height:auto;display:block}
+  .player-mobile-back-arrow{
+    position:absolute;
+    left:-4px;
+    top:50%;
+    transform:translateY(-52%);
+    color:#238408;
+    font-size:35px;
+    font-weight:700;
+    line-height:1;
+  }
+  .player-mobile-title{
+    text-align:center;
+    font-size:19px;
+    padding:0 4px;
+  }
+  .player-mobile-profile{justify-self:end}
+  .player-mobile-profile .profile-button{gap:5px}
+  .player-mobile-profile .profile-button img,
+  .player-mobile-profile .profile-button>span{
+    width:52px;
+    height:52px;
+    font-size:25px;
+    border-width:1.5px;
+  }
+  .player-mobile-profile .profile-button b{font-size:22px}
+  .player-mobile-profile .profile-menu{top:64px;width:205px}
+  .player-mobile-profile .profile-menu a,
+  .player-mobile-profile .profile-menu button{font-size:17px;padding:15px 18px}
+}
+@media(max-width:430px){
+  .player-mobile-header{grid-template-columns:115px 1fr auto;gap:6px;padding:8px 10px;min-height:82px}
+  .player-mobile-logo{max-width:115px;padding-left:9px}
+  .player-mobile-back-arrow{font-size:29px;left:-3px}
+  .player-mobile-title{font-size:16px;line-height:1.05}
+  .player-mobile-profile .profile-button img,
+  .player-mobile-profile .profile-button>span{width:46px;height:46px;font-size:22px}
+  .player-mobile-profile .profile-button b{font-size:19px}
+  .player-mobile-profile .profile-menu{top:57px;width:195px}
+}
