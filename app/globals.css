@@ -277,3 +277,11 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 .my-team-tee{display:flex;align-items:center;gap:6px}
 .my-team-match-side{display:grid;gap:5px;justify-items:center}
 .my-team-match-side>b{font-size:14px;color:#238408}
+
+/* Version 12.24 — polished weekly Results history */
+.results-heading-v1224{gap:18px}.results-month-select{min-width:min(360px,100%)}
+.results-week-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.results-week-tabs button{border:1px solid #cfd6d1;background:#fff;color:#253340;border-radius:10px;padding:12px 8px;font-weight:900;font-size:15px;cursor:pointer}.results-week-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.results-summary-v1224{margin-bottom:14px}.monthly-champion-banner{display:flex;align-items:center;gap:16px;margin-bottom:16px;background:linear-gradient(135deg,#fffdf1,#f8fbf5);border-color:#dcc66e}.monthly-champion-trophy{font-size:48px;line-height:1}.monthly-champion-banner>div{display:grid;gap:2px}.monthly-champion-banner strong{font-size:23px;color:#173759}.monthly-champion-banner small{color:#66717c;font-weight:700}
+.results-section-label{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:18px 0 10px}.results-section-label h2{margin:2px 0 0}.results-table-card-v1224{overflow:hidden}.results-table-v1224 .results-place{font-weight:900}.place-badge{display:inline-grid;place-items:center;min-width:42px;padding:5px 8px;border-radius:999px;background:#edf1f3;color:#39434f;font-size:12px}.place-1{background:#fff2b5;color:#735600}.place-2{background:#edf0f2;color:#46515c}.place-3{background:#f4ded0;color:#70401f}
+@media(max-width:820px){.results-heading-v1224{align-items:stretch}.results-month-select{width:100%;min-width:0}.results-section-label{align-items:center}.monthly-champion-banner{padding:14px}}
+@media(max-width:520px){.results-week-tabs{gap:5px}.results-week-tabs button{padding:11px 4px;font-size:13px}.results-section-label .pill{font-size:11px}.monthly-champion-trophy{font-size:40px}.monthly-champion-banner strong{font-size:20px}}

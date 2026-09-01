@@ -101,3 +101,12 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 ### Version 12.23 final icon revision
 - Home league snapshot remains removed.
 - Match Play icon now contains only two separated player silhouettes with no symbol or object between them.
+
+## Version 12.24 — Results History
+- Redesigned the player Results page into a cleaner weekly league history.
+- Players can choose a league month and switch between Weeks 1–4 with quick week tabs.
+- Weekly results now show finishing place, raw Stableford, bonus birdies, bonus points, handicap, and official total.
+- Week 4 results also show the opponent, match result, and Cup points once awarded.
+- Added a monthly champion trophy banner when a monthly champion has been recorded.
+- Added a posted-results status so players can quickly see whether a week is complete or still in progress.
+- No database migration or new environment variables are required.
