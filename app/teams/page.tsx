@@ -17,6 +17,7 @@ export default function Teams(){
   const [players,setPlayers]=useState<Player[]>([])
   const [loading,setLoading]=useState(true)
   const [trophies,setTrophies]=useState<Record<string,TrophyCounts>>({})
+  const [avatars,setAvatars]=useState<Record<string,string>>({})
 
   useEffect(()=>{(async()=>{
     const {data:s}=await supabase.from('seasons').select('id,name').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
@@ -31,6 +32,10 @@ export default function Teams(){
     ])
     setTeams((t||[]) as Team[])
     setPlayers((p||[]) as Player[])
+    const {data:avatarRows}=await supabase.rpc('get_league_player_avatars')
+    const avatarMap:Record<string,string>={}
+    ;((avatarRows||[]) as {player_id:string;avatar_url:string|null}[]).forEach(row=>{if(row.avatar_url)avatarMap[row.player_id]=row.avatar_url})
+    setAvatars(avatarMap)
 
     const counts:Record<string,TrophyCounts>={}
     const teamNameById=new Map(((allTeams||[]) as Team[]).map(team=>[team.id,team.name]))
@@ -107,9 +112,11 @@ export default function Teams(){
             </div>
           </div>
           {roster.length?<div className="player-roster">
-            {roster.map((player,index)=><div className="player-name" key={player.id}>
-              <span className="player-number">{index+1}</span>
-              {player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} title={teeLabels[player.official_tee_color]||'Official tee'} aria-label={teeLabels[player.official_tee_color]||'Official tee'}></span>}<strong>{player.full_name}</strong>
+            {roster.map((player)=><div className="player-name" key={player.id}>
+              <span className="team-player-avatar-v1230" aria-hidden={!avatars[player.id]}>
+                {avatars[player.id]?<img src={avatars[player.id]} alt={`${player.full_name} profile`} />:<span>👤</span>}
+              </span>
+              <span className="team-player-copy-v1230">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} title={teeLabels[player.official_tee_color]||'Official tee'} aria-label={teeLabels[player.official_tee_color]||'Official tee'}></span>}<strong>{player.full_name}</strong></span>
             </div>)}
           </div>:<p className="muted">No active players are assigned to this team.</p>}
         </section>)}

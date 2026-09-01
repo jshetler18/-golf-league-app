@@ -147,3 +147,10 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Removed the separate Results item from the Home menu.
 - Removed the old Monthly Standings experience; /standings now redirects to /results for compatibility.
 - Updated My Team and navigation links to use the combined Monthly Standings page.
+
+## Version 12.30
+- Monthly Standings note now explains that weekly values are official adjusted totals with handicaps included.
+- Teams page roster numbers replaced by larger player profile photos, with a profile placeholder when no photo is uploaded.
+- Added editable Rules Page management in Admin. Admins can change the Rules page title, add/remove/reorder sections, and edit each section's heading and text.
+- Added `league_rules` database migration with public read access and admin-only write access.
+- Restyled sign-in, account, and signed-out experiences to match the mobile league app branding and layout.

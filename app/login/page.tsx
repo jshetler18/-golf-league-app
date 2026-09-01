@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -37,28 +38,30 @@ export default function LoginPage(){
     setLoading(false)
   }
 
-  async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('Signed out.') }
+  async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('You have been signed out.') }
 
-  if(userEmail) return <>
-    <section className="hero"><div className="eyebrow">Your Account</div><h1>{profile?.full_name || userEmail}</h1><p>Manage your simulator access and reservations.</p></section>
-    <div className="grid">
-      <div className="card"><h2>Account Status</h2><p><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span></p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending' && <p>Your account is waiting for admin approval.</p>}</div>
-      <div className="card"><h2>Signed In</h2><p>{userEmail}</p><button className="btn secondary" onClick={signOut}>Sign Out</button></div>
-    </div>
-    {message && <p className="message">{message}</p>}
-  </>
-
-  return <>
-    <section className="hero"><div className="eyebrow">Member Access</div><h1>{mode==='signin'?'Sign In':'Request an Account'}</h1><p>Approved users can reserve simulator time and manage their own bookings.</p></section>
-    <div className="card auth-card">
-      <div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>setMode('signin')}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>setMode('signup')}>Create Account</button></div>
-      <form onSubmit={submit} className="form-grid single">
-        {mode==='signup' && <label className="field">Full name<input required value={name} onChange={e=>setName(e.target.value)} /></label>}
-        <label className="field">Email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></label>
-        <label className="field">Password<input type="password" required minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></label>
-        <button className="btn" disabled={loading}>{loading?'Please wait…':mode==='signin'?'Sign In':'Request Account'}</button>
-      </form>
-      {message && <p className="message">{message}</p>}
-    </div>
-  </>
+  return <div className="auth-app-shell-v1230">
+    <div className="auth-app-brand-v1230"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" /></div>
+    <main className="auth-app-content-v1230">
+      {userEmail?<>
+        <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
+        <div className="card auth-card auth-app-card-v1230">
+          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<p>Your account is waiting for administrator approval.</p>}</div>
+          <div className="auth-app-actions-v1230"><Link className="btn" href="/">Go to Home</Link><button className="btn secondary" onClick={signOut}>Log Out</button></div>
+        </div>
+      </>:<>
+        <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':'Request access to the 19th Hole Golf League app.'}</p></div>
+        <div className="card auth-card auth-app-card-v1230">
+          <div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setMessage('')}}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setMessage('')}}>Create Account</button></div>
+          <form onSubmit={submit} className="form-grid single">
+            {mode==='signup' && <label className="field">Full name<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} /></label>}
+            <label className="field">Email<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} /></label>
+            <label className="field">Password<input type="password" required minLength={6} autoComplete={mode==='signin'?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)} /></label>
+            <button className="btn auth-primary-v1230" disabled={loading}>{loading?'Please wait…':mode==='signin'?'Sign In':'Request Account'}</button>
+          </form>
+        </div>
+      </>}
+      {message&&<p className="message auth-message-v1230">{message}</p>}
+    </main>
+  </div>
 }
