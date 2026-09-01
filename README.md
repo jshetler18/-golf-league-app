@@ -20,3 +20,10 @@ Version 12.4
 - Adds a matching calendar-plus booking icon.
 - Renames My Bookings to My Sim Reservations throughout the player UI and bottom navigation.
 - Gives the booking page the same mobile player header, persistent profile photo, back-logo behavior, and bottom navigation as the other player pages.
+
+## Version 12.7
+- Adds Admin Messages & Announcements publishing.
+- Admin can enter a title and message, optionally pin it, and optionally set an expiration date.
+- Published announcements appear on the existing player Messages page and feed its persistent unread badge.
+- Admin can review recent announcements and delete them.
+- Push notifications are still intentionally not enabled in this version.
