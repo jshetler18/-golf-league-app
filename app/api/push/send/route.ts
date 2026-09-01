@@ -28,7 +28,7 @@ export async function POST(req:NextRequest){
     for(const sub of subs||[]){
       if(!sub.p256dh||!sub.auth)continue
       try{
-        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:'/messages',tag:`announcement-${payload.announcementId||Date.now()}`}))
+        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:payload.announcementId?`/messages?message=${encodeURIComponent(String(payload.announcementId))}`:'/messages',tag:`announcement-${payload.announcementId||Date.now()}`}))
         sent++
       }catch(err:any){
         failed++

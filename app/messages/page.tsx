@@ -7,6 +7,7 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 export default function Messages(){
   const [rows,setRows]=useState<any[]>([])
   const [read,setRead]=useState<Set<string>>(new Set())
+  const [selectedId,setSelectedId]=useState<string|null>(null)
 
   const load=useCallback(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -23,6 +24,8 @@ export default function Messages(){
   },[])
 
   useEffect(()=>{
+    const requested=new URLSearchParams(window.location.search).get('message')
+    if(requested)setSelectedId(requested)
     load()
 
     const onFocus=()=>load()
@@ -48,6 +51,22 @@ export default function Messages(){
     }
   },[load])
 
+  useEffect(()=>{
+    if(!selectedId || !rows.some(m=>m.id===selectedId) || read.has(selectedId))return
+    mark(selectedId)
+  },[selectedId,rows,read])
+
+  function showMessage(id:string){
+    setSelectedId(id)
+    window.history.replaceState(null,'',`/messages?message=${encodeURIComponent(id)}`)
+    mark(id)
+  }
+
+  function showAll(){
+    setSelectedId(null)
+    window.history.replaceState(null,'','/messages')
+  }
+
   async function mark(id:string){
     const {data:{user}}=await supabase.auth.getUser()
     if(!user)return
@@ -57,5 +76,7 @@ export default function Messages(){
     window.dispatchEvent(new Event('league-unread-changed'))
   }
 
-  return <PlayerPage title="Messages"><div className="simple-mobile-page"><h1>Messages</h1><p className="muted">League messages and announcements.</p><div className="message-list">{rows.length?rows.map(m=><button key={m.id} onClick={()=>mark(m.id)} className={'message-card '+(!read.has(m.id)?'unread':'')}><div><strong>{m.title}</strong>{!read.has(m.id)&&<span className="new-dot">New</span>}</div><p>{m.body}</p><small>{new Date(m.created_at).toLocaleDateString()}</small></button>):<div className="card">No messages yet.</div>}</div></div></PlayerPage>
+  const selected=selectedId?rows.find(m=>m.id===selectedId):null
+
+  return <PlayerPage title="Messages"><div className="simple-mobile-page"><h1>Messages</h1>{selected?<div className="message-detail"><button type="button" className="message-back" onClick={showAll}>← All Messages</button><div className="message-card message-card-open"><div><strong>{selected.title}</strong></div><p>{selected.body}</p><small>{new Date(selected.created_at).toLocaleDateString()}</small></div></div>:<><p className="muted">League messages and announcements.</p><div className="message-list">{rows.length?rows.map(m=><button key={m.id} onClick={()=>showMessage(m.id)} className={'message-card '+(!read.has(m.id)?'unread':'')}><div><strong>{m.title}</strong>{!read.has(m.id)&&<span className="new-dot">New</span>}</div><p>{m.body}</p><small>{new Date(m.created_at).toLocaleDateString()}</small></button>):<div className="card">No messages yet.</div>}</div></>}</div></PlayerPage>
 }

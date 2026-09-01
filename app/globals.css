@@ -248,3 +248,7 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 
 /* v12.9 phone notifications */
 .notification-settings{margin-bottom:16px}.notification-status{display:flex;align-items:center;gap:9px;margin:14px 0}.status-dot{width:11px;height:11px;border-radius:50%;background:#a9b0ad;box-shadow:0 0 0 3px #eef1ef}.status-dot.on{background:#18884b;box-shadow:0 0 0 3px #dff3e8}.notification-settings .message{margin-top:12px;white-space:normal}
+
+
+/* v12.10 direct push-to-message */
+.message-detail{display:grid;gap:12px}.message-back{justify-self:start;border:0;background:transparent;color:#173a63;font-weight:800;font-size:15px;padding:6px 0;cursor:pointer}.message-card-open{width:100%;text-align:left;cursor:default}.message-card-open strong{font-size:18px}.message-card-open p{white-space:pre-wrap}
