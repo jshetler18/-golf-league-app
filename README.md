@@ -89,7 +89,15 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Kept the existing icon weight and visual theme.
 
 ## Version 12.23
-- Added a compact Current League Snapshot to the player Home page.
 - Snapshot shows the logged-in player's team, current course/month/week, monthly position, Cup position/points, and Week 4 opponent when available.
 - Snapshot cells link directly to My Team, Monthly Standings, Cup Standings, and Match Play.
 - Redesigned the Match Play icon with wider-separated player silhouettes and a centered VS-style badge so the faces no longer appear to touch.
+
+## Version 12.23 revision
+- Removed the Current League Snapshot from the player Home page at user request.
+- Kept the revised Match Play head-to-head icon from Version 12.23.
+
+
+### Version 12.23 final icon revision
+- Home league snapshot remains removed.
+- Match Play icon now contains only two separated player silhouettes with no symbol or object between them.
