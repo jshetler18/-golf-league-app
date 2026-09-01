@@ -1,6 +1,8 @@
 'use client'
 import { useEffect,useMemo,useState } from 'react'
+import type { CSSProperties } from 'react'
 import { supabase } from '@/lib/supabase'
+import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Season={id:string;name:string;start_date:string|null;end_date:string|null;is_active:boolean;is_closed:boolean}
 type Team={id:string;season_id:string;name:string}
@@ -8,15 +10,20 @@ type Month={id:string;season_id:string;month_start:string}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Champion={league_month_id:string;team_id:string}
 
+type MonthlyHistoryRow={season:Season;month:Month;team:string}
+
+const HISTORY_START='2025-11-01'
+const teamKey=(name:string)=>name.trim().toLowerCase()
+
 export default function History(){
- const [seasons,setSeasons]=useState<Season[]>([]),[teams,setTeams]=useState<Team[]>([]),[months,setMonths]=useState<Month[]>([]),[points,setPoints]=useState<CupPoint[]>([]),[champions,setChampions]=useState<Champion[]>([]),[loading,setLoading]=useState(true)
+ const [seasons,setSeasons]=useState<Season[]>([]),[teams,setTeams]=useState<Team[]>([]),[months,setMonths]=useState<Month[]>([]),[points,setPoints]=useState<CupPoint[]>([]),[champions,setChampions]=useState<Champion[]>([]),[loading,setLoading]=useState(true),[selectedSeasonId,setSelectedSeasonId]=useState('')
  useEffect(()=>{(async()=>{
   const {data:s}=await supabase.from('seasons').select('id,name,start_date,end_date,is_active,is_closed').order('start_date')
-  const ss=(s||[]) as Season[];setSeasons(ss);const seasonIds=ss.map(x=>x.id)
+  const ss=(s||[]) as Season[];setSeasons(ss);const preferred=ss.find(x=>x.is_active&&!x.is_closed)||ss[ss.length-1];if(preferred)setSelectedSeasonId(preferred.id);const seasonIds=ss.map(x=>x.id)
   if(!seasonIds.length){setLoading(false);return}
   const [{data:t},{data:m}]=await Promise.all([
    supabase.from('teams').select('id,season_id,name').in('season_id',seasonIds),
-   supabase.from('league_months').select('id,season_id,month_start').in('season_id',seasonIds).order('month_start')
+   supabase.from('league_months').select('id,season_id,month_start').in('season_id',seasonIds).gte('month_start',HISTORY_START).order('month_start')
   ])
   const tt=(t||[]) as Team[],mm=(m||[]) as Month[];setTeams(tt);setMonths(mm);const monthIds=mm.map(x=>x.id)
   if(monthIds.length){const [{data:p},{data:c}]=await Promise.all([
@@ -25,25 +32,78 @@ export default function History(){
   ]);setPoints((p||[]) as CupPoint[]);setChampions((c||[]) as Champion[])}
   setLoading(false)
  })()},[])
+
  const teamName=(id:string)=>teams.find(t=>t.id===id)?.name||'Team'
- const completed=seasons.filter(s=>s.is_closed)
- const seasonTables=useMemo(()=>completed.map(s=>{
-  const sm=months.filter(m=>m.season_id===s.id).sort((a,b)=>a.month_start.localeCompare(b.month_start))
-  const st=teams.filter(t=>t.season_id===s.id)
-  const rows=st.map(t=>{const byMonth=sm.map(m=>points.find(p=>p.league_month_id===m.id&&p.team_id===t.id)?.points);const total=byMonth.reduce<number>((sum,value)=>sum+(value??0),0);return {team:t,byMonth,total}}).sort((a,b)=>(b.total??0)-(a.total??0)||a.team.name.localeCompare(b.team.name))
-  return {season:s,months:sm,rows}
- }),[completed,months,teams,points])
- const monthlyHistory=useMemo(()=>champions.map(c=>{const m=months.find(x=>x.id===c.league_month_id);if(!m)return null;const s=seasons.find(x=>x.id===m.season_id);return {season:s,month:m,team:teamName(c.team_id)}}).filter(Boolean).sort((a:any,b:any)=>a.month.month_start.localeCompare(b.month.month_start)),[champions,months,seasons,teams])
- const monthlyLeaders=useMemo(()=>{const map=new Map<string,number>();monthlyHistory.forEach((x:any)=>map.set(x.team,(map.get(x.team)||0)+1));return [...map.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))},[monthlyHistory])
- if(loading)return <p>Loading…</p>
- return <>
-  <div className="section-title"><div><div className="eyebrow">League archive</div><h1>Champions & History</h1><p className="muted">Past Cup champions, monthly champions, and final season standings.</p></div></div>
-  <div className="grid">
-   <section className="card"><h2>Past Cup Champions</h2>{seasonTables.length?seasonTables.map(x=>{const champion=x.rows[0];return champion?<div key={x.season.id} style={{marginBottom:12}}><div className="pill">{x.season.name}</div><p className="champ" style={{marginTop:8}}>{champion.team.name} • {champion.total.toLocaleString()} pts</p></div>:null}):<p className="muted">No completed seasons yet.</p>}</section>
-   <section className="card"><h2>All-Time Monthly Titles</h2>{monthlyLeaders.length?<div className="table-wrap"><table><thead><tr><th>#</th><th>Team</th><th>Titles</th></tr></thead><tbody>{monthlyLeaders.map(([team,count],i)=><tr key={team}><td>{i+1}</td><td><strong>{team}</strong></td><td>{count}</td></tr>)}</tbody></table></div>:<p className="muted">No monthly champions recorded yet.</p>}</section>
-  </div>
-  <div className="section-title"><h2>Monthly Champions</h2></div>
-  <div className="card table-wrap"><table><thead><tr><th>Season</th><th>Month</th><th>Champion</th></tr></thead><tbody>{monthlyHistory.map((x:any)=><tr key={x.month.id}><td>{x.season?.name||'—'}</td><td>{new Date(x.month.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})}</td><td><strong>{x.team}</strong></td></tr>)}</tbody></table></div>
-  {seasonTables.map(x=><div key={x.season.id}><div className="section-title"><h2>{x.season.name} Final Cup Standings</h2></div><div className="card table-wrap"><table><thead><tr><th>#</th><th>Team</th>{x.months.map(m=><th key={m.id}>{new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})}</th>)}<th>Total</th></tr></thead><tbody>{x.rows.map((r,i)=><tr key={r.team.id}><td className="rank">{i+1}</td><td><strong>{r.team.name}</strong>{i===0&&<span className="pill" style={{marginLeft:8}}>Cup Champion</span>}</td>{r.byMonth.map((v,j)=><td key={x.months[j]?.id??`${r.team.id}-${j}`}>{v??'—'}</td>)}<td><strong>{r.total}</strong></td></tr>)}</tbody></table></div></div>)}
- </>
+
+ const cupChampions=useMemo(()=>seasons.filter(s=>s.is_closed&&(!s.end_date||s.end_date>=HISTORY_START)).map(s=>{
+   const sm=months.filter(m=>m.season_id===s.id)
+   const st=teams.filter(t=>t.season_id===s.id)
+   const totals=st.map(team=>({team,total:sm.reduce((sum,m)=>sum+Number(points.find(p=>p.league_month_id===m.id&&p.team_id===team.id)?.points||0),0)})).sort((a,b)=>b.total-a.total||a.team.name.localeCompare(b.team.name))
+   return totals.length?{season:s,team:totals[0].team.name,total:totals[0].total}:null
+ }).filter(Boolean) as {season:Season;team:string;total:number}[],[seasons,months,teams,points])
+
+ const monthlyHistory=useMemo(()=>champions.map(c=>{
+   const month=months.find(m=>m.id===c.league_month_id);if(!month)return null
+   const season=seasons.find(s=>s.id===month.season_id);if(!season)return null
+   return {season,month,team:teamName(c.team_id)}
+ }).filter(Boolean).sort((a:any,b:any)=>a.month.month_start.localeCompare(b.month.month_start)) as MonthlyHistoryRow[],[champions,months,seasons,teams])
+
+ const monthlyLeaders=useMemo(()=>{
+   const counts=new Map<string,{name:string,count:number}>()
+   monthlyHistory.forEach(row=>{const key=teamKey(row.team);const old=counts.get(key);counts.set(key,{name:row.team,count:(old?.count||0)+1})})
+   return [...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name))
+ },[monthlyHistory])
+
+ const bySeason=useMemo(()=>seasons.filter(s=>monthlyHistory.some(r=>r.season.id===s.id)).map(s=>({season:s,rows:monthlyHistory.filter(r=>r.season.id===s.id)})),[seasons,monthlyHistory])
+ const selectedSeason=seasons.find(s=>s.id===selectedSeasonId)||null
+ const selectedMonths=useMemo(()=>months.filter(m=>m.season_id===selectedSeasonId).sort((a,b)=>a.month_start.localeCompare(b.month_start)),[months,selectedSeasonId])
+ const seasonCupRows=useMemo(()=>{
+   if(!selectedSeasonId)return []
+   const st=teams.filter(t=>t.season_id===selectedSeasonId)
+   return st.map(team=>{
+     const byMonth=selectedMonths.map(m=>{const p=points.find(p=>p.league_month_id===m.id&&p.team_id===team.id);return p?Number(p.points):null})
+     return {team,byMonth,total:byMonth.reduce<number>((sum,v)=>sum+(v||0),0)}
+   }).sort((a,b)=>b.total-a.total||a.team.name.localeCompare(b.team.name))
+ },[selectedSeasonId,teams,selectedMonths,points])
+ const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
+ const monthLabel=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})
+
+ if(loading)return <PlayerPage title="History"><p>Loading…</p></PlayerPage>
+ return <PlayerPage title="History"><div className="history-page-v1232">
+   <div className="section-title"><div><h1>History</h1><p className="muted">League champions beginning with the 2025–2026 season.</p></div></div>
+
+   <section className="card history-section-v1232">
+     <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-cup">🏆</span><div><h2>Past Cup Champions</h2><p className="muted">Season-long Cup champions.</p></div></div>
+     {cupChampions.length?<div className="history-cup-list-v1232">{cupChampions.map(row=><div className="history-cup-row-v1232" key={row.season.id}><span>{row.season.name}</span><strong>{row.team}</strong><b>{row.total.toLocaleString()} pts</b></div>)}</div>:<p className="muted">No completed Cup champions are recorded yet.</p>}
+   </section>
+
+   <section className="card history-section-v1232 history-cup-standings-v1233">
+     <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-cup">🏆</span><div><h2>Season Cup Standings</h2><p className="muted">Choose a season to view its Cup standings.</p></div></div>
+     <label className="history-season-select-v1233">
+       <span>Season</span>
+       <select value={selectedSeasonId} onChange={e=>setSelectedSeasonId(e.target.value)}>
+         {seasons.filter(s=>!s.start_date||s.start_date>=HISTORY_START).slice().sort((a,b)=>(b.start_date||'').localeCompare(a.start_date||'')).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+       </select>
+     </label>
+     {selectedSeason&&seasonCupRows.length?<div className="history-cup-board-v1233">
+       <div className="cup-scroll-v1231" style={{'--cup-months':selectedMonths.length} as CSSProperties}>
+         <div className="cup-grid-v1231 header"><span>#</span><span>Team</span>{selectedMonths.map(m=><span key={m.id}>{monthShort(m)}</span>)}<span>Total</span></div>
+         {seasonCupRows.map((r,i)=><div className={`cup-grid-v1231 row ${i===0?'cup-first-v1231':''}`} key={r.team.id}><span className="cup-rank-v1231">{i+1}</span><span className="cup-team-v1231"><strong>{r.team.name}</strong>{i===0&&<small>{selectedSeason.is_closed?'CHAMPION':'LEADER'}</small>}</span>{r.byMonth.map((v,j)=><span key={selectedMonths[j].id}>{v===null?'—':v.toLocaleString()}</span>)}<span className="cup-total-v1231">{r.total.toLocaleString()}</span></div>)}
+       </div>
+     </div>:<p className="muted">No Cup standings are available for this season yet.</p>}
+   </section>
+
+   <section className="card history-section-v1232">
+     <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-monthly">🏆</span><div><h2>All-Time Monthly Titles</h2><p className="muted">Total monthly championships won since November 2025.</p></div></div>
+     {monthlyLeaders.length?<div className="history-title-list-v1232">{monthlyLeaders.map((row,i)=><div className="history-title-row-v1232" key={teamKey(row.name)}><span className="history-rank-v1232">{i+1}</span><strong>{row.name}</strong><span className="history-title-count-v1232"><i className="trophy trophy-monthly">🏆</i>{row.count} {row.count===1?'Title':'Titles'}</span></div>)}</div>:<p className="muted">No monthly champions are recorded yet.</p>}
+   </section>
+
+   <section className="history-monthly-section-v1232">
+     <div className="section-title compact"><div><h2>Monthly Champions</h2><p className="muted">Starting with November 2025, each newly crowned monthly champion is added automatically.</p></div></div>
+     {bySeason.length?bySeason.map(group=><div className="card history-season-v1232" key={group.season.id}>
+       <div className="history-season-head-v1232"><strong>{group.season.name}</strong>{group.season.is_active&&<span className="pill">Current Season</span>}</div>
+       <div className="history-month-list-v1232">{group.rows.map(row=><div className="history-month-row-v1232" key={row.month.id}><span className="trophy trophy-monthly">🏆</span><div><small>{monthLabel(row.month.month_start)}</small><strong>{row.team}</strong></div></div>)}</div>
+     </div>):<div className="card"><p className="muted">No monthly champions are recorded yet.</p></div>}
+   </section>
+ </div></PlayerPage>
 }

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
-import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MatchPlayIcon,MessagesIcon,ChatIcon,TeamsIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
+import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,ChatIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
 
 type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string;desc:string}
 const items:MenuItem[]=[
@@ -11,10 +11,10 @@ const items:MenuItem[]=[
  {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations',desc:'View and manage your simulator reservations'},
  {href:'/results',Icon:StandingsIcon,title:'Monthly Standings',desc:'View current standings and past monthly results'},
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
- {href:'/cup#match-play',Icon:MatchPlayIcon,title:'Match Play',desc:'View your Week 4 matchups and results'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages',desc:'Read league messages and announcements'},
  {href:'/chat',Icon:ChatIcon,title:'League Chat',desc:'Chat with the entire league or just your team'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams',desc:'View league teams and players'},
+ {href:'/history',Icon:HistoryIcon,title:'History',desc:'View Cup champions and monthly title history'},
  {href:'/rules',Icon:RulesIcon,title:'Rules',desc:'View league rules and point system'}
 ]
 export default function Home(){

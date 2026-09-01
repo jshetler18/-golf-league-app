@@ -50,6 +50,11 @@ export function TeamsIcon(props: IconProps){
   return <svg {...base(props)}><circle cx="23" cy="22" r="9" fill="currentColor" stroke="none"/><circle cx="43" cy="24" r="8" fill="currentColor" stroke="none"/><path d="M8 52c0-11 6-17 15-17s15 6 15 17H8Z" fill="currentColor" stroke="none"/><path d="M36 52c0-9 4-14 11-14 7 0 11 5 11 14H36Z" fill="currentColor" stroke="none"/></svg>
 }
 
+
+export function HistoryIcon(props: IconProps){
+  return <svg {...base(props)}><path d="M14 10h31a5 5 0 0 1 5 5v39H19a5 5 0 0 1-5-5V10Z"/><path d="M14 45h31a5 5 0 0 1 5 5"/><circle cx="31" cy="28" r="10"/><path d="M31 22v7l5 3"/></svg>
+}
+
 export function RulesIcon(props: IconProps){
   return <svg {...base(props)}><path d="M15 8h25l10 10v38H15V8Z" fill="currentColor" stroke="none"/><path d="M40 8v12h10" stroke="white"/><path d="M23 29h19M23 38h19M23 47h14" stroke="white" strokeWidth="3.5"/></svg>
 }
