@@ -110,3 +110,11 @@ Version 12.15: Reply boxes now open directly beneath the message being replied t
 - Added a monthly champion trophy banner when a monthly champion has been recorded.
 - Added a posted-results status so players can quickly see whether a week is complete or still in progress.
 - No database migration or new environment variables are required.
+
+
+## Version 12.25 Results Leaderboard Trial
+- Removed separate Week 1–4 result buttons.
+- Results now show one monthly leaderboard with Week 1, Week 2, Week 3, Week 4 and Total columns.
+- Week 4 match result and Cup points appear under the team name when available.
+- Monthly Champion trophy uses the existing silver/grayscale monthly trophy style from the Teams page.
+- This is a presentation-only trial and requires no database migration.
