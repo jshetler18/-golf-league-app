@@ -1,3 +1,9 @@
+Version 10.2
+
+Changes:
+- Removed the per-team player-count pill from the player-facing Teams page.
+- Keeps Version 10.1 signup/admin approval messaging and all prior features.
+
 # Tom Krise 19th Hole Golf Simulator — Version 10
 
 Version 10 adds a player-facing Weekly Results page while retaining all Version 9.6 booking, Teams/Rosters, trophy, league scoring, Cup, history, and admin features.

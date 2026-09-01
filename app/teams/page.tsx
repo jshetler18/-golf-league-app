@@ -104,7 +104,6 @@ export default function Teams(){
                 {Array.from({length:trophies[team.name.trim().toLowerCase()]?.monthly||0}).map((_,i)=><span className="trophy trophy-monthly" title="Monthly Championship" key={`monthly-${i}`}>🏆</span>)}
               </div>:null}
             </div>
-            <span className="pill">{roster.length} Players</span>
           </div>
           {roster.length?<div className="player-roster">
             {roster.map((player,index)=><div className="player-name" key={player.id}>
