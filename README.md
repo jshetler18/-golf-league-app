@@ -40,7 +40,7 @@ No Supabase schema changes or new environment variables are required for this ve
 - Improved mobile admin navigation without changing player-facing pages.
 
 
-## Version 12.37
+## Version 12.37.1
 - Admin is now a page-based dashboard: Accounts, Messages, Rules, Players & Teams, League Setup & Scoring, and Simulator each have their own page.
 - Messages and Rules are separate admin pages.
 - Added rich-text formatting controls to Messages and Rules (bold, italic, underline, headings, bulleted/numbered lists, links, and clear formatting).
@@ -48,3 +48,7 @@ No Supabase schema changes or new environment variables are required for this ve
 - Admin Messages now shows a Viewed By count and expandable list of the players who opened each announcement, including view time.
 - Simulator admin page now shows upcoming personal, league, and blocked reservations, including who reserved the simulator.
 - Added admin read access for announcement read receipts.
+
+
+## 12.37.1 hotfix
+Fixed the admin authorization render guard on the Admin home page and all separate Admin section pages.
