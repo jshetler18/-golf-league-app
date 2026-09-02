@@ -17,6 +17,7 @@ export function TeamRawStats({rows,teamName,currentSeason}:{rows:RawRow[];teamNa
   }
   const allLow=extreme(all,'low'), seasonLow=extreme(current,'low'), allHigh=extreme(all,'high'), seasonHigh=extreme(current,'high')
   const latest=all.length?[...all].sort((a,b)=>b.score_month.localeCompare(a.score_month))[0].score_month:null
+  const past=[...all].sort((a,b)=>b.score_month.localeCompare(a.score_month))
 
   const ExtremeSide=({label,data}:{label:string;data:{value:number;dates:string[]}|null})=><div className="raw-extreme-side">
     <small>{label}</small>
@@ -48,5 +49,19 @@ export function TeamRawStats({rows,teamName,currentSeason}:{rows:RawRow[];teamNa
         <ExtremeSide label="Highest Raw Score" data={seasonHigh}/>
       </div>
     </div>
+
+    <details className="past-scores-details">
+      <summary>{teamName}'s Past Scores</summary>
+      <div className="past-scores-list">
+        {past.length?past.map((r,i)=>{
+          const isHigh=allHigh?.value===r.raw_score
+          const isLow=allLow?.value===r.raw_score
+          return <div className="past-score-row" key={`${r.season_label}-${r.score_month}-${i}`}>
+            <span className="past-score-date">{monthYear(r.score_month)}</span>
+            <strong className={`past-score-value${isHigh?' is-high':isLow?' is-low':''}`}>{num(r.raw_score)}</strong>
+          </div>
+        }):<div className="past-score-empty">No past scores yet.</div>}
+      </div>
+    </details>
   </div>
 }
