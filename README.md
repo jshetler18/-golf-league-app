@@ -35,3 +35,8 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 ## v12.49
 - Reservation time selection can now expand backward or forward from the first selected hour.
 - Existing 3-hour maximum, consecutive-hour requirement, and tap-again-to-deselect behavior remain unchanged.
+
+
+## v12.50
+- Restored the tee-box key to the player Teams page above the Championship Key.
+- Tee legend uses colored squares and approximate yardages: Forward ≈3,500; Senior ≈5,000; Middle ≈5,500; Back ≈6,000; Tip ≈6,500+ yards.

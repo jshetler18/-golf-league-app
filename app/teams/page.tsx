@@ -9,7 +9,7 @@ type Team={id:string;name:string}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
 type TrophyCounts={cup:number;monthly:number}
 
-const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tips'}
+const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tip Tees'}
 
 export default function Teams(){
   const [season,setSeason]=useState<Season|null>(null)
@@ -87,8 +87,16 @@ export default function Teams(){
     </div>
 
     {!season?<div className="card">There is no active league season right now.</div>:<>
-      <div className="card tee-key" aria-label="Championship trophy key">
-        <strong>Championship Key</strong>
+      <div className="card tee-key" aria-label="Tee box and championship key">
+        <strong>Tee Box Key</strong>
+        <div className="tee-key-items">
+          <span><i className="tee-square tee-turquoise" aria-hidden="true"></i>Forward Tees (≈3,500 yards)</span>
+          <span><i className="tee-square tee-red" aria-hidden="true"></i>Senior Tees (≈5,000 yards)</span>
+          <span><i className="tee-square tee-yellow" aria-hidden="true"></i>Middle Tees (≈5,500 yards)</span>
+          <span><i className="tee-square tee-blue" aria-hidden="true"></i>Back Tees (≈6,000 yards)</span>
+          <span><i className="tee-square tee-black" aria-hidden="true"></i>Tip Tees (≈6,500+ yards)</span>
+        </div>
+        <strong className="championship-key-title-v1250">Championship Key</strong>
         <div className="trophy-key-items">
           <span><i className="trophy trophy-cup" aria-hidden="true">🏆</i>Cup Championship</span>
           <span><i className="trophy trophy-monthly" aria-hidden="true">🏆</i>Monthly Championship</span>
