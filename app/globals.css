@@ -392,3 +392,7 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
   .booking-confirmation-actions{display:grid}
   .booking-confirmation-actions .btn{width:100%}
 }
+
+.booking-confirmation-details{display:grid;gap:4px;color:#405148;font-size:17px;line-height:1.45}
+.booking-confirmation-date{font-size:19px;font-weight:700;color:#253f32}
+.booking-confirmation-time{font-size:20px;font-weight:800;color:#173c2a}

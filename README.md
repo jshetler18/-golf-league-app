@@ -11,3 +11,7 @@ Admin usability update:
 - Player Home menu is ~20% more compact, removes all subtitle text, uses smaller icons/titles, and titles are no longer bold.
 - Home profile control sits at the lower-right of the header area.
 - Teams page removes the redundant tee-box key while keeping each player's tee designation.
+
+## v12.40
+- Booking confirmation popup now uses a fixed three-line confirmation format with full weekday/month names and ordinal dates.
+- Reminder investigation confirmed the Supabase cron is running every 5 minutes, but the live reminder endpoint is returning HTTP 401 Unauthorized. The Vercel CRON_SECRET must be synchronized with the token used by the Supabase cron job.

@@ -13,7 +13,22 @@ const pad=(n:number)=>String(n).padStart(2,'0')
 function dateKey(d:Date){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
 function easternStamp(date:string,hour:number){return `${date} ${pad(hour)}:00:00 America/New_York`}
 function hourLabel(hour:number){return new Intl.DateTimeFormat('en-US',{hour:'numeric'}).format(new Date(2020,0,1,hour))}
-function friendlyDate(date:string){return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric'}).format(new Date(`${date}T12:00:00`))}
+function ordinalDay(day:number){
+  const mod100=day%100
+  if(mod100>=11&&mod100<=13)return `${day}th`
+  if(day%10===1)return `${day}st`
+  if(day%10===2)return `${day}nd`
+  if(day%10===3)return `${day}rd`
+  return `${day}th`
+}
+function fullFriendlyDate(date:string){
+  const d=new Date(`${date}T12:00:00`)
+  const weekday=new Intl.DateTimeFormat('en-US',{weekday:'long'}).format(d)
+  const month=new Intl.DateTimeFormat('en-US',{month:'long'}).format(d)
+  return `${weekday}, ${month} ${ordinalDay(d.getDate())}`
+}
+function compactHour(hour:number){return new Intl.DateTimeFormat('en-US',{hour:'numeric'}).format(new Date(2020,0,1,hour)).replace(/\s/g,'').toUpperCase()}
+
 function easternParts(iso:string){
   const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(iso))
   const get=(type:string)=>Number(parts.find(p=>p.type===type)?.value||0)
@@ -28,7 +43,7 @@ export default function BookPage(){
   const [startHour,setStartHour]=useState<number|null>(null)
   const [duration,setDuration]=useState(1)
   const [message,setMessage]=useState('')
-  const [confirmation,setConfirmation]=useState('')
+  const [confirmation,setConfirmation]=useState<{date:string;time:string}|null>(null)
   const [loading,setLoading]=useState(true)
 
   const today=useMemo(()=>dateKey(new Date()),[])
@@ -36,7 +51,7 @@ export default function BookPage(){
 
   async function load(preserveFeedback=false){
     setLoading(true)
-    if(!preserveFeedback){setMessage('');setConfirmation('')}
+    if(!preserveFeedback){setMessage('');setConfirmation(null)}
     const { data:u }=await supabase.auth.getUser()
     if(!u.user){setUserId('');setProfile(null);setItems([]);setLoading(false);return}
     setUserId(u.user.id)
@@ -63,7 +78,7 @@ export default function BookPage(){
 
   function chooseSlot(hour:number){
     if(overlaps(hour))return
-    setMessage('');setConfirmation('')
+    setMessage('');setConfirmation(null)
     if(startHour!==null && hour===startHour+duration && duration<3 && hour<21){
       setDuration(duration+1)
       return
@@ -101,7 +116,7 @@ export default function BookPage(){
   const canBook=profile?.status==='approved' && profile?.booking_enabled
 
   async function book(e:FormEvent){
-    e.preventDefault(); setMessage(''); setConfirmation('')
+    e.preventDefault(); setMessage(''); setConfirmation(null)
     if(!canBook){setMessage('Your account must be approved before you can book.');return}
     if(startHour===null){setMessage('Please select a starting time.');return}
     if(startHour+duration>21){setMessage('Bookings must end by 9:00 PM.');return}
@@ -109,7 +124,7 @@ export default function BookPage(){
     const sound=prepareBookingSound()
     const {error}=await supabase.from('bookings').insert({kind:'personal',user_id:userId,created_by:userId,start_at:easternStamp(date,startHour),end_at:easternStamp(date,startHour+duration)})
     if(error){sound?.close();setMessage(error.message);return}
-    setConfirmation(`Reservation confirmed for ${friendlyDate(date)}, ${hourLabel(startHour)}–${hourLabel(startHour+duration)}.`)
+    setConfirmation({date:fullFriendlyDate(date),time:`${compactHour(startHour)}-${compactHour(startHour+duration)}`})
     sound?.play()
     setStartHour(null)
     setDuration(1)
@@ -121,15 +136,15 @@ export default function BookPage(){
   return <PlayerPage title="Reserve Sim">
     <section className="hero"><div className="eyebrow">Simulator Calendar</div><h1>Reserve Sim</h1><p>Open daily 7:00 AM–9:00 PM. Reserve up to 3 hours per day, up to 30 days ahead.</p></section>
     {!canBook && profile && <div className="card notice"><strong>Booking access is {profile.status}.</strong><p className="muted">You can view the calendar, but an admin must approve your account before you can reserve time.</p></div>}
-    {confirmation&&<div className="booking-confirmation-overlay" role="presentation" onClick={()=>setConfirmation('')}>
+    {confirmation&&<div className="booking-confirmation-overlay" role="presentation" onClick={()=>setConfirmation(null)}>
       <div className="booking-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="booking-confirmation-title" onClick={e=>e.stopPropagation()}>
-        <button type="button" className="booking-confirmation-close" onClick={()=>setConfirmation('')} aria-label="Close reservation confirmation">×</button>
+        <button type="button" className="booking-confirmation-close" onClick={()=>setConfirmation(null)} aria-label="Close reservation confirmation">×</button>
         <div className="booking-confirmation-check" aria-hidden="true">✓</div>
         <h2 id="booking-confirmation-title">Reservation Confirmed</h2>
-        <p>{confirmation}</p>
+        <div className="booking-confirmation-details"><div>Reservation Confirmed for</div><div className="booking-confirmation-date">{confirmation.date}</div><div className="booking-confirmation-time">{confirmation.time}</div></div>
         <div className="booking-confirmation-actions">
           <Link className="btn" href="/my-bookings">View My Sim Reservations</Link>
-          <button type="button" className="btn secondary" onClick={()=>setConfirmation('')}>Done</button>
+          <button type="button" className="btn secondary" onClick={()=>setConfirmation(null)}>Done</button>
         </div>
       </div>
     </div>}
