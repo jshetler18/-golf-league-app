@@ -25,3 +25,6 @@ Admin usability update:
 
 ## v12.42
 Redesigned Admin Simulator into Team Schedules, League Make-Up Blocks, and Bookings & Block Time. Team schedules support custom start/end dates and future-only rebuilds.
+
+## v12.43
+Team recurring simulator schedules can now begin on the first day of the month before the active league season. For a November season, admins can start team blocks on October 1 for practice time while continuing the same recurring schedule into league play.

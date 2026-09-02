@@ -1,0 +1,3 @@
+-- v12.43 production migration applied through Supabase.
+-- Allows recurring team simulator schedules to begin on the first day of the month before the league season.
+-- This supports October practice blocks for a November-start winter league.
