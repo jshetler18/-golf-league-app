@@ -1,6 +1,6 @@
 'use client'
 
-import {FormEvent, useEffect, useState} from 'react'
+import {FormEvent, useEffect, useMemo, useState} from 'react'
 import {supabase} from '@/lib/supabase'
 import {RichTextDisplay,RichTextEditor,sanitizeRichText} from '@/components/RichTextEditor'
 
@@ -16,6 +16,7 @@ type Announcement={
   created_at:string
 }
 type Reader={user_id:string;read_at:string;name:string}
+type ApprovedPlayer={id:string;name:string}
 
 export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [title,setTitle]=useState('')
@@ -29,28 +30,34 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [message,setMessage]=useState('')
   const [saving,setSaving]=useState(false)
   const [readers,setReaders]=useState<Record<string,Reader[]>>({})
+  const [approvedPlayers,setApprovedPlayers]=useState<ApprovedPlayer[]>([])
   const [openReaders,setOpenReaders]=useState<string|null>(null)
 
   async function load(){
-    const {data,error}=await supabase
-      .from('announcements')
-      .select('id,title,body,audience,team_id,is_pinned,expires_at,created_at')
-      .order('is_pinned',{ascending:false})
-      .order('created_at',{ascending:false})
-      .limit(20)
+    const [{data,error},{data:profiles,error:profileError}]=await Promise.all([
+      supabase
+        .from('announcements')
+        .select('id,title,body,audience,team_id,is_pinned,expires_at,created_at')
+        .order('is_pinned',{ascending:false})
+        .order('created_at',{ascending:false})
+        .limit(20),
+      supabase
+        .from('profiles')
+        .select('id,full_name,email')
+        .eq('status','approved')
+        .neq('role','admin')
+        .order('full_name')
+    ])
     if(error){setMessage(error.message);return}
+    if(profileError){setMessage(profileError.message);return}
     const announcements=(data||[]) as Announcement[]
     setRows(announcements)
+    setApprovedPlayers((profiles||[]).map(p=>({id:p.id,name:p.full_name||p.email||'Player'})))
     const ids=announcements.map(a=>a.id)
     if(!ids.length){setReaders({});return}
     const {data:readRows,error:readError}=await supabase.from('announcement_reads').select('announcement_id,user_id,read_at').in('announcement_id',ids).order('read_at',{ascending:true})
     if(readError){setMessage(readError.message);return}
-    const userIds=[...new Set((readRows||[]).map(r=>r.user_id))]
-    let names:Record<string,string>={}
-    if(userIds.length){
-      const {data:profiles}=await supabase.from('profiles').select('id,full_name,email').in('id',userIds)
-      names=Object.fromEntries((profiles||[]).map(p=>[p.id,p.full_name||p.email||'Player']))
-    }
+    const names=Object.fromEntries((profiles||[]).map(p=>[p.id,p.full_name||p.email||'Player']))
     const grouped:Record<string,Reader[]>={}
     for(const r of readRows||[]){(grouped[r.announcement_id]??=[]).push({user_id:r.user_id,read_at:r.read_at,name:names[r.user_id]||'Player'})}
     setReaders(grouped)
@@ -111,6 +118,12 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
     if(!error)load()
   }
 
+  const readerMaps=useMemo(()=>{
+    const out:Record<string,Record<string,Reader>>={}
+    for(const [announcementId,list] of Object.entries(readers))out[announcementId]=Object.fromEntries(list.map(r=>[r.user_id,r]))
+    return out
+  },[readers])
+
   const now=Date.now()
   return <section className="admin-announcements-section">
     <div className="section-title"><div><h2>Messages & Announcements</h2><p className="muted">Send a message to everyone or only to one league team. Team messages are visible only to accounts linked to that team.</p></div></div>
@@ -134,14 +147,25 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
           {rows.length===0?<p className="muted">No announcements have been posted yet.</p>:rows.map(a=>{
             const expired=!!a.expires_at&&new Date(a.expires_at).getTime()<now
             const teamName=a.team_id?teams.find(t=>t.id===a.team_id)?.name:null
+            const readMap=readerMaps[a.id]||{}
+            const viewedCount=Object.keys(readMap).length
             return <div className="admin-announcement-item" key={a.id}>
               <div className="admin-announcement-copy">
                 <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
                 <RichTextDisplay value={a.body} className="admin-announcement-body-v1237"/>
                 <small>Posted {new Date(a.created_at).toLocaleDateString()}{a.expires_at?` · Expires ${new Date(a.expires_at).toLocaleDateString()}`:''}</small>
                 <div className="announcement-read-tools-v1237">
-                  <button type="button" className="announcement-read-button-v1237" onClick={()=>setOpenReaders(openReaders===a.id?null:a.id)}>{(readers[a.id]||[]).length} {(readers[a.id]||[]).length===1?'view':'views'} · Viewed By</button>
-                  {openReaders===a.id&&<div className="announcement-read-list-v1237">{(readers[a.id]||[]).length===0?<span>No one has opened this message yet.</span>:(readers[a.id]||[]).map(r=><div key={r.user_id}><strong>{r.name}</strong><small>{new Date(r.read_at).toLocaleString()}</small></div>)}</div>}
+                  <button type="button" className="announcement-read-button-v1237" onClick={()=>setOpenReaders(openReaders===a.id?null:a.id)}>{viewedCount} of {approvedPlayers.length} viewed · View Players</button>
+                  {openReaders===a.id&&<div className="announcement-reader-roster-v1238">
+                    {approvedPlayers.length===0?<span className="muted">No approved players found.</span>:approvedPlayers.map(p=>{
+                      const read=readMap[p.id]
+                      return <div className={`announcement-reader-row-v1238 ${read?'viewed':'not-viewed'}`} key={p.id}>
+                        <span className="announcement-reader-check-v1238" aria-label={read?'Viewed':'Not viewed'}>{read?'✓':''}</span>
+                        <strong>{p.name}</strong>
+                        <small>{read?new Date(read.read_at).toLocaleString():'Not viewed'}</small>
+                      </div>
+                    })}
+                  </div>}
                 </div>
               </div>
               <button className="btn danger small" onClick={()=>remove(a.id,a.title)}>Delete</button>
