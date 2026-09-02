@@ -106,6 +106,15 @@ export default function History(){
      return rankingDirection==='asc'?d:-d
    })
  },[currentRankingTeams,rawRows,rankingMetric,rankingDirection,currentSeason?.name,cupChampions,monthlyHistory])
+ const rankedRows=useMemo(()=>{
+   let lastValue:number|null|undefined=undefined,lastRank=0
+   return rankingRows.map((row,index)=>{
+     const same=lastValue!==undefined&&((row.value==null&&lastValue==null)||(row.value!=null&&lastValue!=null&&Math.abs(Number(row.value)-Number(lastValue))<1e-9))
+     const rank=same?lastRank:index+1
+     lastValue=row.value;lastRank=rank
+     return {...row,rank}
+   })
+ },[rankingRows])
  const formatRanking=(v:number|null)=>v==null?'—':Math.round(Number(v)).toLocaleString()
 
  const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
@@ -156,7 +165,7 @@ export default function History(){
        <label>Sort Order<select value={rankingDirection} onChange={e=>setRankingDirection(e.target.value as 'asc'|'desc')}><option value="desc">Highest First</option><option value="asc">Lowest First</option></select></label>
      </div>
      <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th className="rank-stat-head"><span>Statistic</span><strong>{rankingLabels[rankingMetric]}</strong></th></tr></thead><tbody>
-       {rankingRows.map((r,i)=><tr key={r.team.id}><td className="rank-number">#{i+1}</td><td className="rank-team">{r.team.name}</td><td className="rank-value">{formatRanking(r.value)}</td></tr>)}
+       {rankedRows.map(r=><tr key={r.team.id}><td className="rank-number">#{r.rank}</td><td className="rank-team">{r.team.name}</td><td className="rank-value">{formatRanking(r.value)}</td></tr>)}
      </tbody></table></div>
    </section>
  </div></PlayerPage>

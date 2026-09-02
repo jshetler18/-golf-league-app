@@ -60,3 +60,9 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - History Rankings now display whole-number values with no decimals.
 - Rankings table was tightened for phone screens so the selected statistic title wraps above the value column instead of forcing horizontal scrolling.
 - Restored Cup Championships and Monthly Championships to the Rankings statistic dropdown.
+
+
+## v12.56
+- History Rankings statistic header enlarged to match Rank/Team header sizing.
+- Rankings now use competition ranking for ties (1, 1, 3, etc.) across every ranking statistic.
+- Cup Standings Match Play redesigned with head-to-head matchup cards, prominent Cup point scores, VS badge, and winner highlighting.
