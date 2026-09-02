@@ -121,7 +121,18 @@ export default function BookPage(){
   return <PlayerPage title="Reserve Sim">
     <section className="hero"><div className="eyebrow">Simulator Calendar</div><h1>Reserve Sim</h1><p>Open daily 7:00 AM–9:00 PM. Reserve up to 3 hours per day, up to 30 days ahead.</p></section>
     {!canBook && profile && <div className="card notice"><strong>Booking access is {profile.status}.</strong><p className="muted">You can view the calendar, but an admin must approve your account before you can reserve time.</p></div>}
-    {confirmation&&<div className="booking-confirmation" role="status"><strong>✓ Booking captured</strong><span>{confirmation}</span><Link href="/my-bookings">View My Sim Reservations</Link></div>}
+    {confirmation&&<div className="booking-confirmation-overlay" role="presentation" onClick={()=>setConfirmation('')}>
+      <div className="booking-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="booking-confirmation-title" onClick={e=>e.stopPropagation()}>
+        <button type="button" className="booking-confirmation-close" onClick={()=>setConfirmation('')} aria-label="Close reservation confirmation">×</button>
+        <div className="booking-confirmation-check" aria-hidden="true">✓</div>
+        <h2 id="booking-confirmation-title">Reservation Confirmed</h2>
+        <p>{confirmation}</p>
+        <div className="booking-confirmation-actions">
+          <Link className="btn" href="/my-bookings">View My Sim Reservations</Link>
+          <button type="button" className="btn secondary" onClick={()=>setConfirmation('')}>Done</button>
+        </div>
+      </div>
+    </div>}
     <div className="booking-layout booking-layout-single">
       <form onSubmit={book} className="card choose-day-card"><h2>Choose a Day</h2><label className="field booking-date-field">Date<input type="date" min={today} max={maxDate} value={date} onChange={e=>setDate(e.target.value)} /></label>
         <p className="muted slot-help">Tap or click any green available time to select it. Tap the next consecutive hour to extend the reservation, up to 3 hours.</p>

@@ -362,3 +362,33 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .simulator-booking-browser-v1238{padding:0;overflow:hidden}.sim-booking-controls-v1238{display:flex;align-items:end;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid var(--line);background:#f8faf9}.sim-range-buttons-v1238{display:flex;gap:6px;flex-wrap:wrap}.sim-range-buttons-v1238 button{padding:9px 11px;border:1px solid #d5dfd8;border-radius:9px;background:#fff;color:#294238;font-weight:800}.sim-range-buttons-v1238 button.active{background:#173c2a;color:#fff;border-color:#173c2a}.sim-jump-date-v1238{min-width:170px;margin-left:auto}.sim-jump-date-v1238 input{min-height:39px}.sim-booking-summary-v1238{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;background:#fff;color:var(--muted);font-size:.88rem}.sim-booking-summary-v1238 strong{color:#173c2a}.sim-booking-table-v1238{margin:0;min-width:690px}.sim-booking-table-v1238 td,.sim-booking-table-v1238 th{padding:11px 13px}.sim-kind-pill-v1238{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:850}.sim-kind-pill-v1238.personal{background:#e8f4eb;color:#256a34}.sim-kind-pill-v1238.league{background:#eaf0f8;color:#2b4e76}.sim-kind-pill-v1238.blocked{background:#f2e8e8;color:#8b4040}.sim-pagination-v1238{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);background:#fafcfb}.sim-pagination-v1238 span{font-size:.85rem;color:var(--muted);font-weight:750}
 .league-admin-tabs-v1238{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 18px}.league-admin-tabs-v1238 button{text-align:left;display:grid;grid-template-columns:32px 1fr;grid-template-areas:'num title' 'num sub';column-gap:10px;align-items:center;padding:13px;border:1px solid #dce5df;border-radius:14px;background:#f8faf9;color:#294238}.league-admin-tabs-v1238 button>span{grid-area:num;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#e6efe9;color:#173c2a;font-weight:900}.league-admin-tabs-v1238 button>strong{grid-area:title;font-size:.96rem}.league-admin-tabs-v1238 button>small{grid-area:sub;color:#718078;font-size:.75rem}.league-admin-tabs-v1238 button.active{background:#173c2a;border-color:#173c2a;color:white}.league-admin-tabs-v1238 button.active>span{background:#fff;color:#173c2a}.league-admin-tabs-v1238 button.active>small{color:#d5e5db}.league-admin-workspace-v1238{border:1px solid #e1e7e3;border-radius:16px;background:#fbfcfb;padding:4px 16px 16px}.league-admin-workspace-v1238>section:first-child{margin-top:12px}
 @media(max-width:760px){.announcement-reader-row-v1238{grid-template-columns:22px 1fr;grid-template-areas:'check name' '. time';gap:3px 8px}.announcement-reader-check-v1238{grid-area:check}.announcement-reader-row-v1238 strong{grid-area:name}.announcement-reader-row-v1238 small{grid-area:time;text-align:left}.sim-jump-date-v1238{margin-left:0;min-width:100%;width:100%}.sim-booking-summary-v1238{align-items:flex-start;flex-direction:column;gap:3px}.league-admin-tabs-v1238{grid-template-columns:1fr}.league-admin-workspace-v1238{padding:4px 10px 12px}}
+
+
+/* Version 12.39: sleeker player home, centered booking confirmation, simplified teams key */
+.mobile-brand .profile-wrap{align-self:flex-end}
+.mobile-menu-row{min-height:120px;padding:14px 5vw;gap:24px}
+.menu-icon{width:75px;height:75px;font-size:31px}
+.menu-copy{gap:0}
+.menu-title{font-size:26px;font-weight:400;line-height:1.2}
+.menu-arrow{font-size:46px}
+.booking-confirmation-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:22px;background:rgba(6,20,15,.48);backdrop-filter:blur(2px)}
+.booking-confirmation-modal{position:relative;width:min(92vw,480px);padding:34px 28px 26px;border:1px solid #a9ceb7;border-radius:20px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.28);text-align:center;color:#173c2a}
+.booking-confirmation-close{position:absolute;top:10px;right:12px;width:38px;height:38px;border-radius:50%;background:#f1f5f2;color:#46554d;font-size:28px;line-height:1}
+.booking-confirmation-check{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:#e5f5e9;color:#20853c;font-size:38px;font-weight:900}
+.booking-confirmation-modal h2{margin:0 0 8px;font-size:25px}
+.booking-confirmation-modal p{margin:0;color:#405148;font-size:17px;line-height:1.5}
+.booking-confirmation-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.booking-confirmation-actions .btn{min-width:170px}
+.booking-confirmation-actions .btn.secondary{background:#edf2ef;color:#173c2a}
+@media(min-width:851px){.mobile-menu-row{min-height:100px}.menu-icon{width:72px;height:72px}.menu-title{font-size:25px}}
+@media(max-width:520px){
+  .mobile-brand{min-height:175px;align-items:center}
+  .mobile-brand .profile-wrap{align-self:flex-end}
+  .mobile-menu-row{min-height:84px;padding:9px 18px;gap:14px}
+  .menu-icon{width:51px;height:51px;font-size:22px}
+  .menu-title{font-size:18px;font-weight:400}
+  .menu-arrow{font-size:31px}
+  .booking-confirmation-modal{padding:30px 20px 22px;border-radius:18px}
+  .booking-confirmation-actions{display:grid}
+  .booking-confirmation-actions .btn{width:100%}
+}

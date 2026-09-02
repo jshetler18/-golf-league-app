@@ -87,18 +87,11 @@ export default function Teams(){
     </div>
 
     {!season?<div className="card">There is no active league season right now.</div>:<>
-      <div className="card tee-key" aria-label="Championship trophy and official tee box key">
-        <strong>Championship & Tee Box Key</strong>
+      <div className="card tee-key" aria-label="Championship trophy key">
+        <strong>Championship Key</strong>
         <div className="trophy-key-items">
           <span><i className="trophy trophy-cup" aria-hidden="true">🏆</i>Cup Championship</span>
           <span><i className="trophy trophy-monthly" aria-hidden="true">🏆</i>Monthly Championship</span>
-        </div>
-        <div className="tee-key-items">
-          <span><i className="tee-square tee-turquoise"></i>Forward Tees</span>
-          <span><i className="tee-square tee-red"></i>Senior Tees</span>
-          <span><i className="tee-square tee-yellow"></i>Middle Tees</span>
-          <span><i className="tee-square tee-blue"></i>Back Tees</span>
-          <span><i className="tee-square tee-black"></i>Tips</span>
         </div>
       </div>
       <div className="grid team-grid">

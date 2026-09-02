@@ -5,17 +5,17 @@ import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
 import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,ChatIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon} from '@/components/PlayerIcons'
 
-type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string;desc:string}
+type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string}
 const items:MenuItem[]=[
- {href:'/book',Icon:ReserveIcon,title:'Reserve Sim',desc:'Check availability and reserve simulator time'},
- {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations',desc:'View and manage your simulator reservations'},
- {href:'/results',Icon:StandingsIcon,title:'Monthly Standings',desc:'View current standings and past monthly results'},
- {href:'/cup',Icon:TrophyIcon,title:'Cup Standings',desc:'View Cup Points and monthly totals'},
- {href:'/messages',Icon:MessagesIcon,title:'Messages',desc:'Read league messages and announcements'},
- {href:'/chat',Icon:ChatIcon,title:'League Chat',desc:'Chat with the entire league or just your team'},
- {href:'/teams',Icon:TeamsIcon,title:'Teams',desc:'View league teams and players'},
- {href:'/history',Icon:HistoryIcon,title:'History',desc:'View Cup champions and monthly title history'},
- {href:'/rules',Icon:RulesIcon,title:'Rules',desc:'View league rules and point system'}
+ {href:'/book',Icon:ReserveIcon,title:'Reserve Sim'},
+ {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations'},
+ {href:'/results',Icon:StandingsIcon,title:'Monthly Standings'},
+ {href:'/cup',Icon:TrophyIcon,title:'Cup Standings'},
+ {href:'/messages',Icon:MessagesIcon,title:'Messages'},
+ {href:'/chat',Icon:ChatIcon,title:'League Chat'},
+ {href:'/teams',Icon:TeamsIcon,title:'Teams'},
+ {href:'/history',Icon:HistoryIcon,title:'History'},
+ {href:'/rules',Icon:RulesIcon,title:'Rules'}
 ]
 export default function Home(){
  const [profile,setProfile]=useState<any>(null),[open,setOpen]=useState(false),[unread,setUnread]=useState(0),[chatUnread,setChatUnread]=useState(0); const wrap=useRef<HTMLDivElement>(null)
@@ -26,7 +26,7 @@ export default function Home(){
  async function logout(){await supabase.auth.signOut();location.href='/login'}
  return <div className="mobile-home">
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
-  <nav className="mobile-menu">{items.map(({href,Icon,title,desc})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><strong>{title}</strong><small>{desc}</small></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}{title==='League Chat'&&chatUnread>0&&<span className="unread-badge">{chatUnread}</span>}<span className="menu-arrow">›</span></Link>)}</nav>
+  <nav className="mobile-menu">{items.map(({href,Icon,title})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><span className="menu-title">{title}</span></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}{title==='League Chat'&&chatUnread>0&&<span className="unread-badge">{chatUnread}</span>}<span className="menu-arrow">›</span></Link>)}</nav>
   <Bottom unread={unread}/>
  </div>
 }
