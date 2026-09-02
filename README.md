@@ -9,16 +9,24 @@ Simulator scheduling refinements:
 - Legacy make-up page redirects to the combined scheduling page.
 
 
-## v12.47
+## v12.48
 Recurring Team & League Schedules now use separate Starting Time and Hours Reserved controls. Admin can reserve 1-24 hours; the former fixed 3-hour restriction is removed.
 
 
-## v12.47
+## v12.48
 - League Make-Up Time now appears on the player reservation calendar using the same blue league-reservation styling as team league rounds.
 - Player-facing label is `Makeup - League Round`.
 - Existing future recurring make-up bookings are converted automatically.
 
 
-## v12.47
+## v12.48
 - Reservation time slots now toggle off when a selected time is tapped/clicked again.
 - Keeps reservations consecutive and limited to the existing 3-hour player maximum.
+
+
+## v12.48
+- Added recurring simulator blocks to Admin → Simulator → Bookings & Block Time.
+- Admin can choose reason, day each week, starting time, hours reserved, schedule start, and schedule end.
+- Recurring blocks can be edited or removed; changing a schedule rebuilds future occurrences while preserving past ones.
+- Existing bookings are protected by conflict detection.
+- One-time simulator blocks remain available on the same page and now support 6 AM starts and 1–24 hour lengths.
