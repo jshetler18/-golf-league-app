@@ -414,3 +414,22 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 @media(max-width:720px){.raw-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.raw-stat-box:last-child{grid-column:1/-1}}
 .admin-raw-history{padding:0;overflow:hidden}.admin-raw-head,.admin-raw-row{display:grid;grid-template-columns:1.5fr 1fr .6fr .8fr;gap:10px;align-items:center;padding:10px 14px}.admin-raw-head{background:#eef3f0;font-size:12px}.admin-raw-row{border-top:1px solid var(--line);font-size:13px}.admin-raw-row input{width:100%;padding:8px}
 @media(max-width:720px){.admin-raw-head,.admin-raw-row{grid-template-columns:1.3fr .9fr .5fr .8fr;font-size:11px;padding:8px}.league-admin-tabs-v1238{grid-template-columns:1fr 1fr}}
+
+/* v12.52 raw-score statistics layout */
+.raw-score-disclaimer{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+.team-raw-stats{display:grid;gap:12px;margin-top:14px}
+.raw-stat-feature{border:1px solid var(--line);border-radius:14px;background:#eef8e9;padding:14px;text-align:center;display:grid;gap:4px}
+.raw-stat-feature small{font-size:11px;font-weight:800;line-height:1.2;color:var(--muted)}
+.raw-stat-feature strong{font-size:30px;line-height:1.05}
+.raw-stat-feature span{font-size:11px;color:var(--muted)}
+.raw-stat-season-average{background:#f8faf9}
+.raw-stat-group{border:1px solid var(--line);border-radius:14px;background:#f8faf9;padding:0;overflow:hidden}
+.raw-stat-group>h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--line);text-align:center;font-size:14px;line-height:1.2}
+.raw-extreme-grid{display:grid;grid-template-columns:1fr 1fr}
+.raw-extreme-side{min-width:0;padding:13px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.raw-extreme-side+ .raw-extreme-side{border-left:1px solid var(--line)}
+.raw-extreme-side small{font-size:11px;font-weight:800;line-height:1.2;color:var(--muted)}
+.raw-extreme-side strong{font-size:24px;line-height:1.05}
+.raw-extreme-dates{display:grid;gap:2px;margin-top:2px;font-size:11px;line-height:1.25;color:var(--muted)}
+.raw-extreme-dates span{display:block}
+.team-card .team-raw-stats{margin-top:16px}

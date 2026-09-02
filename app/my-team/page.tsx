@@ -184,7 +184,7 @@ export default function MyTeam(){
     </div>
 
     <div className="card my-team-raw-score-card">
-      <div className="section-title compact"><div><div className="eyebrow">Raw Score Statistics</div><h2>{team.name} Scoring History</h2></div></div>
+      <div className="section-title compact"><div><div className="eyebrow">Raw Score Statistics <span className="raw-score-disclaimer">(Handicaps are not factored in)</span></div><h2>{team.name} Scoring History</h2></div></div>
       <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={seasonName}/>
     </div>
 
