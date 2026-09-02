@@ -178,7 +178,7 @@ export default function MyTeam(){
 
     <div className="card">
       <div className="section-title compact"><div><div className="eyebrow">Roster</div><h2>{team.name} Players</h2></div></div>
-      <div className="my-team-roster">{roster.filter(p=>p.team_id===team.id).map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small className="my-team-tee">{p.official_tee_color&&<span className={`tee-dot tee-${p.official_tee_color.toLowerCase()}`} aria-hidden="true"></span>}<span>{p.official_tee_color?(teeLabels[p.official_tee_color.toLowerCase()]||`${p.official_tee_color} Tees`):'Tee not set'}</span></small></div></div>)}</div>
+      <div className="my-team-roster">{roster.filter(p=>p.team_id===team.id).map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small className="my-team-tee">{p.official_tee_color&&<span className={`tee-square tee-${p.official_tee_color.toLowerCase()}`} aria-hidden="true"></span>}<span>{p.official_tee_color?(teeLabels[p.official_tee_color.toLowerCase()]||`${p.official_tee_color} Tees`):'Tee not set'}</span></small></div></div>)}</div>
     </div>
   </PlayerPage>
 }

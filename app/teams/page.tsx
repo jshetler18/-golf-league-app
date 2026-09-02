@@ -116,7 +116,7 @@ export default function Teams(){
               <span className="team-player-avatar-v1230" aria-hidden={!avatars[player.id]}>
                 {avatars[player.id]?<img src={avatars[player.id]} alt={`${player.full_name} profile`} />:<span>👤</span>}
               </span>
-              <span className="team-player-copy-v1230">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} title={teeLabels[player.official_tee_color]||'Official tee'} aria-label={teeLabels[player.official_tee_color]||'Official tee'}></span>}<strong>{player.full_name}</strong></span>
+              <span className="team-player-copy-v1230"><strong>{player.full_name}</strong><small className="team-player-tee-v1235">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} aria-hidden="true"></span>}<span>{player.official_tee_color?(teeLabels[player.official_tee_color]||`${player.official_tee_color} Tees`):'Tee not set'}</span></small></span>
             </div>)}
           </div>:<p className="muted">No active players are assigned to this team.</p>}
         </section>)}

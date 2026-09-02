@@ -25,3 +25,9 @@ No Supabase schema changes or new environment variables are required for this ve
 ## v12.34
 - All-Time Monthly Titles now displays one silver trophy for every monthly championship won.
 - Monthly Champions always lists the current season first, with prior seasons beneath it newest-first.
+
+
+## Version 12.35
+- Tee-box indicators use square markers consistently.
+- Teams roster shows player name with tee square + official tee name beneath, matching My Team.
+- Admin Login appears directly below the regular Sign In button.
