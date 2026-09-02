@@ -27,7 +27,7 @@ export async function POST(req:NextRequest){
     if(!announcement)return NextResponse.json({error:'Announcement not found.'},{status:404})
 
     const title=String(announcement.title||'Tom Krise 19th Hole Golf League').slice(0,120)
-    const body=String(announcement.body||'You have a new league message.').slice(0,500)
+    const body=String(announcement.body||'You have a new league message.').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,500)
     webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com', 'BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM', privateKey)
 
     let subscriptions:any[]=[]

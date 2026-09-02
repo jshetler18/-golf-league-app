@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { supabase } from '@/lib/supabase'
+import {RichTextDisplay} from '@/components/RichTextEditor'
 
 type RuleSection={heading:string;body:string}
 type RulePage={page_title:string;sections:RuleSection[]}
@@ -34,7 +35,7 @@ export default function Rules(){
       {loading?<section className="card"><p>Loading…</p></section>:<section className="card rules-content-v1230">
         {rules.sections.map((section,index)=><div className="rule-section-v1230" key={`${section.heading}-${index}`}>
           <h2>{section.heading}</h2>
-          <p>{section.body}</p>
+          <RichTextDisplay value={section.body}/>
         </div>)}
       </section>}
     </div>

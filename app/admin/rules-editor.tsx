@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import {RichTextEditor,sanitizeRichText} from '@/components/RichTextEditor'
 
 type RuleSection={heading:string;body:string}
 
@@ -34,7 +35,7 @@ export default function RulesEditor(){
   async function save(){
     setSaving(true);setMessage('')
     const {data:{user}}=await supabase.auth.getUser()
-    const cleaned=sections.map(s=>({heading:s.heading.trim(),body:s.body.trim()})).filter(s=>s.heading||s.body)
+    const cleaned=sections.map(s=>({heading:s.heading.trim(),body:sanitizeRichText(s.body).trim()})).filter(s=>s.heading||s.body)
     const {error}=await supabase.from('league_rules').upsert({id:1,page_title:title.trim()||'League Rules',sections:cleaned,updated_at:new Date().toISOString(),updated_by:user?.id||null},{onConflict:'id'})
     setMessage(error?error.message:'Rules page updated successfully.')
     if(!error)setSections(cleaned)
@@ -50,7 +51,7 @@ export default function RulesEditor(){
           {sections.map((section,index)=><div className="admin-rule-section-v1230" key={index}>
             <div className="admin-rule-toolbar-v1230"><strong>Section {index+1}</strong><div><button className="btn secondary small" type="button" onClick={()=>move(index,-1)} disabled={index===0}>↑</button><button className="btn secondary small" type="button" onClick={()=>move(index,1)} disabled={index===sections.length-1}>↓</button><button className="btn danger small" type="button" onClick={()=>remove(index)}>Remove</button></div></div>
             <label className="field">Heading<input value={section.heading} onChange={e=>updateSection(index,'heading',e.target.value)} /></label>
-            <label className="field">Text<textarea rows={4} value={section.body} onChange={e=>updateSection(index,'body',e.target.value)} /></label>
+            <label className="field">Text<RichTextEditor value={section.body} onChange={value=>updateSection(index,'body',value)} placeholder="Enter rule text…"/></label>
           </div>)}
         </div>
         <div className="admin-rule-actions-v1230"><button className="btn secondary" type="button" onClick={add}>Add Rule Section</button><button className="btn" type="button" onClick={save} disabled={saving}>{saving?'Saving…':'Save Rules Page'}</button></div>
