@@ -15,3 +15,10 @@ Admin usability update:
 ## v12.40
 - Booking confirmation popup now uses a fixed three-line confirmation format with full weekday/month names and ordinal dates.
 - Reminder investigation confirmed the Supabase cron is running every 5 minutes, but the live reminder endpoint is returning HTTP 401 Unauthorized. The Vercel CRON_SECRET must be synchronized with the token used by the Supabase cron job.
+
+## Version 12.41
+- Added season-long weekly 3-hour simulator blocks for each active league team.
+- Admin Simulator page now shows every team as Set Up or Not Set Up with its recurring weekday/time.
+- Setting a team block automatically creates weekly league reservations for the active season.
+- Editing a team block rebuilds future recurring reservations; clearing it removes future recurring reservations.
+- Recurring team blocks automatically appear on the player Reserve Sim calendar with the team name and prevent overlapping personal reservations.
