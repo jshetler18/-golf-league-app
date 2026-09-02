@@ -164,7 +164,7 @@ export default function History(){
        <label>Ranking Statistic<select value={rankingMetric} onChange={e=>setRankingMetric(e.target.value as RankingMetric)}>{(Object.keys(rankingLabels) as RankingMetric[]).map(k=><option key={k} value={k}>{rankingLabels[k]}</option>)}</select></label>
        <label>Sort Order<select value={rankingDirection} onChange={e=>setRankingDirection(e.target.value as 'asc'|'desc')}><option value="desc">Highest First</option><option value="asc">Lowest First</option></select></label>
      </div>
-     <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th className="rank-stat-head"><span>Statistic</span><strong>{rankingLabels[rankingMetric]}</strong></th></tr></thead><tbody>
+     <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th className="rank-stat-head">{rankingLabels[rankingMetric]}</th></tr></thead><tbody>
        {rankedRows.map(r=><tr key={r.team.id}><td className="rank-number">#{r.rank}</td><td className="rank-team">{r.team.name}</td><td className="rank-value">{formatRanking(r.value)}</td></tr>)}
      </tbody></table></div>
    </section>
