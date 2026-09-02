@@ -33,20 +33,20 @@ export function TeamRawStats({rows,teamName,currentSeason}:{rows:RawRow[];teamNa
 
   return <div className="team-raw-stats">
     <div className="raw-stat-group">
-      <h3>All-Time</h3>
-      <Average value={avg(all)} detail={latest?`Through ${monthYear(latest)}`:'No scores yet'}/>
-      <div className="raw-extreme-grid">
-        <ExtremeSide label="Lowest Raw Score" data={allLow}/>
-        <ExtremeSide label="Highest Raw Score" data={allHigh}/>
-      </div>
-    </div>
-
-    <div className="raw-stat-group">
       <h3>Current Season</h3>
       <Average value={avg(current)} detail={current.length?`${currentSeason} Season`:'No scores yet'}/>
       <div className="raw-extreme-grid">
         <ExtremeSide label="Lowest Raw Score" data={seasonLow}/>
         <ExtremeSide label="Highest Raw Score" data={seasonHigh}/>
+      </div>
+    </div>
+
+    <div className="raw-stat-group">
+      <h3>All-Time</h3>
+      <Average value={avg(all)} detail={latest?`Through ${monthYear(latest)}`:'No scores yet'}/>
+      <div className="raw-extreme-grid">
+        <ExtremeSide label="Lowest Raw Score" data={allLow}/>
+        <ExtremeSide label="Highest Raw Score" data={allHigh}/>
       </div>
     </div>
 
