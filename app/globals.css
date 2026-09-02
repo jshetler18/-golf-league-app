@@ -408,3 +408,9 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .tee-key-items .tee-square{width:13px;height:13px;flex-basis:13px}
 .championship-key-title-v1250{display:block;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 @media(max-width:600px){.tee-key-items{grid-template-columns:1fr}}
+
+/* v12.51 raw-score history */
+.team-raw-stats{display:grid;gap:10px;margin-top:14px}.raw-stat-feature,.raw-stat-box{border:1px solid var(--line);border-radius:14px;background:#f8faf9;padding:13px;display:grid;gap:4px}.raw-stat-feature{text-align:center;background:#eef8e9}.raw-stat-feature small,.raw-stat-box small{font-size:11px;font-weight:800;line-height:1.2;color:var(--muted)}.raw-stat-feature strong{font-size:30px}.raw-stat-box strong{font-size:22px}.raw-stat-feature span,.raw-stat-box span{font-size:11px;color:var(--muted)}.raw-stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.team-card .raw-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.team-card .raw-stat-box:last-child{grid-column:1/-1}.my-team-raw-score-card{margin-top:16px}
+@media(max-width:720px){.raw-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.raw-stat-box:last-child{grid-column:1/-1}}
+.admin-raw-history{padding:0;overflow:hidden}.admin-raw-head,.admin-raw-row{display:grid;grid-template-columns:1.5fr 1fr .6fr .8fr;gap:10px;align-items:center;padding:10px 14px}.admin-raw-head{background:#eef3f0;font-size:12px}.admin-raw-row{border-top:1px solid var(--line);font-size:13px}.admin-raw-row input{width:100%;padding:8px}
+@media(max-width:720px){.admin-raw-head,.admin-raw-row{grid-template-columns:1.3fr .9fr .5fr .8fr;font-size:11px;padding:8px}.league-admin-tabs-v1238{grid-template-columns:1fr 1fr}}

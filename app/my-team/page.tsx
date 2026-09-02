@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
+import { TeamRawStats } from '@/components/TeamRawStats'
 
 type Player={id:string;full_name:string;team_id:string|null;official_tee_color:string|null;is_active:boolean}
 type PlayerAvatar={player_id:string;avatar_url:string|null}
@@ -14,6 +15,7 @@ type Handicap={league_month_id:string;team_id:string;handicap_points:number}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Matchup={league_month_id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null;high_points_awarded:number|null;low_points_awarded:number|null}
 type TrophyCounts={cup:number;monthly:number}
+type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
 
 function monthLabel(date:string){return new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})}
 function scoreText(v:number|null|undefined){return v==null?'—':Number(v).toFixed(1)}
@@ -32,6 +34,8 @@ export default function MyTeam(){
   const [matchups,setMatchups]=useState<Matchup[]>([])
   const [playerAvatars,setPlayerAvatars]=useState<Record<string,string>>({})
   const [trophies,setTrophies]=useState<Record<string,TrophyCounts>>({})
+  const [rawRows,setRawRows]=useState<RawRow[]>([])
+  const [seasonName,setSeasonName]=useState('')
 
   useEffect(()=>{(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -44,6 +48,9 @@ export default function MyTeam(){
     const {data:teamData}=await supabase.from('teams').select('id,name,season_id').eq('id',player.team_id).maybeSingle()
     if(!teamData){setLoading(false);return}
     setTeam(teamData as Team)
+    const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')])
+    setSeasonName(seasonRow?.name||'')
+    setRawRows((rawData||[]) as RawRow[])
 
     const [{data:rosterData},{data:teamDataAll},{data:monthData}]=await Promise.all([
       supabase.from('players').select('id,full_name,team_id,official_tee_color,is_active').eq('season_id',teamData.season_id).eq('is_active',true).order('full_name'),
@@ -174,6 +181,11 @@ export default function MyTeam(){
         <div className="my-team-championship-box"><span className="trophy trophy-cup" aria-hidden="true">🏆</span><div><strong>{trophies[team.name.trim().toLowerCase()]?.cup||0}</strong><small>Cup Championships</small></div></div>
         <div className="my-team-championship-box"><span className="trophy trophy-monthly" aria-hidden="true">🏆</span><div><strong>{trophies[team.name.trim().toLowerCase()]?.monthly||0}</strong><small>Monthly Championships</small></div></div>
       </div>
+    </div>
+
+    <div className="card my-team-raw-score-card">
+      <div className="section-title compact"><div><div className="eyebrow">Raw Score Statistics</div><h2>{team.name} Scoring History</h2></div></div>
+      <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={seasonName}/>
     </div>
 
     <div className="card">

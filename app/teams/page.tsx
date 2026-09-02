@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
+import { TeamRawStats } from '@/components/TeamRawStats'
 
 type Season={id:string;name:string}
 type Team={id:string;name:string}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
 type TrophyCounts={cup:number;monthly:number}
+type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
 
 const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tip Tees'}
 
@@ -18,6 +20,7 @@ export default function Teams(){
   const [loading,setLoading]=useState(true)
   const [trophies,setTrophies]=useState<Record<string,TrophyCounts>>({})
   const [avatars,setAvatars]=useState<Record<string,string>>({})
+  const [rawRows,setRawRows]=useState<RawRow[]>([])
 
   useEffect(()=>{(async()=>{
     const {data:s}=await supabase.from('seasons').select('id,name').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
@@ -32,6 +35,8 @@ export default function Teams(){
     ])
     setTeams((t||[]) as Team[])
     setPlayers((p||[]) as Player[])
+    const {data:rawData}=await supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')
+    setRawRows((rawData||[]) as RawRow[])
     const {data:avatarRows}=await supabase.rpc('get_league_player_avatars')
     const avatarMap:Record<string,string>={}
     ;((avatarRows||[]) as {player_id:string;avatar_url:string|null}[]).forEach(row=>{if(row.avatar_url)avatarMap[row.player_id]=row.avatar_url})
@@ -120,6 +125,7 @@ export default function Teams(){
               <span className="team-player-copy-v1230"><strong>{player.full_name}</strong><small className="team-player-tee-v1235">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} aria-hidden="true"></span>}<span>{player.official_tee_color?(teeLabels[player.official_tee_color]||`${player.official_tee_color} Tees`):'Tee not set'}</span></small></span>
             </div>)}
           </div>:<p className="muted">No active players are assigned to this team.</p>}
+          <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={season?.name||''}/>
         </section>)}
       </div></>}
   </PlayerPage>
