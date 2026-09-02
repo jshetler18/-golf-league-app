@@ -336,3 +336,13 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 
 /* Version 12.35: consistent square tee markers, Teams tee labels, Admin Login below Sign In */
 .my-team-tee .tee-square{width:10px;height:10px;flex-basis:10px;border-radius:2px}
+\n\n/* v12.36 Admin dashboard organization */
+.admin-hero-v1236{margin-bottom:14px}
+.admin-jump-v1236{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;padding:10px 0 12px;margin:0 0 22px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-overflow-scrolling:touch}
+.admin-jump-v1236 a{flex:0 0 auto;text-decoration:none;font-weight:800;font-size:.88rem;color:#173c2a;background:#eef7f0;border:1px solid #cfe2d3;border-radius:999px;padding:9px 13px;white-space:nowrap}
+.admin-jump-v1236 a:hover{background:#dfeee3}
+.admin-group-title-v1236{scroll-margin-top:80px;display:flex;align-items:center;gap:12px;margin:34px 0 14px;padding:14px 16px;background:#f6f8f7;border:1px solid #dfe6e1;border-radius:16px}
+.admin-group-title-v1236>span{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#173c2a;color:#fff;font-weight:900}
+.admin-group-title-v1236 h2{margin:0;font-size:1.18rem;color:#173c2a}
+.admin-group-title-v1236 p{margin:3px 0 0;color:#66736b;font-size:.9rem}
+@media(max-width:700px){.admin-jump-v1236{margin-left:-4px;margin-right:-4px}.admin-group-title-v1236{margin-top:26px;padding:12px}.admin-group-title-v1236 p{font-size:.84rem}}

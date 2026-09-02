@@ -31,3 +31,10 @@ No Supabase schema changes or new environment variables are required for this ve
 - Tee-box indicators use square markers consistently.
 - Teams roster shows player name with tee square + official tee name beneath, matching My Team.
 - Admin Login appears directly below the regular Sign In button.
+
+
+## Version 12.36
+- Reorganized Admin into five clearly labeled management groups.
+- Added a sticky quick-jump navigation for Accounts, Messages & Rules, Players & Teams, League Setup & Scoring, and Simulator.
+- Preserved all existing admin functions and database behavior.
+- Improved mobile admin navigation without changing player-facing pages.
