@@ -433,3 +433,27 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .raw-extreme-dates{display:grid;gap:2px;margin-top:2px;font-size:11px;line-height:1.25;color:var(--muted)}
 .raw-extreme-dates span{display:block}
 .team-card .team-raw-stats{margin-top:16px}
+
+/* v12.53 raw score section + teams/rankings */
+.raw-group-average{padding:14px 12px;text-align:center;display:grid;gap:4px;background:#eef8e9;border-bottom:1px solid var(--line)}
+.raw-group-average small{font-size:11px;font-weight:800;line-height:1.2;color:var(--muted)}
+.raw-group-average strong{font-size:30px;line-height:1.05}
+.raw-group-average span{font-size:11px;color:var(--muted)}
+.teams-rankings-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 16px}
+.teams-rankings-tabs button{border:1px solid var(--line);border-radius:12px;background:#fff;padding:11px 14px;font:inherit;font-weight:800;color:var(--text);cursor:pointer}
+.teams-rankings-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.rankings-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:14px}
+.rankings-controls label{display:grid;gap:5px;font-size:11px;font-weight:800;color:var(--muted)}
+.rankings-controls select{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font:inherit;color:var(--text)}
+.rankings-mode{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.rankings-mode button{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;font:inherit;font-weight:800;cursor:pointer}
+.rankings-mode button.active{background:#eef8e9;border-color:#9fcb90;color:#1c6816}
+.rankings-note{margin:0 0 12px;font-size:12px;color:var(--muted)}
+.rankings-table-wrap{overflow-x:auto}
+.rankings-table{width:100%;border-collapse:separate;border-spacing:0}
+.rankings-table th,.rankings-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.rankings-table th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#f8faf9}
+.rankings-table td.rank-number{font-weight:900;width:44px}
+.rankings-table td.rank-team{font-weight:800}
+.rankings-table td.rank-value{font-size:18px;font-weight:900;text-align:right}
+@media(max-width:720px){.rankings-controls{grid-template-columns:1fr}.rankings-table th,.rankings-table td{padding:10px 8px}}

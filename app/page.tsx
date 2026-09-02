@@ -13,7 +13,7 @@ const items:MenuItem[]=[
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages'},
  {href:'/chat',Icon:ChatIcon,title:'League Chat'},
- {href:'/teams',Icon:TeamsIcon,title:'Teams'},
+ {href:'/teams',Icon:TeamsIcon,title:'Teams & Rankings'},
  {href:'/history',Icon:HistoryIcon,title:'History'},
  {href:'/rules',Icon:RulesIcon,title:'Rules'}
 ]

@@ -73,7 +73,7 @@ export default function History(){
    <div className="section-title"><div><h1>History</h1><p className="muted">League champions beginning with the 2025–2026 season.</p></div></div>
 
    <section className="card history-section-v1232">
-     <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-cup">🏆</span><div><h2>Past Cup Champions</h2><p className="muted">Season-long Cup champions.</p></div></div>
+     <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-cup">🏆</span><div><h2>Cup Champions</h2><p className="muted">Season-long Cup champions.</p></div></div>
      {cupChampions.length?<div className="history-cup-list-v1232">{cupChampions.map(row=><div className="history-cup-row-v1232" key={row.season.id}><span>{row.season.name}</span><strong>{row.team}</strong><b>{row.total.toLocaleString()} pts</b></div>)}</div>:<p className="muted">No completed Cup champions are recorded yet.</p>}
    </section>
 

@@ -24,21 +24,25 @@ export function TeamRawStats({rows,teamName,currentSeason}:{rows:RawRow[];teamNa
     <div className="raw-extreme-dates">{data?.dates.length?data.dates.map(d=><span key={d}>{monthYear(d)}</span>):<span>No scores yet</span>}</div>
   </div>
 
-  return <div className="team-raw-stats">
-    <div className="raw-stat-feature"><small>All-Time Average Raw Score</small><strong>{num(avg(all))}</strong><span>{latest?`Through ${monthYear(latest)}`:'No scores yet'}</span></div>
+  const Average=({value,detail}:{value:number|null;detail:string})=><div className="raw-group-average">
+    <small>Average Raw Score</small>
+    <strong>{num(value)}</strong>
+    <span>{detail}</span>
+  </div>
 
+  return <div className="team-raw-stats">
     <div className="raw-stat-group">
       <h3>All-Time</h3>
+      <Average value={avg(all)} detail={latest?`Through ${monthYear(latest)}`:'No scores yet'}/>
       <div className="raw-extreme-grid">
         <ExtremeSide label="Lowest Raw Score" data={allLow}/>
         <ExtremeSide label="Highest Raw Score" data={allHigh}/>
       </div>
     </div>
 
-    <div className="raw-stat-feature raw-stat-season-average"><small>Current Season Average Raw Score</small><strong>{num(avg(current))}</strong><span>{current.length?`${currentSeason} Season`:'No scores yet'}</span></div>
-
     <div className="raw-stat-group">
       <h3>Current Season</h3>
+      <Average value={avg(current)} detail={current.length?`${currentSeason} Season`:'No scores yet'}/>
       <div className="raw-extreme-grid">
         <ExtremeSide label="Lowest Raw Score" data={seasonLow}/>
         <ExtremeSide label="Highest Raw Score" data={seasonHigh}/>

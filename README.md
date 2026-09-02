@@ -40,3 +40,11 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 ## v12.50
 - Restored the tee-box key to the player Teams page above the Championship Key.
 - Tee legend uses colored squares and approximate yardages: Forward ≈3,500; Senior ≈5,000; Middle ≈5,500; Back ≈6,000; Tip ≈6,500+ yards.
+
+
+## v12.53
+- Reworked raw score statistic cards so All-Time and Current Season each contain their centered average above low/high records.
+- History heading changed to Cup Champions.
+- Teams renamed Teams & Rankings on Home and page heading.
+- Added Teams/Rankings toggle with sortable team ranking metrics and raw/handicap modes.
+- Handicap rankings use raw score + monthly handicap. Historical handicap data prior to records stored in the app is not available, so adjusted all-time begins with available app scoring data.
