@@ -5,24 +5,30 @@ import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 
 type Season={id:string;name:string;start_date:string|null;end_date:string|null;is_active:boolean;is_closed:boolean}
-type Team={id:string;season_id:string;name:string}
+type Team={id:string;season_id:string;name:string;is_active?:boolean}
 type Month={id:string;season_id:string;month_start:string}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Champion={league_month_id:string;team_id:string}
+type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
+type RankingMetric='all_avg'|'all_high'|'all_low'|'season_avg'|'season_high'|'season_low'
 
 type MonthlyHistoryRow={season:Season;month:Month;team:string}
 
 const HISTORY_START='2025-11-01'
 const teamKey=(name:string)=>name.trim().toLowerCase()
+const rankingLabels:Record<RankingMetric,string>={
+ all_avg:'All-Time Avg Raw Score',all_high:'All-Time Highest Raw Score',all_low:'All-Time Lowest Raw Score',
+ season_avg:'Current Season Avg Raw Score',season_high:'Current Season High Raw Score',season_low:'Current Season Low Raw Score'
+}
 
 export default function History(){
- const [seasons,setSeasons]=useState<Season[]>([]),[teams,setTeams]=useState<Team[]>([]),[months,setMonths]=useState<Month[]>([]),[points,setPoints]=useState<CupPoint[]>([]),[champions,setChampions]=useState<Champion[]>([]),[loading,setLoading]=useState(true),[selectedSeasonId,setSelectedSeasonId]=useState('')
+ const [seasons,setSeasons]=useState<Season[]>([]),[teams,setTeams]=useState<Team[]>([]),[months,setMonths]=useState<Month[]>([]),[points,setPoints]=useState<CupPoint[]>([]),[champions,setChampions]=useState<Champion[]>([]),[rawRows,setRawRows]=useState<RawRow[]>([]),[loading,setLoading]=useState(true),[selectedSeasonId,setSelectedSeasonId]=useState(''),[rankingMetric,setRankingMetric]=useState<RankingMetric>('all_avg'),[rankingDirection,setRankingDirection]=useState<'desc'|'asc'>('desc')
  useEffect(()=>{(async()=>{
   const {data:s}=await supabase.from('seasons').select('id,name,start_date,end_date,is_active,is_closed').order('start_date')
   const ss=(s||[]) as Season[];setSeasons(ss);const preferred=ss.find(x=>x.is_active&&!x.is_closed)||ss[ss.length-1];if(preferred)setSelectedSeasonId(preferred.id);const seasonIds=ss.map(x=>x.id)
   if(!seasonIds.length){setLoading(false);return}
   const [{data:t},{data:m}]=await Promise.all([
-   supabase.from('teams').select('id,season_id,name').in('season_id',seasonIds),
+   supabase.from('teams').select('id,season_id,name,is_active').in('season_id',seasonIds),
    supabase.from('league_months').select('id,season_id,month_start').in('season_id',seasonIds).gte('month_start',HISTORY_START).order('month_start')
   ])
   const tt=(t||[]) as Team[],mm=(m||[]) as Month[];setTeams(tt);setMonths(mm);const monthIds=mm.map(x=>x.id)
@@ -30,6 +36,8 @@ export default function History(){
    supabase.from('cup_points').select('league_month_id,team_id,points').in('league_month_id',monthIds),
    supabase.from('monthly_champions').select('league_month_id,team_id').in('league_month_id',monthIds)
   ]);setPoints((p||[]) as CupPoint[]);setChampions((c||[]) as Champion[])}
+  const {data:raw}=await supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')
+  setRawRows((raw||[]) as RawRow[])
   setLoading(false)
  })()},[])
 
@@ -65,6 +73,33 @@ export default function History(){
      return {team,byMonth,total:byMonth.reduce<number>((sum,v)=>sum+(v||0),0)}
    }).sort((a,b)=>b.total-a.total||a.team.name.localeCompare(b.team.name))
  },[selectedSeasonId,teams,selectedMonths,points])
+ const currentSeason=seasons.find(s=>s.is_active&&!s.is_closed)||seasons.slice().sort((a,b)=>(b.start_date||'').localeCompare(a.start_date||''))[0]||null
+ const currentRankingTeams=useMemo(()=>{
+   if(!currentSeason)return []
+   const seen=new Set<string>()
+   return teams.filter(t=>t.season_id===currentSeason.id&&t.is_active!==false).filter(t=>{const k=teamKey(t.name);if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>a.name.localeCompare(b.name))
+ },[teams,currentSeason?.id])
+ const rankingRows=useMemo(()=>{
+   const calc=(vals:number[],kind:'avg'|'high'|'low')=>{
+     if(!vals.length)return null
+     if(kind==='avg')return vals.reduce((a,b)=>a+b,0)/vals.length
+     return kind==='high'?Math.max(...vals):Math.min(...vals)
+   }
+   return currentRankingTeams.map(team=>{
+     const all=rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)).map(r=>Number(r.raw_score))
+     const current=rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)&&r.season_label===currentSeason?.name).map(r=>Number(r.raw_score))
+     const vals=rankingMetric.startsWith('season_')?current:all
+     const kind: 'avg'|'high'|'low'=rankingMetric.endsWith('avg')?'avg':rankingMetric.endsWith('high')?'high':'low'
+     return {team,value:calc(vals,kind)}
+   }).sort((a,b)=>{
+     if(a.value==null&&b.value==null)return a.team.name.localeCompare(b.team.name)
+     if(a.value==null)return 1;if(b.value==null)return -1
+     const d=a.value-b.value
+     return rankingDirection==='asc'?d:-d
+   })
+ },[currentRankingTeams,rawRows,rankingMetric,rankingDirection,currentSeason?.name])
+ const formatRanking=(v:number|null)=>v==null?'—':Number(v).toFixed(1)
+
  const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
  const monthLabel=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})
 
@@ -104,6 +139,17 @@ export default function History(){
        <div className="history-season-head-v1232"><strong>{group.season.name}</strong>{group.season.is_active&&<span className="pill">Current Season</span>}</div>
        <div className="history-month-list-v1232">{group.rows.map(row=><div className="history-month-row-v1232" key={row.month.id}><span className="trophy trophy-monthly">🏆</span><div><small>{monthLabel(row.month.month_start)}</small><strong>{row.team}</strong></div></div>)}</div>
      </div>):<div className="card"><p className="muted">No monthly champions are recorded yet.</p></div>}
+   </section>
+
+   <section className="card history-section-v1232 history-rankings-v1254">
+     <div className="section-title compact"><div><div className="eyebrow">Raw Score Statistics</div><h2>Rankings</h2><p className="muted">Compare current league teams using raw scores only. Handicaps are not factored in.</p></div></div>
+     <div className="rankings-controls">
+       <label>Ranking Statistic<select value={rankingMetric} onChange={e=>setRankingMetric(e.target.value as RankingMetric)}>{(Object.keys(rankingLabels) as RankingMetric[]).map(k=><option key={k} value={k}>{rankingLabels[k]}</option>)}</select></label>
+       <label>Sort Order<select value={rankingDirection} onChange={e=>setRankingDirection(e.target.value as 'asc'|'desc')}><option value="desc">Highest First</option><option value="asc">Lowest First</option></select></label>
+     </div>
+     <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th style={{textAlign:'right'}}>{rankingLabels[rankingMetric]}</th></tr></thead><tbody>
+       {rankingRows.map((r,i)=><tr key={r.team.id}><td className="rank-number">#{i+1}</td><td className="rank-team">{r.team.name}</td><td className="rank-value">{formatRanking(r.value)}</td></tr>)}
+     </tbody></table></div>
    </section>
  </div></PlayerPage>
 }

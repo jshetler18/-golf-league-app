@@ -48,3 +48,10 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - Teams renamed Teams & Rankings on Home and page heading.
 - Added Teams/Rankings toggle with sortable team ranking metrics and raw/handicap modes.
 - Handicap rankings use raw score + monthly handicap. Historical handicap data prior to records stored in the app is not available, so adjusted all-time begins with available app scoring data.
+
+
+## v12.54
+- Restored Teams page as a single Teams view.
+- Moved raw-score Rankings to History below Monthly Champions.
+- Rankings use raw scores only with six score metrics.
+- All-Time and Current Season average score panels now match the low/high background.

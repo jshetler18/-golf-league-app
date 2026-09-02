@@ -435,7 +435,7 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .team-card .team-raw-stats{margin-top:16px}
 
 /* v12.53 raw score section + teams/rankings */
-.raw-group-average{padding:14px 12px;text-align:center;display:grid;gap:4px;background:#eef8e9;border-bottom:1px solid var(--line)}
+.raw-group-average{padding:14px 12px;text-align:center;display:grid;gap:4px;background:#f8faf9;border-bottom:1px solid var(--line)}
 .raw-group-average small{font-size:11px;font-weight:800;line-height:1.2;color:var(--muted)}
 .raw-group-average strong{font-size:30px;line-height:1.05}
 .raw-group-average span{font-size:11px;color:var(--muted)}
