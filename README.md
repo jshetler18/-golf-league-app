@@ -7,3 +7,7 @@ Simulator scheduling refinements:
 - Multiple recurring League Make-Up Time blocks can still be created, edited, and removed from the combined page.
 - Simulator dashboard simplified to Team & League Schedules plus Bookings & Block Time.
 - Legacy make-up page redirects to the combined scheduling page.
+
+
+## v12.45
+Recurring Team & League Schedules now use separate Starting Time and Hours Reserved controls. Admin can reserve 1-24 hours; the former fixed 3-hour restriction is removed.

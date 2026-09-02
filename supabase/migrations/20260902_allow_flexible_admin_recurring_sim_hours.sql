@@ -1,0 +1,3 @@
+-- v12.45 production migration applied through Supabase.
+-- Removes the fixed 3-hour restriction from recurring team and League Make-Up Time schedules.
+-- Admin may choose an hourly start time and a duration from 1 through 24 hours.
