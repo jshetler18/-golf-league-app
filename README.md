@@ -30,3 +30,8 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - Recurring blocks can be edited or removed; changing a schedule rebuilds future occurrences while preserving past ones.
 - Existing bookings are protected by conflict detection.
 - One-time simulator blocks remain available on the same page and now support 6 AM starts and 1–24 hour lengths.
+
+
+## v12.49
+- Reservation time selection can now expand backward or forward from the first selected hour.
+- Existing 3-hour maximum, consecutive-hour requirement, and tap-again-to-deselect behavior remain unchanged.

@@ -100,6 +100,11 @@ export default function BookPage(){
       return
     }
 
+    if(startHour!==null && hour===startHour-1 && duration<3 && hour>=7){
+      setStartHour(hour)
+      setDuration(duration+1)
+      return
+    }
     if(startHour!==null && hour===startHour+duration && duration<3 && hour<21){
       setDuration(duration+1)
       return
@@ -171,7 +176,7 @@ export default function BookPage(){
     </div>}
     <div className="booking-layout booking-layout-single">
       <form onSubmit={book} className="card choose-day-card"><h2>Choose a Day</h2><label className="field booking-date-field">Date<input type="date" min={today} max={maxDate} value={date} onChange={e=>setDate(e.target.value)} /></label>
-        <p className="muted slot-help">Tap or click any green available time to select it. Tap the next consecutive hour to extend the reservation, up to 3 hours. Tap a selected time again to turn it off.</p>
+        <p className="muted slot-help">Tap any green available time to start. Then tap the consecutive hour before or after your selection to extend it, up to 3 hours. Tap a selected time again to turn it off.</p>
         <div className="slot-list">{hours.map(h=>{const busy=overlaps(h);const selected=!busy&&startHour!==null&&h>=startHour&&h<startHour+duration;return <button type="button" onClick={()=>chooseSlot(h)} disabled={!!busy||!canBook} className={`slot ${busy?busy.kind:'open'} ${selected?'selected':''} ${!busy&&canBook?'slot-clickable':''}`} key={h}><span><strong>{hourLabel(h)}</strong>–{hourLabel(h+1)}</span><span>{busy?(busy.kind==='league'?busy.display_title:busy.is_own?'My Reservation':'Unavailable'):selected?'Selected':'Available'}</span></button>})}</div>
         <div className="booking-confirm-area">
           {startHour!==null&&<p className="booking-selection-summary"><strong>Selected:</strong> {hourLabel(startHour)}–{hourLabel(startHour+duration)} ({duration} {duration===1?'hour':'hours'})</p>}
