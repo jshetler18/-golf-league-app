@@ -1,0 +1,3 @@
+-- v12.44 production migration applied through Supabase.
+-- Standardizes recurring league/make-up blocks to 3 hours and the five approved start times.
+-- League make-up reservations use the fixed display title "League Make-Up Time".
