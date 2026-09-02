@@ -1,0 +1,3 @@
+-- v12.42 production migration applied through Supabase.
+-- Adds team schedule start/end dates, recurring league_makeup_slots, and generated booking linkage.
+-- See production migration: add_flexible_team_and_makeup_sim_schedules.

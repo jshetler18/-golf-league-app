@@ -22,3 +22,6 @@ Admin usability update:
 - Setting a team block automatically creates weekly league reservations for the active season.
 - Editing a team block rebuilds future recurring reservations; clearing it removes future recurring reservations.
 - Recurring team blocks automatically appear on the player Reserve Sim calendar with the team name and prevent overlapping personal reservations.
+
+## v12.42
+Redesigned Admin Simulator into Team Schedules, League Make-Up Blocks, and Bookings & Block Time. Team schedules support custom start/end dates and future-only rebuilds.
