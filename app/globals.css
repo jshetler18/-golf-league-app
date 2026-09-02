@@ -449,11 +449,11 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .rankings-mode button{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;font:inherit;font-weight:800;cursor:pointer}
 .rankings-mode button.active{background:#eef8e9;border-color:#9fcb90;color:#1c6816}
 .rankings-note{margin:0 0 12px;font-size:12px;color:var(--muted)}
-.rankings-table-wrap{overflow-x:auto}
-.rankings-table{width:100%;border-collapse:separate;border-spacing:0}
-.rankings-table th,.rankings-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.rankings-table-wrap{overflow-x:hidden;width:100%}
+.rankings-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+.rankings-table th,.rankings-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left}.rankings-table th:nth-child(1),.rankings-table td:nth-child(1){width:50px}.rankings-table th:nth-child(3),.rankings-table td:nth-child(3){width:108px}
 .rankings-table th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#f8faf9}
 .rankings-table td.rank-number{font-weight:900;width:44px}
-.rankings-table td.rank-team{font-weight:800}
-.rankings-table td.rank-value{font-size:18px;font-weight:900;text-align:right}
-@media(max-width:720px){.rankings-controls{grid-template-columns:1fr}.rankings-table th,.rankings-table td{padding:10px 8px}}
+.rankings-table td.rank-team{font-weight:800;overflow-wrap:anywhere}
+.rankings-table td.rank-value{font-size:18px;font-weight:900;text-align:right}.rank-stat-head{text-align:right!important;white-space:normal!important;line-height:1.1}.rank-stat-head span{display:block;font-size:9px;letter-spacing:.06em}.rank-stat-head strong{display:block;margin-top:4px;font-size:10px;line-height:1.15;text-transform:none;letter-spacing:0;overflow-wrap:anywhere}
+@media(max-width:720px){.rankings-controls{grid-template-columns:1fr}.rankings-table th,.rankings-table td{padding:9px 6px}.rankings-table th:nth-child(1),.rankings-table td:nth-child(1){width:42px}.rankings-table th:nth-child(3),.rankings-table td:nth-child(3){width:92px}.rankings-table td.rank-value{font-size:17px}.rank-stat-head strong{font-size:9px}}

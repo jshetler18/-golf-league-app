@@ -10,7 +10,7 @@ type Month={id:string;season_id:string;month_start:string}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Champion={league_month_id:string;team_id:string}
 type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
-type RankingMetric='all_avg'|'all_high'|'all_low'|'season_avg'|'season_high'|'season_low'
+type RankingMetric='all_avg'|'all_high'|'all_low'|'season_avg'|'season_high'|'season_low'|'cup_titles'|'monthly_titles'
 
 type MonthlyHistoryRow={season:Season;month:Month;team:string}
 
@@ -18,7 +18,8 @@ const HISTORY_START='2025-11-01'
 const teamKey=(name:string)=>name.trim().toLowerCase()
 const rankingLabels:Record<RankingMetric,string>={
  all_avg:'All-Time Avg Raw Score',all_high:'All-Time Highest Raw Score',all_low:'All-Time Lowest Raw Score',
- season_avg:'Current Season Avg Raw Score',season_high:'Current Season High Raw Score',season_low:'Current Season Low Raw Score'
+ season_avg:'Current Season Avg Raw Score',season_high:'Current Season High Raw Score',season_low:'Current Season Low Raw Score',
+ cup_titles:'Cup Championships',monthly_titles:'Monthly Championships'
 }
 
 export default function History(){
@@ -86,19 +87,26 @@ export default function History(){
      return kind==='high'?Math.max(...vals):Math.min(...vals)
    }
    return currentRankingTeams.map(team=>{
-     const all=rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)).map(r=>Number(r.raw_score))
-     const current=rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)&&r.season_label===currentSeason?.name).map(r=>Number(r.raw_score))
-     const vals=rankingMetric.startsWith('season_')?current:all
-     const kind: 'avg'|'high'|'low'=rankingMetric.endsWith('avg')?'avg':rankingMetric.endsWith('high')?'high':'low'
-     return {team,value:calc(vals,kind)}
+     const key=teamKey(team.name)
+     const all=rawRows.filter(r=>teamKey(r.canonical_team_name)===key).map(r=>Number(r.raw_score))
+     const current=rawRows.filter(r=>teamKey(r.canonical_team_name)===key&&r.season_label===currentSeason?.name).map(r=>Number(r.raw_score))
+     let value:number|null
+     if(rankingMetric==='cup_titles') value=cupChampions.filter(c=>teamKey(c.team)===key).length
+     else if(rankingMetric==='monthly_titles') value=monthlyHistory.filter(r=>teamKey(r.team)===key).length
+     else {
+       const vals=rankingMetric.startsWith('season_')?current:all
+       const kind: 'avg'|'high'|'low'=rankingMetric.endsWith('avg')?'avg':rankingMetric.endsWith('high')?'high':'low'
+       value=calc(vals,kind)
+     }
+     return {team,value}
    }).sort((a,b)=>{
      if(a.value==null&&b.value==null)return a.team.name.localeCompare(b.team.name)
      if(a.value==null)return 1;if(b.value==null)return -1
      const d=a.value-b.value
      return rankingDirection==='asc'?d:-d
    })
- },[currentRankingTeams,rawRows,rankingMetric,rankingDirection,currentSeason?.name])
- const formatRanking=(v:number|null)=>v==null?'—':Number(v).toFixed(1)
+ },[currentRankingTeams,rawRows,rankingMetric,rankingDirection,currentSeason?.name,cupChampions,monthlyHistory])
+ const formatRanking=(v:number|null)=>v==null?'—':Math.round(Number(v)).toLocaleString()
 
  const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
  const monthLabel=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})
@@ -147,7 +155,7 @@ export default function History(){
        <label>Ranking Statistic<select value={rankingMetric} onChange={e=>setRankingMetric(e.target.value as RankingMetric)}>{(Object.keys(rankingLabels) as RankingMetric[]).map(k=><option key={k} value={k}>{rankingLabels[k]}</option>)}</select></label>
        <label>Sort Order<select value={rankingDirection} onChange={e=>setRankingDirection(e.target.value as 'asc'|'desc')}><option value="desc">Highest First</option><option value="asc">Lowest First</option></select></label>
      </div>
-     <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th style={{textAlign:'right'}}>{rankingLabels[rankingMetric]}</th></tr></thead><tbody>
+     <div className="rankings-table-wrap"><table className="rankings-table"><thead><tr><th>Rank</th><th>Team</th><th className="rank-stat-head"><span>Statistic</span><strong>{rankingLabels[rankingMetric]}</strong></th></tr></thead><tbody>
        {rankingRows.map((r,i)=><tr key={r.team.id}><td className="rank-number">#{i+1}</td><td className="rank-team">{r.team.name}</td><td className="rank-value">{formatRanking(r.value)}</td></tr>)}
      </tbody></table></div>
    </section>

@@ -55,3 +55,8 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - Moved raw-score Rankings to History below Monthly Champions.
 - Rankings use raw scores only with six score metrics.
 - All-Time and Current Season average score panels now match the low/high background.
+
+## v12.55
+- History Rankings now display whole-number values with no decimals.
+- Rankings table was tightened for phone screens so the selected statistic title wraps above the value column instead of forcing horizontal scrolling.
+- Restored Cup Championships and Monthly Championships to the Rankings statistic dropdown.
