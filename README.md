@@ -21,3 +21,7 @@ No Supabase schema changes or new environment variables are required for this ve
 - Shows month-by-month Cup points and season total for every team.
 - Defaults to the current active season and supports historical seasons beginning with 2025-2026.
 - Rank and Team remain frozen on mobile while horizontally scrolling the monthly Cup points.
+
+## v12.34
+- All-Time Monthly Titles now displays one silver trophy for every monthly championship won.
+- Monthly Champions always lists the current season first, with prior seasons beneath it newest-first.

@@ -54,7 +54,7 @@ export default function History(){
    return [...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name))
  },[monthlyHistory])
 
- const bySeason=useMemo(()=>seasons.filter(s=>monthlyHistory.some(r=>r.season.id===s.id)).map(s=>({season:s,rows:monthlyHistory.filter(r=>r.season.id===s.id)})),[seasons,monthlyHistory])
+ const bySeason=useMemo(()=>seasons.filter(s=>monthlyHistory.some(r=>r.season.id===s.id)).slice().sort((a,b)=>Number(b.is_active)-Number(a.is_active)||(b.start_date||'').localeCompare(a.start_date||'')).map(s=>({season:s,rows:monthlyHistory.filter(r=>r.season.id===s.id)})),[seasons,monthlyHistory])
  const selectedSeason=seasons.find(s=>s.id===selectedSeasonId)||null
  const selectedMonths=useMemo(()=>months.filter(m=>m.season_id===selectedSeasonId).sort((a,b)=>a.month_start.localeCompare(b.month_start)),[months,selectedSeasonId])
  const seasonCupRows=useMemo(()=>{
@@ -95,7 +95,7 @@ export default function History(){
 
    <section className="card history-section-v1232">
      <div className="history-section-title-v1232"><span className="history-trophy-v1232 trophy-monthly">🏆</span><div><h2>All-Time Monthly Titles</h2><p className="muted">Total monthly championships won since November 2025.</p></div></div>
-     {monthlyLeaders.length?<div className="history-title-list-v1232">{monthlyLeaders.map((row,i)=><div className="history-title-row-v1232" key={teamKey(row.name)}><span className="history-rank-v1232">{i+1}</span><strong>{row.name}</strong><span className="history-title-count-v1232"><i className="trophy trophy-monthly">🏆</i>{row.count} {row.count===1?'Title':'Titles'}</span></div>)}</div>:<p className="muted">No monthly champions are recorded yet.</p>}
+     {monthlyLeaders.length?<div className="history-title-list-v1232">{monthlyLeaders.map((row,i)=><div className="history-title-row-v1232" key={teamKey(row.name)}><span className="history-rank-v1232">{i+1}</span><strong>{row.name}</strong><span className="history-title-count-v1232"><span className="history-title-trophies-v1234" aria-label={`${row.count} monthly ${row.count===1?'title':'titles'}`}>{Array.from({length:row.count}).map((_,trophyIndex)=><i className="trophy trophy-monthly" key={trophyIndex}>🏆</i>)}</span>{row.count} {row.count===1?'Title':'Titles'}</span></div>)}</div>:<p className="muted">No monthly champions are recorded yet.</p>}
    </section>
 
    <section className="history-monthly-section-v1232">
