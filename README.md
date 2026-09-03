@@ -81,3 +81,9 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - Announcement push notifications increment the stored app-icon badge while the app is closed.
 - Reading messages automatically reduces/clears the badge through the existing unread refresh event.
 - YouTube Live push notifications do not change the message-count badge; the pulsing LIVE indicator remains inside the app.
+
+## v12.62 YouTube live automatic checker
+- YouTube live detection now runs from the existing 5-minute simulator reminder cron, so no second cron job is required.
+- The existing reservation reminder process remains intact.
+- Live notification checking is isolated so a YouTube API problem will not stop simulator reservation reminders.
+- The dedicated `/api/youtube/live/check` route remains available for authenticated cron/manual server checks.
