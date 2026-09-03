@@ -41,13 +41,13 @@ export async function POST(req:NextRequest){
         if(linkedError)return NextResponse.json({error:linkedError.message},{status:500})
         const userIds=(linked||[]).map(p=>p.id)
         if(userIds.length){
-          const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,endpoint,p256dh,auth').in('user_id',userIds)
+          const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',userIds)
           if(subError)return NextResponse.json({error:subError.message},{status:500})
           subscriptions=subs||[]
         }
       }
     }else{
-      const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,endpoint,p256dh,auth')
+      const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth')
       if(subError)return NextResponse.json({error:subError.message},{status:500})
       subscriptions=subs||[]
     }
@@ -56,7 +56,7 @@ export async function POST(req:NextRequest){
     for(const sub of subscriptions){
       if(!sub.p256dh||!sub.auth)continue
       try{
-        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:`/messages?message=${encodeURIComponent(announcementId)}`,tag:`announcement-${announcementId}`}))
+        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:`/messages?message=${encodeURIComponent(announcementId)}`,tag:`announcement-${announcementId}`,kind:'announcement'}))
         sent++
       }catch(err:any){
         failed++

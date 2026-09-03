@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { syncAppBadge } from '@/lib/appBadge'
 import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
@@ -70,7 +71,9 @@ export function PlayerMobileBottom(){
       supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id)
     ])
     const read=new Set((r||[]).map(x=>x.announcement_id))
-    setUnread((a||[]).filter(x=>!read.has(x.id)).length)
+    const messageUnread=(a||[]).filter(x=>!read.has(x.id)).length
+    setUnread(messageUnread)
+    syncAppBadge(messageUnread)
   },[])
   useEffect(()=>{
     load()

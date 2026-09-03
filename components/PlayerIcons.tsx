@@ -51,6 +51,11 @@ export function TeamsIcon(props: IconProps){
 }
 
 
+
+export function LiveIcon(props: IconProps){
+  return <svg {...base(props)}><rect x="9" y="14" width="46" height="36" rx="6"/><path d="m27 24 14 8-14 8Z" fill="currentColor" stroke="none"/><path d="M17 8h30"/></svg>
+}
+
 export function HistoryIcon(props: IconProps){
   return <svg {...base(props)}><path d="M14 10h31a5 5 0 0 1 5 5v39H19a5 5 0 0 1-5-5V10Z"/><path d="M14 45h31a5 5 0 0 1 5 5"/><circle cx="31" cy="28" r="10"/><path d="M31 22v7l5 3"/></svg>
 }

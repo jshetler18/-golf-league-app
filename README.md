@@ -66,3 +66,18 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - History Rankings statistic header enlarged to match Rank/Team header sizing.
 - Rankings now use competition ranking for ties (1, 1, 3, etc.) across every ranking statistic.
 - Cup Standings Match Play redesigned with head-to-head matchup cards, prominent Cup point scores, VS badge, and winner highlighting.
+
+## v12.60 YouTube Live
+- Adds a Live page for @Toms19thHole with an embedded active livestream.
+- Shows a pulsing red LIVE indicator on the Live page and Home menu while streaming.
+- Adds a server endpoint for automatic live detection through YouTube Data API v3.
+- Adds a cron-ready push endpoint that sends one push notification per livestream and deep-links to /live.
+- Requires server-only Vercel environment variable YOUTUBE_API_KEY.
+- After deployment and API-key setup, schedule POST /api/youtube/live/check with Authorization: Bearer CRON_SECRET every 5 minutes.
+
+## v12.61 — Home Screen Message Badge
+- Adds installed-app icon badging for unread league Messages where the device/browser supports the Badging API.
+- Badge count is synchronized to the exact unread announcement count whenever the app is active.
+- Announcement push notifications increment the stored app-icon badge while the app is closed.
+- Reading messages automatically reduces/clears the badge through the existing unread refresh event.
+- YouTube Live push notifications do not change the message-count badge; the pulsing LIVE indicator remains inside the app.
