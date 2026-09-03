@@ -87,6 +87,21 @@ async function enhanceImageForOcr(file:File):Promise<HTMLCanvasElement|File>{
   }finally{URL.revokeObjectURL(url)}
  }catch{return file}
 }
+function settingsCropForOcr(source:HTMLCanvasElement|File):HTMLCanvasElement|File{
+ if(!(source instanceof HTMLCanvasElement))return source
+ try{
+  // GSPro's simulator settings are normally along the bottom of the scorecard.
+  // OCR that area a second time at a larger scale so small values such as
+  // Stimp, Gimmies and Elevation are less likely to be missed.
+  const startY=Math.floor(source.height*.56),cropH=Math.max(1,source.height-startY)
+  const scale=1.55,canvas=document.createElement('canvas')
+  canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(cropH*scale))
+  const cx=canvas.getContext('2d');if(!cx)return source
+  cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high'
+  cx.drawImage(source,0,startY,source.width,cropH,0,0,canvas.width,canvas.height)
+  return canvas
+ }catch{return source}
+}
 const settingDigitText=(s:string)=>String(s||'').toLowerCase()
  .replace(/[|!]/g,'1')
  .replace(/\b[li]{2}\b/g,m=>m.replace(/[li]/g,'1'))
@@ -109,6 +124,23 @@ const flexibleNumberNearLabel=(lines:string[],labels:string[],expected:number)=>
   if(expected===10&&/(?:^|\D)(?:10|1\s*0|1\s*o)(?:\D|$)/i.test(near))return true
   if(expected===5&&/(?:^|\D)(?:5|s)\s*(?:ft|feet|foot)?(?:\D|$)/i.test(near))return true
   return new RegExp(`(^|\\D)${expectedText}(?:\\.0+)?(\\D|$)`).test(n)
+ })
+}
+const flexibleElevationNearLabel=(lines:string[],expected:number)=>{
+ if(flexibleNumberNearLabel(lines,['elevation','elev','elevatlon','altitude','alt'],expected))return true
+ const wanted=String(Math.round(expected))
+ return lines.some((line,i)=>{
+  const near=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+9)).join(' ')
+  const normalized=near.toLowerCase()
+    .replace(/[|!il]/g,'1')
+    .replace(/[oO]/g,'0')
+    .replace(/[zZ](?=\s*0{2,3}\b)/g,'2')
+    .replace(/[,._'’]/g,'')
+    .replace(/\s+/g,' ')
+  const labelOk=/(elev(?:ation|atlon)?|alt(?:itude)?)/i.test(normalized)
+  if(!labelOk)return false
+  const compact=normalized.replace(/\s/g,'')
+  return compact.includes(wanted)||compact.includes(`${wanted}ft`)||compact.includes(`${wanted}feet`)
  })
 }
 function extractGrid(lines:string[]){
@@ -149,15 +181,17 @@ export default function SubmitScore(){
      const ac:AudioContext=audioCtxRef.current ?? new AC();audioCtxRef.current=ac
      if(ac.state==='suspended')await ac.resume()
      const now=ac.currentTime+.03
-     // One simple, low buzzer tone for a failed scorecard check.
-     const osc=ac.createOscillator(),gain=ac.createGain()
-     osc.type='square';osc.frequency.setValueAtTime(125,now)
-     gain.gain.setValueAtTime(.0001,now)
-     gain.gain.exponentialRampToValueAtTime(.22,now+.02)
-     gain.gain.setValueAtTime(.22,now+.55)
-     gain.gain.exponentialRampToValueAtTime(.0001,now+.72)
-     osc.connect(gain);gain.connect(ac.destination);osc.start(now);osc.stop(now+.74)
-     if('vibrate' in navigator)navigator.vibrate?.(250)
+     // A clearer two-pulse error chime: low enough to signal failure without the harsh buzzer sound.
+     const gain=ac.createGain();gain.connect(ac.destination);gain.gain.setValueAtTime(.0001,now)
+     const first=ac.createOscillator(),second=ac.createOscillator()
+     first.type='triangle';second.type='sine'
+     first.frequency.setValueAtTime(260,now);first.frequency.exponentialRampToValueAtTime(185,now+.22)
+     second.frequency.setValueAtTime(165,now+.28);second.frequency.exponentialRampToValueAtTime(115,now+.58)
+     first.connect(gain);second.connect(gain)
+     gain.gain.exponentialRampToValueAtTime(.28,now+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+.24)
+     gain.gain.setValueAtTime(.0001,now+.27);gain.gain.exponentialRampToValueAtTime(.3,now+.30);gain.gain.exponentialRampToValueAtTime(.0001,now+.62)
+     first.start(now);first.stop(now+.25);second.start(now+.28);second.stop(now+.64)
+     if('vibrate' in navigator)navigator.vibrate?.([120,70,180])
    }catch{}
  }
 
@@ -174,19 +208,22 @@ export default function SubmitScore(){
      const T=(window as any).Tesseract;if(!T)throw new Error('OCR is still loading. Please wait a moment and try again.')
      setCheckProgress(10);setMsg('Preparing image for a clearer read…')
      const ocrImage=await enhanceImageForOcr(f)
-     const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(85,15+Math.round(m.progress*70)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}})
-     setCheckProgress(90);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const grid=extractGrid(lines);setPars(grid.pars);setScores(grid.scores)
+     const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(72,15+Math.round(m.progress*57)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}})
+     setCheckProgress(74);setMsg('Reading round settings more closely…')
+     const settingsImage=settingsCropForOcr(ocrImage)
+     const settingsResult=await T.recognize(settingsImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(90,75+Math.round(m.progress*15)))}}})
+     setCheckProgress(92);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const settingsText=String(settingsResult?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const settingLines=[...lines,...settingsText.split(/\n/).map((x:string)=>x.trim()).filter(Boolean)];const grid=extractGrid(lines);setPars(grid.pars);setScores(grid.scores)
      const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>grid.pars[i]!=null&&grid.scores[i]!=null)
      const matchedPlayers=playerMatches(lines,ctx.players)
      const courseExpected=String(selectedMonth.course_name||'');const courseOk=fuzzyCourseMatch(text,courseExpected)
-     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>flexibleNumberNearLabel(lines,['stimp','stimpmeter','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
-     const pinsOk=!!selectedPins&&lineHas(lines,['pins','pin','pin position','pin location'],aliases(selectedPins))
-     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=flexibleNumberNearLabel(lines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
-     const windOk=lineHas(lines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
-     const fairwaysOk=lineHas(lines,['fairway','fairways'],aliases(selectedMonth.fairways))
-     const greensOk=lineHas(lines,['green','greens'],aliases(selectedMonth.greens))
-     const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHas(lines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
-     const elevation=Number(selectedMonth.elevation_ft??2000);const elevationOk=numberNearLabel(lines,['elevation','altitude'],elevation)
+     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>flexibleNumberNearLabel(settingLines,['stimp','stimpmeter','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
+     const pinsOk=!!selectedPins&&lineHas(settingLines,['pins','pin','pin position','pin location'],aliases(selectedPins))
+     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=flexibleNumberNearLabel(settingLines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
+     const windOk=lineHas(settingLines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
+     const fairwaysOk=lineHas(settingLines,['fairway','fairways'],aliases(selectedMonth.fairways))
+     const greensOk=lineHas(settingLines,['green','greens'],aliases(selectedMonth.greens))
+     const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHas(settingLines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
+     const elevation=Number(selectedMonth.elevation_ft??2000);const elevationOk=flexibleElevationNearLabel(settingLines,elevation)
      const next:Check[]=[
        {key:'ocr',label:'Read scorecard image',status:text.trim()?'pass':'fail',detail:text.trim()?'Image text captured.':'No readable text was found.'},
        {key:'course',label:'Course name',status:courseOk?'pass':'fail',detail:courseOk?`${selectedMonth.course_name||'Course'} matched.`:`Could not confidently read the configured course: ${selectedMonth.course_name||'Not configured'}.`},
@@ -208,5 +245,5 @@ export default function SubmitScore(){
  async function submit(){if(!ctx||!file||!selectedMonth)return;if(!validationPassed){setMsg('This scorecard has not passed all required league checks.');return}if(existing?.status==='pending'||existing?.status==='approved'){setMsg('That league round has already been submitted or completed.');return}if(playedHoles.some(h=>!scores[h-1]||!pars[h-1])){setMsg('Please confirm every played hole before submitting.');return}setSaving(true);setMsg('');const ext=file.name.split('.').pop()||'jpg',path=`${ctx.userId}/${monthId}-${ctx.teamId}-w${week}-${Date.now()}.${ext}`;const up=await supabase.storage.from('round-scorecards').upload(path,file,{upsert:false});if(up.error){setMsg(up.error.message);setSaving(false);return}const row={league_month_id:monthId,team_id:ctx.teamId,week_number:week,submitted_by:ctx.userId,image_path:path,hole_scores:scores,hole_pars:pars,stableford_points:sf,raw_stableford:raw,bonus_birdies:bonusBirdies,bonus_points:bonus,handicap_points:handicap,official_total:official,status:'pending'};const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'});setMsg(error?error.message:'Scorecard submitted. It is now awaiting admin approval.');if(!error)setExisting({...row,status:'pending'});setSaving(false)}
  if(!ctx||!selectedMonth)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
  const locked=existing?.status==='approved'||existing?.status==='pending'
- return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page"><h1>Submit Score</h1><div className="card"><h2>{ctx.teamName}</h2><div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}</div>{changeRound&&<div className="round-picker"><label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label><button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button></div>}{existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>This round has already been submitted.</span></div>:locked?<div className="round-status complete"><b>Complete ✓</b><span>This round has already been posted for official scoring.</span></div>:<><p className="muted">Upload a clear GSPro scorecard that also shows the round setup. The app will verify the league settings before any score can be submitted.</p><div className="score-photo-actions"><label className="btn score-photo-btn" onPointerDown={primeFailureAudio}>Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label><label className="btn secondary score-photo-btn" onPointerDown={primeFailureAudio}>Photo Library<input hidden type="file" accept="image/*" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label></div>{preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}{msg&&!reading&&<p className={`message ${validationPassed?'score-ready-message':''}`}><span>{msg}</span></p>}</>}</div>{file&&!locked&&checks.length>0&&<div className="card score-check-card"><div className="score-check-heading"><div><h2>Scorecard Check</h2><p className="muted">All checks must pass before Verify Scores unlocks.</p></div>{reading&&<span className="checking-pill">Checking…</span>}</div><div className="score-check-progress"><span style={{width:`${Math.round((checks.filter(c=>c.status==='pass'||c.status==='fail').length/checks.length)*100)}%`}}/></div><div className="score-check-list">{checks.map(c=><div className={`score-check-item ${c.status}`} key={c.key}><span className="check-dot">{c.status==='pass'?'✓':c.status==='fail'?'!':'•'}</span><div><b>{c.label}</b><small>{c.detail||'Waiting…'}</small></div></div>)}</div></div>}{file&&!locked&&validationPassed&&<div className="card"><h2>Verify Scores</h2><p className="muted">Only the holes used in this league round are shown. Choose the scoring result for each hole.</p><div className="score-entry-grid"><b>Hole</b><b>Par</b><b>Score</b><b>Pts</b>{playedHoles.map(h=>{const i=h-1;return <div className="score-entry-row" key={h}><span>{h}{bonusHoles.includes(h)?' ★':''}</span><input inputMode="numeric" value={pars[i]??''} onChange={e=>setPars(v=>v.map((x,j)=>j===i?(e.target.value?Number(e.target.value):null):x))}/><select value={scoreLabel(scores[i],pars[i])} onChange={e=>setScores(v=>v.map((x,j)=>j===i?scoreFromLabel(e.target.value,pars[i],x):x))}><option value="—">Select</option><option>Albatross+</option><option>Eagle</option><option>Birdie</option><option>Par</option><option>Bogey</option><option>Double Bogey+</option></select><strong>{h<=10&&scores[i]&&pars[i]?pts(scores[i]!,pars[i]!):bonusHoles.includes(h)&&scores[i]&&pars[i]&&scores[i]===pars[i]!-1?`+${bonusValue}`:'—'}</strong></div>})}</div><div className="round-calc"><p>Raw Stableford <b>{raw}</b></p><p>Bonus Birdies <b>{bonusBirdies} (+{bonus.toFixed(1)})</b></p><p>Monthly Handicap <b>{handicap>=0?'+':''}{handicap.toFixed(1)}</b></p><p className="official">Calculated Round Score <b>{official.toFixed(1)}</b></p></div><button className="btn" disabled={saving||reading} onClick={submit}>{saving?'Submitting…':'✓ Scores Are Correct — Submit'}</button></div>}{failureModalOpen&&<div className="score-failure-modal-backdrop" role="presentation" onClick={()=>{if(!reading)setFailureModalOpen(false)}}><div className={`score-failure-modal ${reading?'score-progress-modal':''}`} role="alertdialog" aria-modal="true" aria-labelledby={reading?'score-progress-title':'score-failure-title'} onClick={e=>e.stopPropagation()}>{reading?<><div className="score-progress-spinner" aria-hidden="true"/><h2 id="score-progress-title">Checking Scorecard</h2><p className="score-progress-message">{msg||'Checking scorecard…'}</p><div className="score-modal-progress" aria-label={`Scorecard check ${checkProgress}% complete`}><span style={{width:`${checkProgress}%`}}/></div><strong className="score-progress-percent">{checkProgress}%</strong><small className="score-progress-note">Please keep this window open while the scorecard is being read and verified.</small></>:<><div className="score-failure-modal-icon" aria-hidden="true">×</div><h2 id="score-failure-title">Scorecard check failed and cannot be submitted!</h2><p>Please fix the items marked in red below and upload a new image. Make sure when taking a photo that you take the image from the computer monitor and not the hitting screen. Be sure to get the entire card in the photo including the course name and all of the round settings at the bottom.</p><button type="button" className="btn" onClick={()=>setFailureModalOpen(false)}>View Failed Checks</button></>}</div></div>}</div></PlayerPage>
+ return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page"><h1>Submit Score</h1><div className="card"><h2>{ctx.teamName}</h2><div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}</div>{changeRound&&<div className="round-picker"><label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label><button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button></div>}{existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>This round has already been submitted.</span></div>:locked?<div className="round-status complete"><b>Complete ✓</b><span>This round has already been posted for official scoring.</span></div>:<><p className="muted">Upload a clear GSPro scorecard that also shows the round setup. The app will verify the league settings before any score can be submitted.</p><div className="score-photo-actions"><label className="btn score-photo-btn" onPointerDown={primeFailureAudio}>Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label><label className="btn secondary score-photo-btn" onPointerDown={primeFailureAudio}>Photo Library<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label></div>{preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}{msg&&!reading&&<p className={`message ${validationPassed?'score-ready-message':''}`}><span>{msg}</span></p>}</>}</div>{file&&!locked&&checks.length>0&&<div className="card score-check-card"><div className="score-check-heading"><div><h2>Scorecard Check</h2><p className="muted">All checks must pass before Verify Scores unlocks.</p></div>{reading&&<span className="checking-pill">Checking…</span>}</div><div className="score-check-progress"><span style={{width:`${Math.round((checks.filter(c=>c.status==='pass'||c.status==='fail').length/checks.length)*100)}%`}}/></div><div className="score-check-list">{checks.map(c=><div className={`score-check-item ${c.status}`} key={c.key}><span className="check-dot">{c.status==='pass'?'✓':c.status==='fail'?'!':'•'}</span><div><b>{c.label}</b><small>{c.detail||'Waiting…'}</small></div></div>)}</div></div>}{file&&!locked&&validationPassed&&<div className="card"><h2>Verify Scores</h2><p className="muted">Only the holes used in this league round are shown. Choose the scoring result for each hole.</p><div className="score-entry-grid"><b>Hole</b><b>Par</b><b>Score</b><b>Pts</b>{playedHoles.map(h=>{const i=h-1;return <div className="score-entry-row" key={h}><span>{h}{bonusHoles.includes(h)?' ★':''}</span><input inputMode="numeric" value={pars[i]??''} onChange={e=>setPars(v=>v.map((x,j)=>j===i?(e.target.value?Number(e.target.value):null):x))}/><select value={scoreLabel(scores[i],pars[i])} onChange={e=>setScores(v=>v.map((x,j)=>j===i?scoreFromLabel(e.target.value,pars[i],x):x))}><option value="—">Select</option><option>Albatross+</option><option>Eagle</option><option>Birdie</option><option>Par</option><option>Bogey</option><option>Double Bogey+</option></select><strong>{h<=10&&scores[i]&&pars[i]?pts(scores[i]!,pars[i]!):bonusHoles.includes(h)&&scores[i]&&pars[i]&&scores[i]===pars[i]!-1?`+${bonusValue}`:'—'}</strong></div>})}</div><div className="round-calc"><p>Raw Stableford <b>{raw}</b></p><p>Bonus Birdies <b>{bonusBirdies} (+{bonus.toFixed(1)})</b></p><p>Monthly Handicap <b>{handicap>=0?'+':''}{handicap.toFixed(1)}</b></p><p className="official">Calculated Round Score <b>{official.toFixed(1)}</b></p></div><button className="btn" disabled={saving||reading} onClick={submit}>{saving?'Submitting…':'✓ Scores Are Correct — Submit'}</button></div>}{failureModalOpen&&<div className="score-failure-modal-backdrop" role="presentation" onClick={()=>{if(!reading)setFailureModalOpen(false)}}><div className={`score-failure-modal ${reading?'score-progress-modal':''}`} role="alertdialog" aria-modal="true" aria-labelledby={reading?'score-progress-title':'score-failure-title'} onClick={e=>e.stopPropagation()}>{reading?<><div className="score-progress-spinner" aria-hidden="true"/><h2 id="score-progress-title">Checking Scorecard</h2><p className="score-progress-message">{msg||'Checking scorecard…'}</p><div className="score-modal-progress" aria-label={`Scorecard check ${checkProgress}% complete`}><span style={{width:`${checkProgress}%`}}/></div><strong className="score-progress-percent">{checkProgress}%</strong><small className="score-progress-note">Please keep this window open while the scorecard is being read and verified.</small></>:<><div className="score-failure-modal-icon" aria-hidden="true">×</div><h2 id="score-failure-title">Scorecard check failed and cannot be submitted!</h2><p>Please fix the items marked in red below and upload a new image. Make sure when taking a photo that you take the image from the computer monitor and not the hitting screen. Be sure to get the entire card in the photo including the course name and all of the round settings at the bottom.</p><button type="button" className="btn" onClick={()=>setFailureModalOpen(false)}>View Failed Checks</button></>}</div></div>}</div></PlayerPage>
 }
