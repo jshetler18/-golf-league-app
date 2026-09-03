@@ -89,8 +89,9 @@ export default function SubmitScore(){
    try{
      const AC=(window as any).AudioContext||(window as any).webkitAudioContext
      if(!AC)return
-     if(!audioCtxRef.current)audioCtxRef.current=new AC()
-     if(audioCtxRef.current.state==='suspended')audioCtxRef.current.resume().catch(()=>{})
+     const ac=audioCtxRef.current ?? new AC()
+     audioCtxRef.current=ac
+     if(ac.state==='suspended')ac.resume().catch(()=>{})
    }catch{}
  }
  function playFailureTone(){
