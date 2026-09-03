@@ -91,3 +91,9 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Players can select any league month in the active season and Week 1-4 before uploading.
 - Completed and pending rounds are protected from duplicate submissions.
 - Keeps separate Take Scorecard Photo and Choose from Photos actions and the updated profile-menu icon.
+
+## v12.93 scorecard symbol reading
+- Score verification now uses the scorecard's visual scoring marks as a second signal: single red circle = birdie, double red circle = eagle, no scoring mark = par, single black box = bogey, double black box = double bogey or worse.
+- Hole pars are aligned by OCR word position to reduce row/column shifting.
+- Pins were tightened back up so the configured weekly pin value has to be recognized near the Pins label; the ultra-loose global fallback is no longer used for pins.
+- Stimp detection now distinguishes 10/11 only near the Stimp label and the UI reports an approved league Stimp rather than claiming an exact value when OCR may be ambiguous.

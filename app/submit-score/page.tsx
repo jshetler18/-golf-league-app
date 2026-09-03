@@ -93,11 +93,37 @@ function numberNearLabel(lines:string[],labels:string[],expected:number){
  })
 }
 function fuzzyCourseMatch(text:string,expected:string){
- const hay=clean(text), exp=clean(expected);if(!exp)return false;if(hay.includes(exp))return true
- const tokens=exp.split(' ').filter(t=>t.length>1);if(!tokens.length)return false
- const matched=tokens.filter(t=>veryLooseToken(t,hay)).length
- // One distinctive course-name word, or roughly one-third of the name, is enough on a blurry card.
- return matched>=Math.max(1,Math.ceil(tokens.length*.3))
+ const hay=clean(text), exp=clean(expected);if(!exp)return false
+ if(hay.includes(exp))return true
+ const expectedTokens=exp.split(' ').filter(t=>t.length>1)
+ const hayTokens=hay.split(' ').filter(Boolean)
+ if(!expectedTokens.length||!hayTokens.length)return false
+
+ // Course names are intentionally stricter than the other OCR settings.
+ // Require most meaningful words to be present and only allow small OCR errors per word.
+ const tokenMatches=expectedTokens.map(t=>{
+   const maxEdits=t.length>=9?2:t.length>=5?1:0
+   return hayTokens.some(w=>w===t||(maxEdits>0&&Math.abs(w.length-t.length)<=maxEdits&&editDistance(t,w)<=maxEdits))
+ })
+ const matched=tokenMatches.filter(Boolean).length
+ const required=expectedTokens.length<=2?expectedTokens.length:Math.ceil(expectedTokens.length*.75)
+ if(matched<required)return false
+
+ // For multi-word names, also require two matched name words to occur reasonably close
+ // together in OCR text so unrelated words elsewhere on the card cannot create a pass.
+ if(expectedTokens.length>=2){
+   for(let i=0;i<hayTokens.length;i++){
+     const window=hayTokens.slice(i,i+Math.max(4,expectedTokens.length+2))
+     let hits=0
+     for(const t of expectedTokens){
+       const maxEdits=t.length>=9?2:t.length>=5?1:0
+       if(window.some(w=>w===t||(maxEdits>0&&Math.abs(w.length-t.length)<=maxEdits&&editDistance(t,w)<=maxEdits)))hits++
+     }
+     if(hits>=Math.min(2,required))return true
+   }
+   return false
+ }
+ return true
 }
 function playerMatches(lines:string[],players:string[]){
  const normalized=lines.map(clean)
@@ -209,6 +235,119 @@ const flexibleElevationNearLabel=(lines:string[],expected:number)=>{
   return compact.includes(wanted)||compact.includes(`${wanted}ft`)||compact.includes(`${wanted}feet`)
  })
 }
+
+
+type OcrWord={text:string;confidence?:number;bbox?:{x0:number;y0:number;x1:number;y1:number}}
+type VisionScore={hole:number;label:string;score:number|null;confidence:number}
+
+async function loadColorCanvas(file:File):Promise<HTMLCanvasElement|null>{
+ try{
+  const url=URL.createObjectURL(file)
+  try{
+   const img=await new Promise<HTMLImageElement>((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url})
+   const longest=Math.max(img.naturalWidth,img.naturalHeight),scale=Math.min(2,Math.max(1,2600/Math.max(1,longest)))
+   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale))
+   const cx=canvas.getContext('2d');if(!cx)return null
+   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(img,0,0,canvas.width,canvas.height)
+   return canvas
+  }finally{URL.revokeObjectURL(url)}
+ }catch{return null}
+}
+const wordNum=(w:OcrWord)=>{const t=String(w.text||'').replace(/[^0-9]/g,'');return t?Number(t):null}
+function numericWordRows(words:OcrWord[]){
+ const nums=words.filter(w=>w.bbox&&wordNum(w)!=null).map(w=>({...w,n:wordNum(w)!,cy:((w.bbox!.y0+w.bbox!.y1)/2),cx:((w.bbox!.x0+w.bbox!.x1)/2),h:Math.max(1,w.bbox!.y1-w.bbox!.y0)})).sort((a,b)=>a.cy-b.cy||a.cx-b.cx)
+ const rows:any[]=[]
+ for(const w of nums){
+  let row=rows.find(r=>Math.abs(r.cy-w.cy)<=Math.max(9,w.h*.8,r.h*.8))
+  if(!row){row={cy:w.cy,h:w.h,items:[]};rows.push(row)}
+  row.items.push(w);row.cy=row.items.reduce((a:any,x:any)=>a+x.cy,0)/row.items.length;row.h=Math.max(row.h,w.h)
+ }
+ return rows.map(r=>({...r,items:r.items.sort((a:any,b:any)=>a.cx-b.cx)})).filter(r=>r.items.length>=6)
+}
+function scoreMarkerAt(canvas:HTMLCanvasElement,cx0:number,cy0:number,baseW:number,baseH:number){
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return {label:'Par',confidence:0}
+ const rx=Math.max(12,baseW*2.2),ry=Math.max(12,baseH*1.9)
+ const x0=Math.max(0,Math.floor(cx0-rx)),y0=Math.max(0,Math.floor(cy0-ry)),x1=Math.min(canvas.width,Math.ceil(cx0+rx)),y1=Math.min(canvas.height,Math.ceil(cy0+ry))
+ if(x1<=x0||y1<=y0)return {label:'Par',confidence:0}
+ const d=ctx.getImageData(x0,y0,x1-x0,y1-y0),w=d.width,h=d.height,px=d.data
+ const redR:number[]=[],darkR:number[]=[]
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const i=(y*w+x)*4,R=px[i],G=px[i+1],B=px[i+2],dx=(x+x0-cx0)/rx,dy=(y+y0-cy0)/ry,r=Math.sqrt(dx*dx+dy*dy)
+  if(r<.28||r>1.03)continue
+  const red=R>105&&R>G*1.28&&R>B*1.25&&(R-G)>28
+  const lum=.2126*R+.7152*G+.0722*B
+  if(red)redR.push(r)
+  if(lum<72&&Math.abs(dx)>.25&&Math.abs(dy)>.25)darkR.push(Math.max(Math.abs(dx),Math.abs(dy)))
+ }
+ const peaks=(vals:number[],bin=.055,minCount=8)=>{const bins=new Map<number,number>();for(const r of vals){const k=Math.round(r/bin);bins.set(k,(bins.get(k)||0)+1)}const arr=[...bins.entries()].filter(([,c])=>c>=minCount).sort((a,b)=>a[0]-b[0]);let groups=0,last=-99;for(const [k] of arr){if(k-last>1)groups++;last=k}return groups}
+ const redPeaks=peaks(redR,.05,Math.max(6,Math.round((w+h)*.035)))
+ if(redR.length>Math.max(22,(w+h)*.15)){return {label:redPeaks>=2?'Eagle':'Birdie',confidence:Math.min(1,redR.length/Math.max(35,(w+h)*.35))}}
+ const darkPeaks=peaks(darkR,.055,Math.max(8,Math.round((w+h)*.045)))
+ const darkDensity=darkR.length/Math.max(1,w*h)
+ if(darkDensity>.035){return {label:darkPeaks>=2?'Double Bogey+':'Bogey',confidence:Math.min(1,darkDensity/.11)}}
+ return {label:'Par',confidence:.6}
+}
+function geometricPars(ocrData:any):(number|null)[]{
+ const words=(ocrData?.words||[]) as OcrWord[],rows=numericWordRows(words),out:(number|null)[]=Array(18).fill(null)
+ const header=rows.map(r=>({r,seq:r.items.map((x:any)=>x.n)})).filter(x=>x.seq.includes(1)&&x.seq.includes(2)&&x.seq.includes(3)&&x.seq.includes(4)).sort((a,b)=>b.r.items.length-a.r.items.length)[0]?.r
+ const parRow=rows.filter(r=>r!==header&&r.items.length>=8&&r.items.filter((x:any)=>x.n>=3&&x.n<=5).length>=Math.min(8,r.items.length*.75)).sort((a,b)=>b.items.length-a.items.length)[0]
+ if(!parRow)return out
+ if(header){
+  const hm=new Map<number,any>();for(const it of header.items){if(it.n>=1&&it.n<=18&&!hm.has(it.n))hm.set(it.n,it)}
+  const xs=[...hm.values()].map((x:any)=>x.cx).sort((a:number,b:number)=>a-b),spacing=xs.length>1?xs.slice(1).reduce((a:number,x:number,i:number)=>a+(x-xs[i]),0)/(xs.length-1):9999
+  for(let hole=1;hole<=18;hole++){const h=hm.get(hole);if(!h)continue;const best=parRow.items.reduce((b:any,it:any)=>!b||Math.abs(it.cx-h.cx)<Math.abs(b.cx-h.cx)?it:b,null);if(best&&Math.abs(best.cx-h.cx)<=Math.max(16,spacing*.48)&&best.n>=3&&best.n<=5)out[hole-1]=best.n}
+ }else{for(let i=0;i<Math.min(18,parRow.items.length);i++){const n=parRow.items[i].n;if(n>=3&&n<=5)out[i]=n}}
+ return out
+}
+function visionScores(canvas:HTMLCanvasElement|null,ocrData:any,pars:(number|null)[],playedHoles:number[],sourceSize?:{width:number;height:number}|null):VisionScore[]{
+ if(!canvas)return []
+ const words=(ocrData?.words||[]) as OcrWord[],rows=numericWordRows(words);if(!rows.length)return []
+ const header=rows.map(r=>({r,seq:r.items.map((x:any)=>x.n)})).filter(x=>x.seq.includes(1)&&x.seq.includes(2)&&x.seq.includes(3)&&x.seq.includes(4)).sort((a,b)=>b.r.items.length-a.r.items.length)[0]?.r
+ const parRow=rows.filter(r=>r.items.length>=8&&r.items.filter((x:any)=>x.n>=3&&x.n<=5).length>=Math.min(8,r.items.length*.75)).sort((a,b)=>b.items.length-a.items.length)[0]
+ const scoreRows=rows.filter(r=>r!==header&&r!==parRow&&r.items.length>=8&&r.items.filter((x:any)=>x.n>=1&&x.n<=12).length>=Math.min(7,r.items.length*.7))
+ let scoreRow=scoreRows.sort((a,b)=>{const ay=parRow?Math.abs(a.cy-parRow.cy):0,by=parRow?Math.abs(b.cy-parRow.cy):0;return ay-by})[0]
+ if(!scoreRow)return []
+ const sourceW=sourceSize?.width||Math.max(...words.filter(w=>w.bbox).map(w=>w.bbox!.x1),canvas.width),sourceH=sourceSize?.height||Math.max(...words.filter(w=>w.bbox).map(w=>w.bbox!.y1),canvas.height)
+ const sx=canvas.width/Math.max(1,sourceW),sy=canvas.height/Math.max(1,sourceH)
+ const headerMap=new Map<number,any>();if(header)for(const it of header.items){if(it.n>=1&&it.n<=18&&!headerMap.has(it.n))headerMap.set(it.n,it)}
+ const result:VisionScore[]=[]
+ for(const hole of playedHoles){
+  const par=pars[hole-1];if(!par)continue
+  let target:any=null
+  const h=headerMap.get(hole)
+  if(h){target=scoreRow.items.reduce((best:any,it:any)=>!best||Math.abs(it.cx-h.cx)<Math.abs(best.cx-h.cx)?it:best,null)}
+  if(!target){const idx=playedHoles.indexOf(hole);target=scoreRow.items[idx]||null}
+  if(!target?.bbox)continue
+  const cx=target.cx*sx,cy=target.cy*sy,bw=Math.max(8,(target.bbox.x1-target.bbox.x0)*sx),bh=Math.max(10,(target.bbox.y1-target.bbox.y0)*sy)
+  const m=scoreMarkerAt(canvas,cx,cy,bw,bh)
+  const score=m.label==='Eagle'?Math.max(1,par-2):m.label==='Birdie'?Math.max(1,par-1):m.label==='Par'?par:m.label==='Bogey'?par+1:par+2
+  result.push({hole,label:m.label,score,confidence:m.confidence})
+ }
+ return result
+}
+function detectStimp(lines:string[]){
+ for(let i=0;i<lines.length;i++){
+  if(!labelFound(lines[i],['stimp','stimpmeter','green stimp','green speed']))continue
+  const raw=lines.slice(Math.max(0,i-1),Math.min(lines.length,i+5)).join(' ').toLowerCase().replace(/[|!]/g,'1').replace(/\bo\b/g,'0')
+  if(/(?:^|\D)(?:11|1\s+1|l\s*l|i\s*i)(?:\D|$)/i.test(raw))return 11
+  if(/(?:^|\D)10(?:\D|$)/.test(raw))return 10
+ }
+ return null
+}
+function strictPinsMatch(lines:string[],expected:string){
+ const exp=clean(expected);if(!exp)return false
+ const expWords=exp.split(' ').filter(Boolean)
+ for(let i=0;i<lines.length;i++){
+  if(!labelFound(lines[i],['pins','pin','pin position','pin location']))continue
+  const near=clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+5)).join(' '))
+  const words=near.split(' ').filter(Boolean)
+  if((exp.length<=2?words.includes(exp):near.includes(exp)))return true
+  const hits=expWords.filter(e=>words.some(w=>e===w||(e.length>=5&&editDistance(e,w)<=2))).length
+  if(hits===expWords.length&&hits>0)return true
+ }
+ return false
+}
+
 function extractGrid(lines:string[]){
  const rows=numericRows(lines)
  const parLine=rows.find(a=>a.length>=10&&a.slice(0,10).every(n=>n>=3&&n<=5))
@@ -273,17 +412,24 @@ export default function SubmitScore(){
    try{
      const T=(window as any).Tesseract;if(!T)throw new Error('OCR is still loading. Please wait a moment and try again.')
      setCheckProgress(10);setMsg('Preparing image for a clearer read…')
+     const colorCanvas=await loadColorCanvas(f)
      const ocrImage=await enhanceImageForOcr(f)
      const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(72,15+Math.round(m.progress*57)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}})
      setCheckProgress(74);setMsg('Reading round settings more closely…')
      const settingsImage=settingsCropForOcr(ocrImage)
      const settingsResult=await T.recognize(settingsImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(90,75+Math.round(m.progress*15)))}}})
-     setCheckProgress(92);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const settingsText=String(settingsResult?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const settingLines=[...lines,...settingsText.split(/\n/).map((x:string)=>x.trim()).filter(Boolean)];const grid=extractGrid(lines);setPars(grid.pars);setScores(grid.scores)
-     const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>grid.pars[i]!=null&&grid.scores[i]!=null)
+     setCheckProgress(92);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const settingsText=String(settingsResult?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const settingLines=[...lines,...settingsText.split(/\n/).map((x:string)=>x.trim()).filter(Boolean)];const grid=extractGrid(lines)
+     const geoPars=geometricPars(r?.data),resolvedPars=grid.pars.map((v,i)=>geoPars[i]??v)
+     const ocrSize=ocrImage instanceof HTMLCanvasElement?{width:ocrImage.width,height:ocrImage.height}:null
+     const shapeScores=visionScores(colorCanvas,r?.data,resolvedPars,playedHoles,ocrSize)
+     const shapeMap=new Map(shapeScores.map(v=>[v.hole,v]))
+     const resolvedScores=grid.scores.map((v,i)=>shapeMap.get(i+1)?.score??v)
+     setPars(resolvedPars);setScores(resolvedScores)
+     const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>resolvedPars[i]!=null&&resolvedScores[i]!=null)
      const matchedPlayers=playerMatches(lines,ctx.players)
      const courseExpected=String(selectedMonth.course_name||'');const courseOk=fuzzyCourseMatch(text,courseExpected)
-     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>veryLooseNumberNearLabel(settingLines,['stimp','stimpmeter','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
-     const pinsOk=!!selectedPins&&lineHasVeryLoose(settingLines,['pins','pin','pin position','pin location'],aliases(selectedPins))
+     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=detectStimp(settingLines);const stimpOk=foundStimp!=null&&stimpOptions.includes(foundStimp)
+     const pinsOk=!!selectedPins&&strictPinsMatch(settingLines,selectedPins)
      const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=veryLooseNumberNearLabel(settingLines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
      const windOk=lineHasVeryLoose(settingLines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
      const fairwaysOk=lineHasVeryLoose(settingLines,['fairway','fairways'],aliases(selectedMonth.fairways))
@@ -293,9 +439,9 @@ export default function SubmitScore(){
      const next:Check[]=[
        {key:'ocr',label:'Read scorecard image',status:text.trim()?'pass':'fail',detail:text.trim()?'Image text captured.':'No readable text was found.'},
        {key:'course',label:'Course name',status:courseOk?'pass':'fail',detail:courseOk?`${selectedMonth.course_name||'Course'} matched.`:`Could not confidently read the configured course: ${selectedMonth.course_name||'Not configured'}.`},
-       {key:'holes',label:'Required holes + bonus holes',status:gridOk?'pass':'fail',detail:gridOk?`Holes ${playedHoles.join(', ')} have score/par data.`:`Missing score or par data for: ${playedHoles.filter(h=>grid.pars[h-1]==null||grid.scores[h-1]==null).join(', ')||'required holes'}`},
+       {key:'holes',label:'Required holes + bonus holes',status:gridOk?'pass':'fail',detail:gridOk?`Holes ${playedHoles.join(', ')} have score/par data. Visual score symbols were used where readable.`:`Missing score or par data for: ${playedHoles.filter(h=>resolvedPars[h-1]==null||resolvedScores[h-1]==null).join(', ')||'required holes'}`},
        {key:'players',label:'At least 2 team players',status:matchedPlayers.length>=2?'pass':'fail',detail:matchedPlayers.length>=2?`Matched: ${matchedPlayers.join(', ')}`:`Only matched ${matchedPlayers.length}: ${matchedPlayers.join(', ')||'none'}`},
-       {key:'stimp',label:'Stimp',status:stimpOk?'pass':'fail',detail:stimpOk?`Matched ${foundStimp}.`:`Could not confidently read Stimp ${stimpOptions.join(' or ')} from the image.`},
+       {key:'stimp',label:'Stimp',status:stimpOk?'pass':'fail',detail:stimpOk?`Matched an approved Stimp (${stimpOptions.join(' or ')}).`:`Could not confidently read Stimp ${stimpOptions.join(' or ')} from the image.`},
        {key:'pins',label:`Week ${week} pins`,status:pinsOk?'pass':'fail',detail:pinsOk?`Matched ${selectedPins}.`:selectedPins?`Expected: ${selectedPins}.`:'Admin has not set pins for this week.'},
        {key:'gimmies',label:'Gimmies',status:gimmieOk?'pass':'fail',detail:gimmieOk?`Matched ${gimmie} ft.`:`Could not confidently read ${gimmie} ft gimmies from the image.`},
        {key:'wind',label:'Wind',status:windOk?'pass':'fail',detail:windOk?`Matched ${selectedMonth.wind}.`:`Could not confidently read wind setting ${selectedMonth.wind} from the image.`},
