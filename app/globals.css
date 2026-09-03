@@ -546,16 +546,5 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .profile-menu .profile-menu-icon-link{display:flex;align-items:center;gap:9px}
 .profile-menu .profile-menu-icon-link svg{width:19px;height:19px;flex:0 0 19px;stroke-width:1.9}
 
-/* v12.80 score submission refinements */
-.text-link-button{background:none;border:0;padding:0;color:var(--green,#1f5b46);font:inherit;text-decoration:underline;cursor:pointer}
-.round-picker{display:grid;gap:.75rem;margin-top:.75rem}
-.round-submission-status{margin-top:1rem;padding:1rem;border-radius:14px;background:#f4f6f5}
-.round-submission-status h3{margin:.1rem 0 .4rem}
-.score-processing-card{text-align:center;padding:1.35rem}
-.score-processing-percent{font-size:2.3rem;font-weight:800;line-height:1;margin:1rem 0 .8rem}
-.score-processing-track{height:12px;background:#e6e9e7;border-radius:999px;overflow:hidden}
-.score-processing-track span{display:block;height:100%;background:currentColor;border-radius:999px;transition:width .2s ease}
-.score-entry-grid-v1280{grid-template-columns:52px 58px 72px minmax(92px,1fr) 55px}
-.score-entry-row-v1280{grid-column:1/-1;display:grid;grid-template-columns:52px 58px 72px minmax(92px,1fr) 55px;align-items:center;gap:.4rem}
-.score-result-name{font-size:.88rem;white-space:nowrap}
-@media(max-width:480px){.score-entry-grid-v1280,.score-entry-row-v1280{grid-template-columns:42px 50px 62px minmax(84px,1fr) 46px;gap:.25rem}.score-result-name{font-size:.8rem}}
+/* v12.80 round selection */
+.selected-round{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}.change-round-link{border:0;background:transparent;padding:4px 0;text-decoration:underline;cursor:pointer;font:inherit}.round-picker{display:grid;gap:10px;margin:12px 0 16px;padding:14px;border:1px solid #d8ddd9;border-radius:12px;background:#f8faf8}.round-picker label{display:grid;gap:5px;font-weight:600}.round-picker select{width:100%;padding:10px;border:1px solid #bfc8c1;border-radius:9px;background:white;font:inherit}.round-status{display:grid;gap:4px;margin-top:12px;padding:14px;border-radius:12px}.round-status.pending{background:#fff6df}.round-status.complete{background:#eaf6ed}

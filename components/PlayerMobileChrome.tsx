@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { syncAppBadge } from '@/lib/appBadge'
-import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon } from '@/components/PlayerIcons'
+import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon, SubmitScoreIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
   const router=useRouter()
@@ -52,7 +52,7 @@ export function PlayerMobileHeader({title}:{title:string}){
         <b>⌄</b>
       </button>
       {open&&<div className="profile-menu">
-        <Link href="/submit-score">Submit Score</Link><Link href="/profile">My Profile</Link>
+        <Link href="/submit-score" className="profile-menu-icon-link"><SubmitScoreIcon /> <span>Submit Score</span></Link><Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
       </div>}
