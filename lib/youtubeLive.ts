@@ -16,8 +16,17 @@ export type YouTubeLiveStatus={
   roundText?:string
 }
 
+export type RoundMetadata={
+  matchedTeam?:string
+  month?:string
+  year?:number
+  roundNumber?:number
+  roundText?:string
+  season?:string
+}
+
 const HANDLE='Toms19thHole'
-const FULL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December']
+export const FULL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December']
 const MONTH_ALIASES:Record<string,string>={
   jan:'January',january:'January',feb:'February',february:'February',mar:'March',march:'March',apr:'April',april:'April',
   may:'May',jun:'June',june:'June',jul:'July',july:'July',aug:'August',august:'August',sep:'September',sept:'September',september:'September',
@@ -37,7 +46,7 @@ function normalize(value:string){
 
 function escapeRegExp(value:string){return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
 
-async function getKnownTeamNames(){
+export async function getKnownTeamNames(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL
   const key=process.env.SUPABASE_SECRET_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   if(!url||!key)return [] as string[]
@@ -57,7 +66,6 @@ function findTeamName(text:string,teamNames:string[]){
     if(!n)continue
     const re=new RegExp(`(^|\\s)${escapeRegExp(n)}(?=\\s|$)`,'i')
     if(re.test(normalized))return teamName
-    // Also accept the team name without the literal "Team" prefix in descriptions.
     const short=n.replace(/^team\s+/,'').trim()
     if(short&&short!==n){
       const shortRe=new RegExp(`(^|\\s)team\\s+${escapeRegExp(short)}(?=\\s|$)`,'i')
@@ -67,12 +75,12 @@ function findTeamName(text:string,teamNames:string[]){
   return ''
 }
 
-function findRoundText(text:string){
+function findRoundParts(text:string){
   const compact=normalize(text)
   const monthToken='(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
   const patterns=[
-    new RegExp(`\\b${monthToken}\\s+(20\\d{2})\\s*(?:-|:)??\\s*(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\b`,'i'),
-    new RegExp(`\\b(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s*(?:-|:)??\\s*${monthToken}\\s+(20\\d{2})\\b`,'i'),
+    new RegExp(`\\b${monthToken}\\s+(20\\d{2})\\s*(?:-|:)?\\s*(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\b`,'i'),
+    new RegExp(`\\b(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s*(?:-|:)?\\s*${monthToken}\\s+(20\\d{2})\\b`,'i'),
     new RegExp(`\\b${monthToken}\\s+(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s+(20\\d{2})\\b`,'i')
   ]
   for(let i=0;i<patterns.length;i++){
@@ -83,30 +91,46 @@ function findRoundText(text:string){
     else if(i===1){round=match[1];month=match[2];year=match[3]}
     else {month=match[1];round=match[2];year=match[3]}
     const fullMonth=MONTH_ALIASES[month.toLowerCase()]||FULL_MONTHS.find(m=>m.toLowerCase().startsWith(month.toLowerCase()))||month
-    return `${fullMonth} ${year} Round ${Number(round)}`
+    return {month:fullMonth,year:Number(year),roundNumber:Number(round)}
   }
-  return ''
+  return null
+}
+
+export function seasonForMonthYear(month:string,year:number){
+  const monthIndex=FULL_MONTHS.indexOf(month)+1
+  if(monthIndex>=11)return `${year}-${year+1}`
+  if(monthIndex>=1&&monthIndex<=4)return `${year-1}-${year}`
+  return `${year}`
+}
+
+export function getRoundMetadata(description?:string,title?:string,teamNames:string[]=[]):RoundMetadata{
+  const text=[title||'',description||''].filter(Boolean).join('\n')
+  const teamName=findTeamName(text,teamNames)
+  const round=findRoundParts(text)
+  if(!round)return {matchedTeam:teamName||undefined}
+  return {
+    matchedTeam:teamName||undefined,
+    month:round.month,
+    year:round.year,
+    roundNumber:round.roundNumber,
+    roundText:`${round.month} ${round.year} Round ${round.roundNumber}`,
+    season:seasonForMonthYear(round.month,round.year)
+  }
 }
 
 export function getLiveDisplayText(description?:string,title?:string,teamNames:string[]=[]){
-  // Search the title and description together because OBS/YouTube creators often put metadata in either place.
-  const text=[title||'',description||''].filter(Boolean).join('\n')
-  const teamName=findTeamName(text,teamNames)
-  const roundText=findRoundText(text)
+  const metadata=getRoundMetadata(description,title,teamNames)
   return {
-    matchedTeam:teamName||undefined,
-    roundText:roundText||undefined,
-    liveHeadline:teamName?`${teamName} is now LIVE!`:'A League Round is now LIVE!',
-    liveSubtext:roundText||'Tap to watch'
+    matchedTeam:metadata.matchedTeam,
+    roundText:metadata.roundText,
+    liveHeadline:metadata.matchedTeam?`${metadata.matchedTeam} is now LIVE!`:'A League Round is now LIVE!',
+    liveSubtext:metadata.roundText||'Tap to watch'
   }
 }
 
-export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
-  const key=process.env.YOUTUBE_API_KEY
-  if(!key)return {configured:false,isLive:false}
-
+async function getChannel(key:string,part='id,snippet'){
   const channelUrl=new URL('https://www.googleapis.com/youtube/v3/channels')
-  channelUrl.searchParams.set('part','id,snippet')
+  channelUrl.searchParams.set('part',part)
   channelUrl.searchParams.set('forHandle',HANDLE)
   channelUrl.searchParams.set('key',key)
   const channelRes=await fetch(channelUrl,{cache:'no-store'})
@@ -114,7 +138,14 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
   const channelJson=await channelRes.json()
   const channel=channelJson?.items?.[0]
   if(!channel?.id)throw new Error('YouTube channel @Toms19thHole was not found.')
+  return channel
+}
 
+export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
+  const key=process.env.YOUTUBE_API_KEY
+  if(!key)return {configured:false,isLive:false}
+
+  const channel=await getChannel(key)
   const liveUrl=new URL('https://www.googleapis.com/youtube/v3/search')
   liveUrl.searchParams.set('part','snippet')
   liveUrl.searchParams.set('channelId',channel.id)
@@ -154,4 +185,11 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
     channelTitle:channel.snippet?.title,
     ...display
   }
+}
+
+export async function getYouTubeChannelWithUploads(){
+  const key=process.env.YOUTUBE_API_KEY
+  if(!key)return {configured:false as const,key:'',channel:null as any}
+  const channel=await getChannel(key,'id,snippet,contentDetails')
+  return {configured:true as const,key,channel}
 }

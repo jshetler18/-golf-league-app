@@ -12,7 +12,7 @@ const items:MenuItem[]=[
  {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations'},
  {href:'/results',Icon:StandingsIcon,title:'Monthly Standings'},
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings'},
- {href:'/live',Icon:LiveIcon,title:'Live'},
+ {href:'/live',Icon:LiveIcon,title:'Recorded Rounds'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages'},
  {href:'/chat',Icon:ChatIcon,title:'League Chat'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams'},
@@ -30,7 +30,7 @@ export default function Home(){
  return <div className="mobile-home">
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
   {youtubeLive&&<Link href="/live" className="home-live-alert-v1263" aria-label="Watch live round"><span className="home-live-orb-v1263"><i/>LIVE</span><span className="home-live-copy-v1263"><strong>{youtubeLive.liveHeadline||'A League Round is now LIVE!'}</strong><small>{youtubeLive.liveSubtext||'Tap to watch'}</small></span><span className="home-live-arrow-v1263">›</span></Link>}
-  <nav className="mobile-menu">{items.map(({href,Icon,title})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><span className="menu-title">{title}</span></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}{title==='League Chat'&&chatUnread>0&&<span className="unread-badge">{chatUnread}</span>}{title==='Live'&&!!youtubeLive&&<span className="live-home-badge-v1260"><i/>LIVE</span>}<span className="menu-arrow">›</span></Link>)}</nav>
+  <nav className="mobile-menu">{items.map(({href,Icon,title})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><span className="menu-title">{title}</span></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}{title==='League Chat'&&chatUnread>0&&<span className="unread-badge">{chatUnread}</span>}{title==='Recorded Rounds'&&!!youtubeLive&&<span className="live-home-badge-v1260"><i/>LIVE</span>}<span className="menu-arrow">›</span></Link>)}</nav>
   <Bottom unread={unread}/>
  </div>
 }
