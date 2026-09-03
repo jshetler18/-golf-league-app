@@ -4,12 +4,58 @@ export type YouTubeLiveStatus={
   channelId?:string
   videoId?:string
   title?:string
+  description?:string
   startedAt?:string
   thumbnail?:string
   channelTitle?:string
+  liveHeadline?:string
+  liveSubtext?:string
 }
 
 const HANDLE='Toms19thHole'
+
+const MONTHS='January|February|March|April|May|June|July|August|September|October|November|December'
+
+function normalizeLine(value:string){
+  return value.replace(/\s+/g,' ').trim()
+}
+
+export function getLiveDisplayText(description?:string){
+  const text=String(description||'')
+  const lines=text.split(/\r?\n/).map(normalizeLine).filter(Boolean)
+
+  let teamName=''
+  for(const line of lines){
+    const match=line.match(/\bTeam\s+([A-Za-z][A-Za-z'’.-]*(?:\s+[A-Za-z][A-Za-z'’.-]*){0,2})\b/i)
+    if(match){
+      teamName=`Team ${match[1].trim()}`
+      break
+    }
+  }
+
+  let roundText=''
+  const roundPattern=new RegExp(`\\b(${MONTHS})\\s+(20\\d{2})\\s*(?:[-–—:]\\s*)?Round\\s*(\\d{1,2})\\b`,'i')
+  for(const line of lines){
+    const match=line.match(roundPattern)
+    if(match){
+      const month=match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()
+      roundText=`${month} ${match[2]} Round ${match[3]}`
+      break
+    }
+  }
+  if(!roundText){
+    const match=text.replace(/\s+/g,' ').match(roundPattern)
+    if(match){
+      const month=match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()
+      roundText=`${month} ${match[2]} Round ${match[3]}`
+    }
+  }
+
+  return {
+    liveHeadline:teamName?`${teamName} is now LIVE!`:'A League Round is now LIVE!',
+    liveSubtext:roundText||'Tap to watch'
+  }
+}
 
 export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
   const key=process.env.YOUTUBE_API_KEY
@@ -47,6 +93,8 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
   if(!videoRes.ok)throw new Error(`YouTube live video lookup failed (${videoRes.status}).`)
   const videoJson=await videoRes.json()
   const video=videoJson?.items?.[0]
+  const description=video?.snippet?.description||item?.snippet?.description||''
+  const display=getLiveDisplayText(description)
 
   return {
     configured:true,
@@ -54,8 +102,10 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
     channelId:channel.id,
     videoId,
     title:video?.snippet?.title||item?.snippet?.title||'Tom’s 19th Hole Live',
+    description,
     startedAt:video?.liveStreamingDetails?.actualStartTime,
     thumbnail:video?.snippet?.thumbnails?.high?.url||video?.snippet?.thumbnails?.medium?.url||item?.snippet?.thumbnails?.high?.url,
-    channelTitle:channel.snippet?.title
+    channelTitle:channel.snippet?.title,
+    ...display
   }
 }

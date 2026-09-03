@@ -87,3 +87,10 @@ Recurring Team & League Schedules now use separate Starting Time and Hours Reser
 - The existing reservation reminder process remains intact.
 - Live notification checking is isolated so a YouTube API problem will not stop simulator reservation reminders.
 - The dedicated `/api/youtube/live/check` route remains available for authenticated cron/manual server checks.
+
+## v12.63
+- Added a live-round alert card above Reserve Sim on the Home page that only appears while YouTube is live.
+- The alert uses a pulsing LIVE orb and pulsing red perimeter/glow and opens the existing Live page when tapped.
+- YouTube description parsing now recognizes `Team <name>` and round text such as `November 2026 Round 1`.
+- Home alert headline/subtext use those parsed values, with safe fallbacks if either is omitted.
+- YouTube live push notifications now use the exact same headline and subtext as the Home live alert.

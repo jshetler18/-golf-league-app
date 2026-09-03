@@ -33,8 +33,8 @@ export async function runYouTubeLiveCheck(){
   }
 
   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',PUBLIC,privateKey)
-  const title='Tom’s 19th Hole is LIVE!'
-  const body=status.title?`${status.title} — Tap to watch now.`:'Tap to watch the live stream now.'
+  const title=status.liveHeadline||'A League Round is now LIVE!'
+  const body=status.liveSubtext||'Tap to watch'
   let sent=0,failed=0
   for(const sub of subscriptions){
     if(!sub.p256dh||!sub.auth)continue
