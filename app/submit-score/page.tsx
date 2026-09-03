@@ -28,6 +28,39 @@ const aliases=(s:string|null|undefined)=>{
 const editDistance=(a:string,b:string)=>{const m=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=0;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
 const fuzzyToken=(needle:string,haystack:string)=>{if(haystack.includes(needle))return true;const words=haystack.split(' ').filter(Boolean);return words.some(w=>{if(needle.length<3)return false;const allowed=needle.length>=8?3:needle.length>=5?2:1;return editDistance(needle,w)<=allowed})}
 const labelFound=(line:string,labels:string[])=>{const n=clean(line);return labels.map(clean).some(l=>n.includes(l)||fuzzyToken(l,n))}
+
+const normalizeOcrWord=(s:string)=>clean(s)
+ .replace(/0/g,'o').replace(/1/g,'l').replace(/5/g,'s').replace(/8/g,'b')
+ .replace(/rn/g,'m').replace(/vv/g,'w')
+const looseWordMatch=(expected:string,actual:string)=>{
+ const a=normalizeOcrWord(expected),b=normalizeOcrWord(actual)
+ if(!a||!b)return false
+ if(a.includes(b)||b.includes(a))return Math.min(a.length,b.length)>=Math.min(3,Math.floor(a.length*.55))
+ const maxLen=Math.max(a.length,b.length)
+ const similarity=1-(editDistance(a,b)/Math.max(1,maxLen))
+ return similarity>=(a.length<=3?.66:.42)
+}
+const veryLooseToken=(needle:string,haystack:string)=>{
+ const wanted=normalizeOcrWord(needle),words=normalizeOcrWord(haystack).split(' ').filter(Boolean)
+ if(!wanted)return false
+ return words.some(w=>looseWordMatch(wanted,w))
+}
+function lineHasVeryLoose(textLines:string[],labels:string[],values:string[]){
+ const normalizedAll=clean(textLines.join(' '))
+ const vv=values.map(clean).filter(Boolean)
+ const labelIndexes=textLines.map((line,i)=>({i,line})).filter(({line})=>labels.some(l=>veryLooseToken(l,line)||veryLooseToken(line,l)))
+ for(const {i} of labelIndexes){
+  const w=windowAround(textLines,i,12)
+  for(const v of vv){
+   if(w.includes(v)||veryLooseToken(v,w))return true
+   const tokens=v.split(' ').filter(Boolean)
+   if(tokens.length&&tokens.filter(t=>veryLooseToken(t,w)).length>=Math.max(1,Math.ceil(tokens.length*.4)))return true
+  }
+ }
+ // Last-resort OCR fallback: if the expected value is clearly present anywhere in the settings crop,
+ // accept it even if the setting label was mangled by OCR.
+ return vv.some(v=>v.length>=3&&(normalizedAll.includes(v)||veryLooseToken(v,normalizedAll)))
+}
 const windowAround=(lines:string[],i:number,radius=4)=>clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+radius+1)).join(' '))
 const numericOcr=(s:string)=>clean(s).replace(/\b[iIl|]+\b/g,m=>'1'.repeat(m.length)).replace(/\bo\b/g,'0')
 
@@ -61,9 +94,10 @@ function numberNearLabel(lines:string[],labels:string[],expected:number){
 }
 function fuzzyCourseMatch(text:string,expected:string){
  const hay=clean(text), exp=clean(expected);if(!exp)return false;if(hay.includes(exp))return true
- const tokens=exp.split(' ').filter(t=>t.length>2);if(!tokens.length)return false
- const matched=tokens.filter(t=>fuzzyToken(t,hay)).length
- return matched>=Math.max(1,Math.ceil(tokens.length*.5))
+ const tokens=exp.split(' ').filter(t=>t.length>1);if(!tokens.length)return false
+ const matched=tokens.filter(t=>veryLooseToken(t,hay)).length
+ // One distinctive course-name word, or roughly one-third of the name, is enough on a blurry card.
+ return matched>=Math.max(1,Math.ceil(tokens.length*.3))
 }
 function playerMatches(lines:string[],players:string[]){
  const normalized=lines.map(clean)
@@ -71,8 +105,8 @@ function playerMatches(lines:string[],players:string[]){
    const parts=clean(name).split(' ').filter(Boolean);if(!parts.length)return false
    return normalized.some(line=>{
      const words=line.split(' ').filter(Boolean)
-     const hits=parts.filter(p=>words.some(w=>w.includes(p)||p.includes(w)||(p.length>=4&&editDistance(p,w)<=2))).length
-     return hits>=Math.max(1,Math.ceil(parts.length*.7))
+     const hits=parts.filter(p=>words.some(w=>w.includes(p)||p.includes(w)||(p.length>=3&&editDistance(p,w)<=Math.max(2,Math.floor(p.length*.5))))).length
+     return hits>=Math.max(1,Math.ceil(parts.length*.5))
    })
  }).slice(0,4)
 }
@@ -141,8 +175,25 @@ const flexibleNumberNearLabel=(lines:string[],labels:string[],expected:number)=>
   return new RegExp(`(^|\\D)${expectedText}(?:\\.0+)?(\\D|$)`).test(n)
  })
 }
+const veryLooseNumberNearLabel=(lines:string[],labels:string[],expected:number)=>{
+ if(flexibleNumberNearLabel(lines,labels,expected))return true
+ const exp=String(Math.round(expected))
+ return lines.some((line,i)=>{
+  const near=lines.slice(Math.max(0,i-5),Math.min(lines.length,i+14)).join(' ')
+  const labelOk=labels.some(l=>veryLooseToken(l,near))
+  if(!labelOk)return false
+  const normalized=settingDigitText(near).replace(/[o]/g,'0').replace(/[li|!]/g,'1')
+  const nums=(normalized.match(/\d+/g)||[])
+  return nums.some(n=>{
+   if(n===exp)return true
+   if(exp.length===1)return editDistance(exp,n.slice(0,1))<=1
+   if(Math.abs(n.length-exp.length)>1)return false
+   return editDistance(exp,n)<=Math.max(1,Math.ceil(exp.length*.5))
+  })
+ })
+}
 const flexibleElevationNearLabel=(lines:string[],expected:number)=>{
- if(flexibleNumberNearLabel(lines,['elevation','elev','elevatlon','altitude','alt'],expected))return true
+ if(veryLooseNumberNearLabel(lines,['elevation','elev','elevatlon','altitude','alt'],expected))return true
  const wanted=String(Math.round(expected))
  return lines.some((line,i)=>{
   const near=lines.slice(Math.max(0,i-4),Math.min(lines.length,i+12)).join(' ')
@@ -231,13 +282,13 @@ export default function SubmitScore(){
      const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>grid.pars[i]!=null&&grid.scores[i]!=null)
      const matchedPlayers=playerMatches(lines,ctx.players)
      const courseExpected=String(selectedMonth.course_name||'');const courseOk=fuzzyCourseMatch(text,courseExpected)
-     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>flexibleNumberNearLabel(settingLines,['stimp','stimpmeter','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
-     const pinsOk=!!selectedPins&&lineHas(settingLines,['pins','pin','pin position','pin location'],aliases(selectedPins))
-     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=flexibleNumberNearLabel(settingLines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
-     const windOk=lineHas(settingLines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
-     const fairwaysOk=lineHas(settingLines,['fairway','fairways'],aliases(selectedMonth.fairways))
-     const greensOk=lineHas(settingLines,['green','greens'],aliases(selectedMonth.greens))
-     const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHas(settingLines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
+     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>veryLooseNumberNearLabel(settingLines,['stimp','stimpmeter','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
+     const pinsOk=!!selectedPins&&lineHasVeryLoose(settingLines,['pins','pin','pin position','pin location'],aliases(selectedPins))
+     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=veryLooseNumberNearLabel(settingLines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
+     const windOk=lineHasVeryLoose(settingLines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
+     const fairwaysOk=lineHasVeryLoose(settingLines,['fairway','fairways'],aliases(selectedMonth.fairways))
+     const greensOk=lineHasVeryLoose(settingLines,['green','greens'],aliases(selectedMonth.greens))
+     const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHasVeryLoose(settingLines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
      const elevation=Number(selectedMonth.elevation_ft??2000);const elevationOk=flexibleElevationNearLabel(settingLines,elevation)
      const next:Check[]=[
        {key:'ocr',label:'Read scorecard image',status:text.trim()?'pass':'fail',detail:text.trim()?'Image text captured.':'No readable text was found.'},
