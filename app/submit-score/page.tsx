@@ -26,18 +26,29 @@ const aliases=(s:string|null|undefined)=>{
  return [...new Set(out.filter(Boolean))]
 }
 const editDistance=(a:string,b:string)=>{const m=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=0;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
-const fuzzyToken=(needle:string,haystack:string)=>{if(haystack.includes(needle))return true;const words=haystack.split(' ').filter(Boolean);return words.some(w=>needle.length>=4&&editDistance(needle,w)<=Math.max(1,Math.floor(needle.length*.25)))}
+const fuzzyToken=(needle:string,haystack:string)=>{if(haystack.includes(needle))return true;const words=haystack.split(' ').filter(Boolean);return words.some(w=>{if(needle.length<3)return false;const allowed=needle.length>=8?3:needle.length>=5?2:1;return editDistance(needle,w)<=allowed})}
 const labelFound=(line:string,labels:string[])=>{const n=clean(line);return labels.map(clean).some(l=>n.includes(l)||fuzzyToken(l,n))}
 const windowAround=(lines:string[],i:number,radius=4)=>clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+radius+1)).join(' '))
 const numericOcr=(s:string)=>clean(s).replace(/\b[iIl|]+\b/g,m=>'1'.repeat(m.length)).replace(/\bo\b/g,'0')
 
 function lineHas(textLines:string[],labels:string[],values:string[]){
  const vv=values.map(clean).filter(Boolean)
+ const normalizedAll=clean(textLines.join(' '))
  return textLines.some((line,i)=>{
    if(!labelFound(line,labels))return false
-   const w=windowAround(textLines,i,5)
-   return vv.some(v=>w.includes(v)||v.split(' ').filter(Boolean).every(t=>fuzzyToken(t,w)))
- })
+   const w=windowAround(textLines,i,8)
+   return vv.some(v=>{
+     if(w.includes(v))return true
+     const tokens=v.split(' ').filter(Boolean)
+     if(tokens.length&&tokens.every(t=>fuzzyToken(t,w)))return true
+     if(v.length>=4){
+       const words=w.split(' ').filter(Boolean)
+       const allowed=v.length>=8?3:2
+       if(words.some(word=>editDistance(v,word)<=allowed))return true
+     }
+     return false
+   })
+ }) || vv.some(v=>v.length>=5&&normalizedAll.split(' ').some(word=>editDistance(v,word)<=Math.min(3,Math.max(1,Math.floor(v.length*.35)))))
 }
 function numberNearLabel(lines:string[],labels:string[],expected:number){
  return lines.some((line,i)=>{
@@ -52,13 +63,17 @@ function fuzzyCourseMatch(text:string,expected:string){
  const hay=clean(text), exp=clean(expected);if(!exp)return false;if(hay.includes(exp))return true
  const tokens=exp.split(' ').filter(t=>t.length>2);if(!tokens.length)return false
  const matched=tokens.filter(t=>fuzzyToken(t,hay)).length
- return matched>=Math.max(1,Math.ceil(tokens.length*.6))
+ return matched>=Math.max(1,Math.ceil(tokens.length*.5))
 }
 function playerMatches(lines:string[],players:string[]){
  const normalized=lines.map(clean)
  return players.filter(name=>{
    const parts=clean(name).split(' ').filter(Boolean);if(!parts.length)return false
-   return normalized.some(line=>parts.every(p=>line.includes(p)))
+   return normalized.some(line=>{
+     const words=line.split(' ').filter(Boolean)
+     const hits=parts.filter(p=>words.some(w=>w.includes(p)||p.includes(w)||(p.length>=4&&editDistance(p,w)<=2))).length
+     return hits>=Math.max(1,Math.ceil(parts.length*.7))
+   })
  }).slice(0,4)
 }
 function numericRows(lines:string[]){
@@ -111,12 +126,12 @@ const flexibleNumberNearLabel=(lines:string[],labels:string[],expected:number)=>
  if(numberNearLabel(lines,labels,expected))return true
  const expectedText=String(expected)
  return lines.some((line,i)=>{
-  const near=lines.slice(Math.max(0,i-2),Math.min(lines.length,i+8)).join(' ')
+  const near=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+11)).join(' ')
   const nearClean=clean(near)
   const labelOk=labels.some(label=>{
     const wanted=clean(label)
     if(nearClean.includes(wanted))return true
-    return nearClean.split(' ').some(word=>wanted.length>=4&&editDistance(wanted,word)<=2)
+    return nearClean.split(' ').some(word=>wanted.length>=4&&editDistance(wanted,word)<=Math.min(3,Math.max(2,Math.floor(wanted.length*.35))))
   })
   if(!labelOk)return false
   const n=settingDigitText(near)
@@ -130,7 +145,7 @@ const flexibleElevationNearLabel=(lines:string[],expected:number)=>{
  if(flexibleNumberNearLabel(lines,['elevation','elev','elevatlon','altitude','alt'],expected))return true
  const wanted=String(Math.round(expected))
  return lines.some((line,i)=>{
-  const near=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+9)).join(' ')
+  const near=lines.slice(Math.max(0,i-4),Math.min(lines.length,i+12)).join(' ')
   const normalized=near.toLowerCase()
     .replace(/[|!il]/g,'1')
     .replace(/[oO]/g,'0')
