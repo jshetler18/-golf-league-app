@@ -51,3 +51,17 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Championship archive cards show `Team A vs Team B`, then month/year, then `Championship Round`, then the existing smaller season line.
 - When both matchup raw scores are available, both labeled team scores continue to display under the video.
 - Team Smith remains canonicalized to Team Shingler for archive search and raw-score matching.
+
+## v12.75 — Team Smith Championship Alias Fix
+- Normalizes historical `Team Smith` / `TeamSmith` YouTube metadata to `Team Shingler` before any archive parsing occurs.
+- This makes Team Smith work consistently for championship opponent detection, archive team matching, filters, and raw-score lookup.
+- Championship recordings such as `Team Shetler vs Team Smith` now display as `Team Shetler vs Team Shingler` when both teams are detected.
+- Both official raw scores are shown when the matching team/month/round scores exist in `team_raw_score_history`.
+
+
+## v12.76 – More reliable matchup video detection
+- Makes archived two-team detection much more tolerant of older OBS/YouTube descriptions, including `Team Hutzel vs Team Mock`, `Hutzel vs Mock`, punctuation, and missing spaces.
+- Stores detected matchup teams separately from score matching, so a card can show `Team Hutzel vs Team Mock` even if one score lookup ever fails.
+- Uses both detected teams in Team filtering.
+- Keeps Team Smith normalized to Team Shingler before matchup detection.
+- Verified April 2026 Round 4 raw scores exist for Team Hutzel (22) and Team Mock (22).

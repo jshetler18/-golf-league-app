@@ -19,6 +19,7 @@ type Recording={
   roundText?:string
   season?:string
   rawScore?:number
+  matchupTeams?:string[]
   matchupScores?:{team:string;rawScore:number}[]
   championshipRound?:boolean
 }
@@ -63,6 +64,14 @@ function canonicalArchiveTeam(value:string|undefined){
   return normalizeTeam(value)==='shingler'?'Team Shingler':value
 }
 
+function normalizeYouTubeTeamAliases(value:string){
+  // Team Smith is the historical name for Team Shingler. Normalize it before
+  // any YouTube metadata parsing so it works for team detection, championship
+  // matchup labels, archive filters, and raw-score matching. This also handles
+  // joined text such as TeamSmith or Team SmithApril 2026.
+  return value.replace(/\bteam\s*smith\b/gi,'Team Shingler')
+}
+
 async function getRawScoreRows(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL
   const key=process.env.SUPABASE_SECRET_KEY
@@ -99,15 +108,33 @@ function findRawScore(rows:RawScoreRow[],team:string|undefined,month:string|unde
 
 
 function findMentionedTeams(text:string,teamNames:string[]){
-  const lower=text.toLowerCase()
-  const found:string[]=[]
+  // Be deliberately forgiving with older OBS/YouTube labels. Team names may be
+  // separated by "vs", "v", "&", slashes, punctuation, or no spaces at all.
+  // Normalize Team Smith before scanning so every old Smith reference becomes
+  // Team Shingler consistently.
+  const normalizedText=normalizeYouTubeTeamAliases(text).toLowerCase().replace(/[^a-z0-9]+/g,' ')
+  const compactText=normalizedText.replace(/\s+/g,'')
+  const matches:{team:string;index:number}[]=[]
+
   for(const original of teamNames){
     const canonical=canonicalArchiveTeam(original)||original
-    const base=normalizeTeam(original)
-    const variants=[`team ${base}`,`team${base}`,base]
-    if(variants.some(v=>lower.includes(v))&&!found.some(x=>normalizeTeam(x)===normalizeTeam(canonical)))found.push(canonical)
+    const base=normalizeTeam(canonical)
+    if(!base)continue
+    const variants=[`team ${base}`,base]
+    let index=-1
+    for(const variant of variants){
+      const normalVariant=variant.replace(/[^a-z0-9]+/g,' ').trim()
+      const compactVariant=normalVariant.replace(/\s+/g,'')
+      const normalIndex=normalizedText.indexOf(normalVariant)
+      const compactIndex=compactText.indexOf(compactVariant)
+      const candidate=normalIndex>=0?normalIndex:compactIndex
+      if(candidate>=0&&(index<0||candidate<index))index=candidate
+    }
+    if(index>=0&&!matches.some(x=>normalizeTeam(x.team)===normalizeTeam(canonical)))matches.push({team:canonical,index})
   }
-  return found
+
+  matches.sort((a,b)=>a.index-b.index)
+  return matches.map(x=>x.team)
 }
 
 async function getMatchupRows(){
@@ -207,9 +234,11 @@ export async function GET(){
       const title=String(snippet?.title||'Recorded Round')
       const description=String(snippet?.description||'')
       const publishedAt=snippet?.publishedAt||item?.contentDetails?.videoPublishedAt
-      const text=`${title}\n${description}`
+      const parsingTitle=normalizeYouTubeTeamAliases(title)
+      const parsingDescription=normalizeYouTubeTeamAliases(description)
+      const text=`${parsingTitle}\n${parsingDescription}`
       const championshipRound=/\bchampionship\b/i.test(text)
-      const strict=getRoundMetadata(description,title,teamNames)
+      const strict=getRoundMetadata(parsingDescription,parsingTitle,teamNames)
       const looseDate=looseMonthYear(text)
       const fallbackDate=dateParts(detail?.liveStreamingDetails?.actualStartTime||publishedAt)
 
@@ -243,6 +272,7 @@ export async function GET(){
         roundText,
         season,
         rawScore,
+        matchupTeams:matchupTeams.length>=2?matchupTeams.slice(0,2):undefined,
         matchupScores:matchupScores.length>=2?matchupScores:undefined,
         championshipRound
       })
