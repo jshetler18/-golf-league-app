@@ -572,3 +572,22 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .score-progress-percent{display:block;font-size:18px;margin-bottom:8px}
 .score-progress-note{display:block;color:#69736c;line-height:1.4}
 @keyframes score-spin{to{transform:rotate(360deg)}}
+
+/* v12.95 manual scorecard review workflow */
+.submitted-score-field{display:grid;gap:7px;margin-top:18px;font-weight:800}
+.submitted-score-field input{font-size:22px;font-weight:800;text-align:center}
+.submit-score-review-btn{width:100%;margin-top:14px}
+.round-status.rejected{background:#fdeaea;color:#8c1f1f;border:1px solid #efb2b2}
+.score-success-modal-backdrop{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.56)}
+.score-success-modal{width:min(520px,100%);background:#fff;border:2px solid #78af88;border-radius:18px;padding:26px;box-shadow:0 22px 70px rgba(0,0,0,.3);text-align:center}
+.score-success-icon{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 12px;border-radius:50%;background:#198754;color:#fff;font-size:36px;font-weight:900}
+.score-success-modal h2{margin:0 0 14px;color:#123e26}.score-success-modal p{line-height:1.5}.score-success-modal .btn{width:100%;margin-top:8px}
+.manual-score-review-card{display:grid;gap:16px}
+.submitted-total-admin{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:14px 16px;border-radius:12px;background:#f1f6f2}
+.submitted-total-admin span{font-weight:700}.submitted-total-admin strong{font-size:30px;color:#0b5335}
+.admin-scorecard-image-link{display:grid;gap:7px;text-align:center;color:inherit;text-decoration:none}
+.admin-scorecard-image-link img{display:block;width:100%;max-height:620px;object-fit:contain;border:1px solid #d8dfda;border-radius:12px;background:#111}
+.admin-scorecard-image-link span{font-size:13px;color:var(--muted);text-decoration:underline}
+.admin-denial-note{display:grid;gap:5px;padding:13px 15px;border-radius:10px;background:#fdeaea;color:#812020;border:1px solid #efb2b2}
+.round-review-public-card{display:grid;gap:15px}
+@media(max-width:700px){.submitted-total-admin strong{font-size:26px}}

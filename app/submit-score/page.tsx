@@ -1,461 +1,150 @@
 'use client'
-import {useEffect,useMemo,useRef,useState} from 'react'
+import {useEffect,useState} from 'react'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 import {supabase} from '@/lib/supabase'
 
-type Month={
-  id:string;month_start:string;course_name:string|null;bonus_hole_1:number|null;bonus_hole_2:number|null;bonus_birdie_value:number|null;
-  elevation_ft:number|null;stimp_options:number[]|null;gimmie_feet:number|null;wind:string|null;greens:string|null;fairways:string|null;mulligans:boolean|null;
-  pins_week_1:string|null;pins_week_2:string|null;pins_week_3:string|null;pins_week_4:string|null
-}
-type Ctx={userId:string;teamId:string;teamName:string;players:string[];months:Month[]}
-type CheckStatus='waiting'|'checking'|'pass'|'fail'
-type Check={key:string;label:string;status:CheckStatus;detail:string}
+type Month={id:string;month_start:string;course_name:string|null}
+type Ctx={userId:string;teamId:string;teamName:string;months:Month[]}
 
-const pts=(score:number,par:number)=>{const d=score-par;return d<=-3?5:d===-2?4:d===-1?3:d===0?2:d===1?1:0}
 const monthName=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long'})
 const defaultWeek=(d:Date)=>Math.min(4,Math.floor((d.getDate()-1)/7)+1)
-const clean=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()
-const scoreLabel=(score:number|null,par:number|null)=>{if(!score||!par)return '—';const d=score-par;return d<=-3?'Albatross+':d===-2?'Eagle':d===-1?'Birdie':d===0?'Par':d===1?'Bogey':'Double Bogey+'}
-const scoreFromLabel=(label:string,par:number|null,current:number|null)=>{if(!par)return current;return label==='Albatross+'?Math.max(1,par-3):label==='Eagle'?par-2:label==='Birdie'?par-1:label==='Par'?par:label==='Bogey'?par+1:label==='Double Bogey+'?par+2:current}
-const aliases=(s:string|null|undefined)=>{
- const n=clean(String(s||''));
- const out=[n,n.replace(/feet?/g,'ft')]
- if(['none','no wind','off','calm'].includes(n))out.push('none','no wind','no winds','off','calm','0 mph','0 0 mph')
- if(n==='normal')out.push('normal','default')
- return [...new Set(out.filter(Boolean))]
-}
-const editDistance=(a:string,b:string)=>{const m=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=0;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
-const fuzzyToken=(needle:string,haystack:string)=>{if(haystack.includes(needle))return true;const words=haystack.split(' ').filter(Boolean);return words.some(w=>{if(needle.length<3)return false;const allowed=needle.length>=8?3:needle.length>=5?2:1;return editDistance(needle,w)<=allowed})}
-const labelFound=(line:string,labels:string[])=>{const n=clean(line);return labels.map(clean).some(l=>n.includes(l)||fuzzyToken(l,n))}
-
-const normalizeOcrWord=(s:string)=>clean(s)
- .replace(/0/g,'o').replace(/1/g,'l').replace(/5/g,'s').replace(/8/g,'b')
- .replace(/rn/g,'m').replace(/vv/g,'w')
-const looseWordMatch=(expected:string,actual:string)=>{
- const a=normalizeOcrWord(expected),b=normalizeOcrWord(actual)
- if(!a||!b)return false
- if(a.includes(b)||b.includes(a))return Math.min(a.length,b.length)>=Math.min(3,Math.floor(a.length*.55))
- const maxLen=Math.max(a.length,b.length)
- const similarity=1-(editDistance(a,b)/Math.max(1,maxLen))
- return similarity>=(a.length<=3?.66:.42)
-}
-const veryLooseToken=(needle:string,haystack:string)=>{
- const wanted=normalizeOcrWord(needle),words=normalizeOcrWord(haystack).split(' ').filter(Boolean)
- if(!wanted)return false
- return words.some(w=>looseWordMatch(wanted,w))
-}
-function lineHasVeryLoose(textLines:string[],labels:string[],values:string[]){
- const normalizedAll=clean(textLines.join(' '))
- const vv=values.map(clean).filter(Boolean)
- const labelIndexes=textLines.map((line,i)=>({i,line})).filter(({line})=>labels.some(l=>veryLooseToken(l,line)||veryLooseToken(line,l)))
- for(const {i} of labelIndexes){
-  const w=windowAround(textLines,i,12)
-  for(const v of vv){
-   if(w.includes(v)||veryLooseToken(v,w))return true
-   const tokens=v.split(' ').filter(Boolean)
-   if(tokens.length&&tokens.filter(t=>veryLooseToken(t,w)).length>=Math.max(1,Math.ceil(tokens.length*.4)))return true
-  }
- }
- // Last-resort OCR fallback: if the expected value is clearly present anywhere in the settings crop,
- // accept it even if the setting label was mangled by OCR.
- return vv.some(v=>v.length>=3&&(normalizedAll.includes(v)||veryLooseToken(v,normalizedAll)))
-}
-const windowAround=(lines:string[],i:number,radius=4)=>clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+radius+1)).join(' '))
-const numericOcr=(s:string)=>clean(s).replace(/\b[iIl|]+\b/g,m=>'1'.repeat(m.length)).replace(/\bo\b/g,'0')
-
-function lineHas(textLines:string[],labels:string[],values:string[]){
- const vv=values.map(clean).filter(Boolean)
- const normalizedAll=clean(textLines.join(' '))
- return textLines.some((line,i)=>{
-   if(!labelFound(line,labels))return false
-   const w=windowAround(textLines,i,8)
-   return vv.some(v=>{
-     if(w.includes(v))return true
-     const tokens=v.split(' ').filter(Boolean)
-     if(tokens.length&&tokens.every(t=>fuzzyToken(t,w)))return true
-     if(v.length>=4){
-       const words=w.split(' ').filter(Boolean)
-       const allowed=v.length>=8?3:2
-       if(words.some(word=>editDistance(v,word)<=allowed))return true
-     }
-     return false
-   })
- }) || vv.some(v=>v.length>=5&&normalizedAll.split(' ').some(word=>editDistance(v,word)<=Math.min(3,Math.max(1,Math.floor(v.length*.35)))))
-}
-function numberNearLabel(lines:string[],labels:string[],expected:number){
- return lines.some((line,i)=>{
-   if(!labelFound(line,labels))return false
-   const w=numericOcr(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+6)).join(' '))
-   const compact=w.replace(/\s+/g,' ')
-   const variants=[String(expected),String(expected).split('').join(' ')]
-   return variants.some(v=>new RegExp(`(^|\\D)${v.replace(/ /g,'\\s*')}(?:\\.0+)?(\\D|$)`).test(compact))
- })
-}
-function fuzzyCourseMatch(text:string,expected:string){
- const hay=clean(text), exp=clean(expected);if(!exp)return false
- if(hay.includes(exp))return true
- const expectedTokens=exp.split(' ').filter(t=>t.length>1)
- const hayTokens=hay.split(' ').filter(Boolean)
- if(!expectedTokens.length||!hayTokens.length)return false
-
- // Course names are intentionally stricter than the other OCR settings.
- // Require most meaningful words to be present and only allow small OCR errors per word.
- const tokenMatches=expectedTokens.map(t=>{
-   const maxEdits=t.length>=9?2:t.length>=5?1:0
-   return hayTokens.some(w=>w===t||(maxEdits>0&&Math.abs(w.length-t.length)<=maxEdits&&editDistance(t,w)<=maxEdits))
- })
- const matched=tokenMatches.filter(Boolean).length
- const required=expectedTokens.length<=2?expectedTokens.length:Math.ceil(expectedTokens.length*.75)
- if(matched<required)return false
-
- // For multi-word names, also require two matched name words to occur reasonably close
- // together in OCR text so unrelated words elsewhere on the card cannot create a pass.
- if(expectedTokens.length>=2){
-   for(let i=0;i<hayTokens.length;i++){
-     const window=hayTokens.slice(i,i+Math.max(4,expectedTokens.length+2))
-     let hits=0
-     for(const t of expectedTokens){
-       const maxEdits=t.length>=9?2:t.length>=5?1:0
-       if(window.some(w=>w===t||(maxEdits>0&&Math.abs(w.length-t.length)<=maxEdits&&editDistance(t,w)<=maxEdits)))hits++
-     }
-     if(hits>=Math.min(2,required))return true
-   }
-   return false
- }
- return true
-}
-function playerMatches(lines:string[],players:string[]){
- const normalized=lines.map(clean)
- return players.filter(name=>{
-   const parts=clean(name).split(' ').filter(Boolean);if(!parts.length)return false
-   return normalized.some(line=>{
-     const words=line.split(' ').filter(Boolean)
-     const hits=parts.filter(p=>words.some(w=>w.includes(p)||p.includes(w)||(p.length>=3&&editDistance(p,w)<=Math.max(2,Math.floor(p.length*.5))))).length
-     return hits>=Math.max(1,Math.ceil(parts.length*.5))
-   })
- }).slice(0,4)
-}
-function numericRows(lines:string[]){
- return lines.map(l=>(l.match(/\b(?:[1-9]|1\d|2\d)\b/g)||[]).map(Number)).filter(a=>a.length>=8)
-}
-
-async function enhanceImageForOcr(file:File):Promise<HTMLCanvasElement|File>{
- try{
-  const url=URL.createObjectURL(file)
-  try{
-   const img=await new Promise<HTMLImageElement>((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url})
-   const longest=Math.max(img.naturalWidth,img.naturalHeight)
-   const scale=Math.min(2.4,Math.max(1.35,3200/Math.max(1,longest)))
-   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale))
-   const cx=canvas.getContext('2d',{willReadFrequently:true});if(!cx)return file
-   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(img,0,0,canvas.width,canvas.height)
-   const data=cx.getImageData(0,0,canvas.width,canvas.height),px=data.data
-   for(let i=0;i<px.length;i+=4){
-    const g=.2126*px[i]+.7152*px[i+1]+.0722*px[i+2]
-    // Mild grayscale + contrast boost keeps thin GSPro text readable without crushing it.
-    const v=Math.max(0,Math.min(255,(g-128)*1.5+128))
-    px[i]=px[i+1]=px[i+2]=v
-   }
-   cx.putImageData(data,0,0)
-   return canvas
-  }finally{URL.revokeObjectURL(url)}
- }catch{return file}
-}
-function settingsCropForOcr(source:HTMLCanvasElement|File):HTMLCanvasElement|File{
- if(!(source instanceof HTMLCanvasElement))return source
- try{
-  // GSPro's simulator settings are normally along the bottom of the scorecard.
-  // OCR that area a second time at a larger scale so small values such as
-  // Stimp, Gimmies and Elevation are less likely to be missed.
-  const startY=Math.floor(source.height*.56),cropH=Math.max(1,source.height-startY)
-  const scale=1.55,canvas=document.createElement('canvas')
-  canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(cropH*scale))
-  const cx=canvas.getContext('2d');if(!cx)return source
-  cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high'
-  cx.drawImage(source,0,startY,source.width,cropH,0,0,canvas.width,canvas.height)
-  return canvas
- }catch{return source}
-}
-const settingDigitText=(s:string)=>String(s||'').toLowerCase()
- .replace(/[|!]/g,'1')
- .replace(/\b[li]{2}\b/g,m=>m.replace(/[li]/g,'1'))
- .replace(/\bo\b/g,'0')
- .replace(/\bs(?=\s*(?:ft|feet|foot)\b)/g,'5')
-const flexibleNumberNearLabel=(lines:string[],labels:string[],expected:number)=>{
- if(numberNearLabel(lines,labels,expected))return true
- const expectedText=String(expected)
- return lines.some((line,i)=>{
-  const near=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+11)).join(' ')
-  const nearClean=clean(near)
-  const labelOk=labels.some(label=>{
-    const wanted=clean(label)
-    if(nearClean.includes(wanted))return true
-    return nearClean.split(' ').some(word=>wanted.length>=4&&editDistance(wanted,word)<=Math.min(3,Math.max(2,Math.floor(wanted.length*.35))))
-  })
-  if(!labelOk)return false
-  const n=settingDigitText(near)
-  if(expected===11&&/(?:^|\D)(?:11|1\s*1|l\s*l|i\s*i|1\s*l|l\s*1)(?:\D|$)/i.test(near))return true
-  if(expected===10&&/(?:^|\D)(?:10|1\s*0|1\s*o)(?:\D|$)/i.test(near))return true
-  if(expected===5&&/(?:^|\D)(?:5|s)\s*(?:ft|feet|foot)?(?:\D|$)/i.test(near))return true
-  return new RegExp(`(^|\\D)${expectedText}(?:\\.0+)?(\\D|$)`).test(n)
- })
-}
-const veryLooseNumberNearLabel=(lines:string[],labels:string[],expected:number)=>{
- if(flexibleNumberNearLabel(lines,labels,expected))return true
- const exp=String(Math.round(expected))
- return lines.some((line,i)=>{
-  const near=lines.slice(Math.max(0,i-5),Math.min(lines.length,i+14)).join(' ')
-  const labelOk=labels.some(l=>veryLooseToken(l,near))
-  if(!labelOk)return false
-  const normalized=settingDigitText(near).replace(/[o]/g,'0').replace(/[li|!]/g,'1')
-  const nums=(normalized.match(/\d+/g)||[])
-  return nums.some(n=>{
-   if(n===exp)return true
-   if(exp.length===1)return editDistance(exp,n.slice(0,1))<=1
-   if(Math.abs(n.length-exp.length)>1)return false
-   return editDistance(exp,n)<=Math.max(1,Math.ceil(exp.length*.5))
-  })
- })
-}
-const flexibleElevationNearLabel=(lines:string[],expected:number)=>{
- if(veryLooseNumberNearLabel(lines,['elevation','elev','elevatlon','altitude','alt'],expected))return true
- const wanted=String(Math.round(expected))
- return lines.some((line,i)=>{
-  const near=lines.slice(Math.max(0,i-4),Math.min(lines.length,i+12)).join(' ')
-  const normalized=near.toLowerCase()
-    .replace(/[|!il]/g,'1')
-    .replace(/[oO]/g,'0')
-    .replace(/[zZ](?=\s*0{2,3}\b)/g,'2')
-    .replace(/[,._'’]/g,'')
-    .replace(/\s+/g,' ')
-  const labelOk=/(elev(?:ation|atlon)?|alt(?:itude)?)/i.test(normalized)
-  if(!labelOk)return false
-  const compact=normalized.replace(/\s/g,'')
-  return compact.includes(wanted)||compact.includes(`${wanted}ft`)||compact.includes(`${wanted}feet`)
- })
-}
-
-
-type OcrWord={text:string;confidence?:number;bbox?:{x0:number;y0:number;x1:number;y1:number}}
-type VisionScore={hole:number;label:string;score:number|null;confidence:number}
-
-async function loadColorCanvas(file:File):Promise<HTMLCanvasElement|null>{
- try{
-  const url=URL.createObjectURL(file)
-  try{
-   const img=await new Promise<HTMLImageElement>((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url})
-   const longest=Math.max(img.naturalWidth,img.naturalHeight),scale=Math.min(2,Math.max(1,2600/Math.max(1,longest)))
-   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale))
-   const cx=canvas.getContext('2d');if(!cx)return null
-   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(img,0,0,canvas.width,canvas.height)
-   return canvas
-  }finally{URL.revokeObjectURL(url)}
- }catch{return null}
-}
-const wordNum=(w:OcrWord)=>{const t=String(w.text||'').replace(/[^0-9]/g,'');return t?Number(t):null}
-function numericWordRows(words:OcrWord[]){
- const nums=words.filter(w=>w.bbox&&wordNum(w)!=null).map(w=>({...w,n:wordNum(w)!,cy:((w.bbox!.y0+w.bbox!.y1)/2),cx:((w.bbox!.x0+w.bbox!.x1)/2),h:Math.max(1,w.bbox!.y1-w.bbox!.y0)})).sort((a,b)=>a.cy-b.cy||a.cx-b.cx)
- const rows:any[]=[]
- for(const w of nums){
-  let row=rows.find(r=>Math.abs(r.cy-w.cy)<=Math.max(9,w.h*.8,r.h*.8))
-  if(!row){row={cy:w.cy,h:w.h,items:[]};rows.push(row)}
-  row.items.push(w);row.cy=row.items.reduce((a:any,x:any)=>a+x.cy,0)/row.items.length;row.h=Math.max(row.h,w.h)
- }
- return rows.map(r=>({...r,items:r.items.sort((a:any,b:any)=>a.cx-b.cx)})).filter(r=>r.items.length>=6)
-}
-function scoreMarkerAt(canvas:HTMLCanvasElement,cx0:number,cy0:number,baseW:number,baseH:number){
- const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return {label:'Par',confidence:0}
- const rx=Math.max(12,baseW*2.2),ry=Math.max(12,baseH*1.9)
- const x0=Math.max(0,Math.floor(cx0-rx)),y0=Math.max(0,Math.floor(cy0-ry)),x1=Math.min(canvas.width,Math.ceil(cx0+rx)),y1=Math.min(canvas.height,Math.ceil(cy0+ry))
- if(x1<=x0||y1<=y0)return {label:'Par',confidence:0}
- const d=ctx.getImageData(x0,y0,x1-x0,y1-y0),w=d.width,h=d.height,px=d.data
- const redR:number[]=[],darkR:number[]=[]
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const i=(y*w+x)*4,R=px[i],G=px[i+1],B=px[i+2],dx=(x+x0-cx0)/rx,dy=(y+y0-cy0)/ry,r=Math.sqrt(dx*dx+dy*dy)
-  if(r<.28||r>1.03)continue
-  const red=R>105&&R>G*1.28&&R>B*1.25&&(R-G)>28
-  const lum=.2126*R+.7152*G+.0722*B
-  if(red)redR.push(r)
-  if(lum<72&&Math.abs(dx)>.25&&Math.abs(dy)>.25)darkR.push(Math.max(Math.abs(dx),Math.abs(dy)))
- }
- const peaks=(vals:number[],bin=.055,minCount=8)=>{const bins=new Map<number,number>();for(const r of vals){const k=Math.round(r/bin);bins.set(k,(bins.get(k)||0)+1)}const arr=[...bins.entries()].filter(([,c])=>c>=minCount).sort((a,b)=>a[0]-b[0]);let groups=0,last=-99;for(const [k] of arr){if(k-last>1)groups++;last=k}return groups}
- const redPeaks=peaks(redR,.05,Math.max(6,Math.round((w+h)*.035)))
- if(redR.length>Math.max(22,(w+h)*.15)){return {label:redPeaks>=2?'Eagle':'Birdie',confidence:Math.min(1,redR.length/Math.max(35,(w+h)*.35))}}
- const darkPeaks=peaks(darkR,.055,Math.max(8,Math.round((w+h)*.045)))
- const darkDensity=darkR.length/Math.max(1,w*h)
- if(darkDensity>.035){return {label:darkPeaks>=2?'Double Bogey+':'Bogey',confidence:Math.min(1,darkDensity/.11)}}
- return {label:'Par',confidence:.6}
-}
-function geometricPars(ocrData:any):(number|null)[]{
- const words=(ocrData?.words||[]) as OcrWord[],rows=numericWordRows(words),out:(number|null)[]=Array(18).fill(null)
- const header=rows.map(r=>({r,seq:r.items.map((x:any)=>x.n)})).filter(x=>x.seq.includes(1)&&x.seq.includes(2)&&x.seq.includes(3)&&x.seq.includes(4)).sort((a,b)=>b.r.items.length-a.r.items.length)[0]?.r
- const parRow=rows.filter(r=>r!==header&&r.items.length>=8&&r.items.filter((x:any)=>x.n>=3&&x.n<=5).length>=Math.min(8,r.items.length*.75)).sort((a,b)=>b.items.length-a.items.length)[0]
- if(!parRow)return out
- if(header){
-  const hm=new Map<number,any>();for(const it of header.items){if(it.n>=1&&it.n<=18&&!hm.has(it.n))hm.set(it.n,it)}
-  const xs=[...hm.values()].map((x:any)=>x.cx).sort((a:number,b:number)=>a-b),spacing=xs.length>1?xs.slice(1).reduce((a:number,x:number,i:number)=>a+(x-xs[i]),0)/(xs.length-1):9999
-  for(let hole=1;hole<=18;hole++){const h=hm.get(hole);if(!h)continue;const best=parRow.items.reduce((b:any,it:any)=>!b||Math.abs(it.cx-h.cx)<Math.abs(b.cx-h.cx)?it:b,null);if(best&&Math.abs(best.cx-h.cx)<=Math.max(16,spacing*.48)&&best.n>=3&&best.n<=5)out[hole-1]=best.n}
- }else{for(let i=0;i<Math.min(18,parRow.items.length);i++){const n=parRow.items[i].n;if(n>=3&&n<=5)out[i]=n}}
- return out
-}
-function visionScores(canvas:HTMLCanvasElement|null,ocrData:any,pars:(number|null)[],playedHoles:number[],sourceSize?:{width:number;height:number}|null):VisionScore[]{
- if(!canvas)return []
- const words=(ocrData?.words||[]) as OcrWord[],rows=numericWordRows(words);if(!rows.length)return []
- const header=rows.map(r=>({r,seq:r.items.map((x:any)=>x.n)})).filter(x=>x.seq.includes(1)&&x.seq.includes(2)&&x.seq.includes(3)&&x.seq.includes(4)).sort((a,b)=>b.r.items.length-a.r.items.length)[0]?.r
- const parRow=rows.filter(r=>r.items.length>=8&&r.items.filter((x:any)=>x.n>=3&&x.n<=5).length>=Math.min(8,r.items.length*.75)).sort((a,b)=>b.items.length-a.items.length)[0]
- const scoreRows=rows.filter(r=>r!==header&&r!==parRow&&r.items.length>=8&&r.items.filter((x:any)=>x.n>=1&&x.n<=12).length>=Math.min(7,r.items.length*.7))
- let scoreRow=scoreRows.sort((a,b)=>{const ay=parRow?Math.abs(a.cy-parRow.cy):0,by=parRow?Math.abs(b.cy-parRow.cy):0;return ay-by})[0]
- if(!scoreRow)return []
- const sourceW=sourceSize?.width||Math.max(...words.filter(w=>w.bbox).map(w=>w.bbox!.x1),canvas.width),sourceH=sourceSize?.height||Math.max(...words.filter(w=>w.bbox).map(w=>w.bbox!.y1),canvas.height)
- const sx=canvas.width/Math.max(1,sourceW),sy=canvas.height/Math.max(1,sourceH)
- const headerMap=new Map<number,any>();if(header)for(const it of header.items){if(it.n>=1&&it.n<=18&&!headerMap.has(it.n))headerMap.set(it.n,it)}
- const result:VisionScore[]=[]
- for(const hole of playedHoles){
-  const par=pars[hole-1];if(!par)continue
-  let target:any=null
-  const h=headerMap.get(hole)
-  if(h){target=scoreRow.items.reduce((best:any,it:any)=>!best||Math.abs(it.cx-h.cx)<Math.abs(best.cx-h.cx)?it:best,null)}
-  if(!target){const idx=playedHoles.indexOf(hole);target=scoreRow.items[idx]||null}
-  if(!target?.bbox)continue
-  const cx=target.cx*sx,cy=target.cy*sy,bw=Math.max(8,(target.bbox.x1-target.bbox.x0)*sx),bh=Math.max(10,(target.bbox.y1-target.bbox.y0)*sy)
-  const m=scoreMarkerAt(canvas,cx,cy,bw,bh)
-  const score=m.label==='Eagle'?Math.max(1,par-2):m.label==='Birdie'?Math.max(1,par-1):m.label==='Par'?par:m.label==='Bogey'?par+1:par+2
-  result.push({hole,label:m.label,score,confidence:m.confidence})
- }
- return result
-}
-function detectStimp(lines:string[]){
- for(let i=0;i<lines.length;i++){
-  if(!labelFound(lines[i],['stimp','stimpmeter','green stimp','green speed']))continue
-  const raw=lines.slice(Math.max(0,i-1),Math.min(lines.length,i+5)).join(' ').toLowerCase().replace(/[|!]/g,'1').replace(/\bo\b/g,'0')
-  if(/(?:^|\D)(?:11|1\s+1|l\s*l|i\s*i)(?:\D|$)/i.test(raw))return 11
-  if(/(?:^|\D)10(?:\D|$)/.test(raw))return 10
- }
- return null
-}
-function strictPinsMatch(lines:string[],expected:string){
- const exp=clean(expected);if(!exp)return false
- const expWords=exp.split(' ').filter(Boolean)
- for(let i=0;i<lines.length;i++){
-  if(!labelFound(lines[i],['pins','pin','pin position','pin location']))continue
-  const near=clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+5)).join(' '))
-  const words=near.split(' ').filter(Boolean)
-  if((exp.length<=2?words.includes(exp):near.includes(exp)))return true
-  const hits=expWords.filter(e=>words.some(w=>e===w||(e.length>=5&&editDistance(e,w)<=2))).length
-  if(hits===expWords.length&&hits>0)return true
- }
- return false
-}
-
-function extractGrid(lines:string[]){
- const rows=numericRows(lines)
- const parLine=rows.find(a=>a.length>=10&&a.slice(0,10).every(n=>n>=3&&n<=5))
- const scoreLine=rows.find(a=>a!==parLine&&a.length>=10&&a.slice(0,10).every(n=>n>=1&&n<=12))
- return {
-   pars:Array.from({length:18},(_,i)=>parLine?.[i]??null) as (number|null)[],
-   scores:Array.from({length:18},(_,i)=>scoreLine?.[i]??null) as (number|null)[]
- }
-}
 
 export default function SubmitScore(){
- const [ctx,setCtx]=useState<Ctx|null>(null),[monthId,setMonthId]=useState(''),[week,setWeek]=useState(1),[changeRound,setChangeRound]=useState(false),[existing,setExisting]=useState<any>(null),[handicap,setHandicap]=useState(0),[scores,setScores]=useState<(number|null)[]>(Array(18).fill(null)),[pars,setPars]=useState<(number|null)[]>(Array(18).fill(null)),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState(''),[reading,setReading]=useState(false),[msg,setMsg]=useState(''),[saving,setSaving]=useState(false),[checks,setChecks]=useState<Check[]>([]),[validationPassed,setValidationPassed]=useState(false),[failureModalOpen,setFailureModalOpen]=useState(false),[checkProgress,setCheckProgress]=useState(0)
- const audioCtxRef=useRef<AudioContext|null>(null)
- useEffect(()=>{if(!(window as any).Tesseract&&!document.querySelector('script[data-score-ocr]')){const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';sc.async=true;sc.dataset.scoreOcr='1';document.head.appendChild(sc)};(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return;const {data:p}=await supabase.from('profiles').select('player_id').eq('id',user.id).single();if(!p?.player_id){setMsg('Your account must be linked to a league player before submitting a score.');return}const {data:pl}=await supabase.from('players').select('team_id,teams(name)').eq('id',p.player_id).single();const teamId=pl?.team_id;if(!teamId)return;const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).maybeSingle();if(!season)return;const {data:months}=await supabase.from('league_months').select('id,month_start,course_name,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start');const {data:roster}=await supabase.from('players').select('full_name').eq('team_id',teamId).eq('is_active',true).order('full_name');const ms=(months||[]) as Month[];const now=new Date(),key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;const current=ms.find(m=>String(m.month_start).startsWith(key))||ms[0];if(!current)return;setCtx({userId:user.id,teamId,teamName:(pl as any)?.teams?.name||'My Team',players:(roster||[]).map((x:any)=>x.full_name),months:ms});setMonthId(current.id);setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)})()},[])
- useEffect(()=>{if(!ctx||!monthId)return;(async()=>{const [{data:s},{data:h}]=await Promise.all([supabase.from('round_score_submissions').select('*').eq('league_month_id',monthId).eq('team_id',ctx.teamId).eq('week_number',week).maybeSingle(),supabase.from('monthly_team_handicaps').select('handicap_points').eq('league_month_id',monthId).eq('team_id',ctx.teamId).maybeSingle()]);setExisting(s||null);setHandicap(Number(h?.handicap_points||0));setFile(null);setPreview('');setScores(Array(18).fill(null));setPars(Array(18).fill(null));setMsg('');setChecks([]);setValidationPassed(false);setFailureModalOpen(false);setCheckProgress(0)})()},[ctx,monthId,week])
- const selectedMonth=ctx?.months.find(m=>m.id===monthId)||null,bonusHoles=selectedMonth?[Number(selectedMonth.bonus_hole_1),Number(selectedMonth.bonus_hole_2)].filter(Boolean):[],bonusValue=Number(selectedMonth?.bonus_birdie_value||0.1)
- const playedHoles=useMemo(()=>[...Array.from({length:10},(_,i)=>i+1),...bonusHoles].filter((h,i,a)=>a.indexOf(h)===i),[bonusHoles.join(',')])
- const sf=useMemo(()=>scores.slice(0,10).map((s,i)=>s&&pars[i]?pts(s,pars[i]!):0),[scores,pars]);const raw=sf.reduce<number>((a,b)=>a+b,0);const bonusBirdies=bonusHoles.filter(h=>scores[h-1]&&pars[h-1]&&scores[h-1]===pars[h-1]!-1).length;const bonus=bonusBirdies*bonusValue;const official=raw+bonus+handicap
- const selectedPins=selectedMonth?String((selectedMonth as any)[`pins_week_${week}`]||'').trim():''
+ const [ctx,setCtx]=useState<Ctx|null>(null)
+ const [monthId,setMonthId]=useState('')
+ const [week,setWeek]=useState(1)
+ const [changeRound,setChangeRound]=useState(false)
+ const [existing,setExisting]=useState<any>(null)
+ const [file,setFile]=useState<File|null>(null)
+ const [preview,setPreview]=useState('')
+ const [score,setScore]=useState('')
+ const [msg,setMsg]=useState('')
+ const [saving,setSaving]=useState(false)
+ const [successOpen,setSuccessOpen]=useState(false)
 
+ useEffect(()=>{(async()=>{
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!user)return
+   const {data:p}=await supabase.from('profiles').select('player_id').eq('id',user.id).single()
+   if(!p?.player_id){setMsg('Your account must be linked to a league player before submitting a score.');return}
+   const {data:pl}=await supabase.from('players').select('team_id,teams(name)').eq('id',p.player_id).single()
+   const teamId=(pl as any)?.team_id
+   if(!teamId)return
+   const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).maybeSingle()
+   if(!season){setMsg('There is no active league season.');return}
+   const {data:months}=await supabase.from('league_months').select('id,month_start,course_name').eq('season_id',season.id).order('month_start')
+   const ms=(months||[]) as Month[]
+   const now=new Date(),key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+   const current=ms.find(m=>String(m.month_start).startsWith(key))||ms[0]
+   if(!current){setMsg('No league months have been configured yet.');return}
+   setCtx({userId:user.id,teamId,teamName:(pl as any)?.teams?.name||'My Team',months:ms})
+   setMonthId(current.id)
+   setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)
+ })()},[])
 
- function primeFailureAudio(){
-   try{
-     const AC=(window as any).AudioContext||(window as any).webkitAudioContext
-     if(!AC)return
-     const ac:AudioContext=audioCtxRef.current ?? new AC();audioCtxRef.current=ac
-     if(ac.state==='suspended')void ac.resume()
-     // Start a silent oscillator during the actual tap. This unlocks Web Audio on iOS/Safari.
-     const osc=ac.createOscillator(),gain=ac.createGain();gain.gain.value=0;osc.connect(gain);gain.connect(ac.destination);osc.start();osc.stop(ac.currentTime+.01)
-   }catch{}
+ async function loadExisting(){
+   if(!ctx||!monthId)return
+   const {data}=await supabase.from('round_score_submissions').select('*').eq('league_month_id',monthId).eq('team_id',ctx.teamId).eq('week_number',week).maybeSingle()
+   setExisting(data||null)
+   setFile(null);setPreview('');setScore('');setMsg('');setSuccessOpen(false)
  }
- async function playFailureTone(){
-   try{
-     const AC=(window as any).AudioContext||(window as any).webkitAudioContext
-     if(!AC)return
-     const ac:AudioContext=audioCtxRef.current ?? new AC();audioCtxRef.current=ac
-     if(ac.state==='suspended')await ac.resume()
-     const now=ac.currentTime+.03
-     // A clearer two-pulse error chime: low enough to signal failure without the harsh buzzer sound.
-     const gain=ac.createGain();gain.connect(ac.destination);gain.gain.setValueAtTime(.0001,now)
-     const first=ac.createOscillator(),second=ac.createOscillator()
-     first.type='triangle';second.type='sine'
-     first.frequency.setValueAtTime(260,now);first.frequency.exponentialRampToValueAtTime(185,now+.22)
-     second.frequency.setValueAtTime(165,now+.28);second.frequency.exponentialRampToValueAtTime(115,now+.58)
-     first.connect(gain);second.connect(gain)
-     gain.gain.exponentialRampToValueAtTime(.28,now+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+.24)
-     gain.gain.setValueAtTime(.0001,now+.27);gain.gain.exponentialRampToValueAtTime(.3,now+.30);gain.gain.exponentialRampToValueAtTime(.0001,now+.62)
-     first.start(now);first.stop(now+.25);second.start(now+.28);second.stop(now+.64)
-     if('vibrate' in navigator)navigator.vibrate?.([120,70,180])
-   }catch{}
- }
+ useEffect(()=>{loadExisting()},[ctx?.teamId,monthId,week])
 
- async function choose(f:File){
-   if(!ctx||!selectedMonth)return
-   primeFailureAudio()
-   setFailureModalOpen(true);setCheckProgress(5);setFile(f);setPreview(URL.createObjectURL(f));setReading(true);setValidationPassed(false);setScores(Array(18).fill(null));setPars(Array(18).fill(null));setMsg('Checking scorecard…')
-   const base:Check[]=[
-     {key:'ocr',label:'Read scorecard image',status:'checking',detail:'Reading text and score data…'},
-     {key:'course',label:'Course name',status:'waiting',detail:''},{key:'holes',label:'Required holes + bonus holes',status:'waiting',detail:''},{key:'players',label:'At least 2 team players',status:'waiting',detail:''},
-     {key:'stimp',label:'Stimp',status:'waiting',detail:''},{key:'pins',label:`Week ${week} pins`,status:'waiting',detail:''},{key:'gimmies',label:'Gimmies',status:'waiting',detail:''},{key:'wind',label:'Wind',status:'waiting',detail:''},{key:'fairways',label:'Fairways',status:'waiting',detail:''},{key:'greens',label:'Greens',status:'waiting',detail:''},{key:'mulligans',label:'Mulligans',status:'waiting',detail:''},{key:'elevation',label:'Elevation',status:'waiting',detail:''}
-   ];setChecks(base)
-   try{
-     const T=(window as any).Tesseract;if(!T)throw new Error('OCR is still loading. Please wait a moment and try again.')
-     setCheckProgress(10);setMsg('Preparing image for a clearer read…')
-     const colorCanvas=await loadColorCanvas(f)
-     const ocrImage=await enhanceImageForOcr(f)
-     const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(72,15+Math.round(m.progress*57)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}})
-     setCheckProgress(74);setMsg('Reading round settings more closely…')
-     const settingsImage=settingsCropForOcr(ocrImage)
-     const settingsResult=await T.recognize(settingsImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(90,75+Math.round(m.progress*15)))}}})
-     setCheckProgress(92);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const settingsText=String(settingsResult?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const settingLines=[...lines,...settingsText.split(/\n/).map((x:string)=>x.trim()).filter(Boolean)];const grid=extractGrid(lines)
-     const geoPars=geometricPars(r?.data),resolvedPars=grid.pars.map((v,i)=>geoPars[i]??v)
-     const ocrSize=ocrImage instanceof HTMLCanvasElement?{width:ocrImage.width,height:ocrImage.height}:null
-     const shapeScores=visionScores(colorCanvas,r?.data,resolvedPars,playedHoles,ocrSize)
-     const shapeMap=new Map(shapeScores.map(v=>[v.hole,v]))
-     const resolvedScores=grid.scores.map((v,i)=>shapeMap.get(i+1)?.score??v)
-     setPars(resolvedPars);setScores(resolvedScores)
-     const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>resolvedPars[i]!=null&&resolvedScores[i]!=null)
-     const matchedPlayers=playerMatches(lines,ctx.players)
-     const courseExpected=String(selectedMonth.course_name||'');const courseOk=fuzzyCourseMatch(text,courseExpected)
-     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=detectStimp(settingLines);const stimpOk=foundStimp!=null&&stimpOptions.includes(foundStimp)
-     const pinsOk=!!selectedPins&&strictPinsMatch(settingLines,selectedPins)
-     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=veryLooseNumberNearLabel(settingLines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
-     const windOk=lineHasVeryLoose(settingLines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
-     const fairwaysOk=lineHasVeryLoose(settingLines,['fairway','fairways'],aliases(selectedMonth.fairways))
-     const greensOk=lineHasVeryLoose(settingLines,['green','greens'],aliases(selectedMonth.greens))
-     const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHasVeryLoose(settingLines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
-     const elevation=Number(selectedMonth.elevation_ft??2000);const elevationOk=flexibleElevationNearLabel(settingLines,elevation)
-     const next:Check[]=[
-       {key:'ocr',label:'Read scorecard image',status:text.trim()?'pass':'fail',detail:text.trim()?'Image text captured.':'No readable text was found.'},
-       {key:'course',label:'Course name',status:courseOk?'pass':'fail',detail:courseOk?`${selectedMonth.course_name||'Course'} matched.`:`Could not confidently read the configured course: ${selectedMonth.course_name||'Not configured'}.`},
-       {key:'holes',label:'Required holes + bonus holes',status:gridOk?'pass':'fail',detail:gridOk?`Holes ${playedHoles.join(', ')} have score/par data. Visual score symbols were used where readable.`:`Missing score or par data for: ${playedHoles.filter(h=>resolvedPars[h-1]==null||resolvedScores[h-1]==null).join(', ')||'required holes'}`},
-       {key:'players',label:'At least 2 team players',status:matchedPlayers.length>=2?'pass':'fail',detail:matchedPlayers.length>=2?`Matched: ${matchedPlayers.join(', ')}`:`Only matched ${matchedPlayers.length}: ${matchedPlayers.join(', ')||'none'}`},
-       {key:'stimp',label:'Stimp',status:stimpOk?'pass':'fail',detail:stimpOk?`Matched an approved Stimp (${stimpOptions.join(' or ')}).`:`Could not confidently read Stimp ${stimpOptions.join(' or ')} from the image.`},
-       {key:'pins',label:`Week ${week} pins`,status:pinsOk?'pass':'fail',detail:pinsOk?`Matched ${selectedPins}.`:selectedPins?`Expected: ${selectedPins}.`:'Admin has not set pins for this week.'},
-       {key:'gimmies',label:'Gimmies',status:gimmieOk?'pass':'fail',detail:gimmieOk?`Matched ${gimmie} ft.`:`Could not confidently read ${gimmie} ft gimmies from the image.`},
-       {key:'wind',label:'Wind',status:windOk?'pass':'fail',detail:windOk?`Matched ${selectedMonth.wind}.`:`Could not confidently read wind setting ${selectedMonth.wind} from the image.`},
-       {key:'fairways',label:'Fairways',status:fairwaysOk?'pass':'fail',detail:fairwaysOk?`Matched ${selectedMonth.fairways}.`:`Expected: ${selectedMonth.fairways}.`},
-       {key:'greens',label:'Greens',status:greensOk?'pass':'fail',detail:greensOk?`Matched ${selectedMonth.greens}.`:`Expected: ${selectedMonth.greens}.`},
-       {key:'mulligans',label:'Mulligans',status:mulligansOk?'pass':'fail',detail:mulligansOk?`Matched ${mulliganExpected}.`:`Expected: ${mulliganExpected}.`},
-       {key:'elevation',label:'Elevation',status:elevationOk?'pass':'fail',detail:elevationOk?`Matched ${elevation} ft.`:`Expected ${elevation} ft.`}
-     ]
-     setChecks(next);setCheckProgress(100);const ok=next.every(c=>c.status==='pass');setValidationPassed(ok);setMsg(ok?'Scorecard Ready — every required league setting matches. Verify the scores below.':'');if(ok){setFailureModalOpen(false)}else{setFailureModalOpen(true);void playFailureTone()}
-   }catch(e:any){setChecks(v=>v.map(c=>c.key==='ocr'?{...c,status:'fail',detail:e?.message||'Could not read this image.'}:c));setMsg('');setFailureModalOpen(true);void playFailureTone()}
-   finally{setReading(false)}
- }
- async function submit(){if(!ctx||!file||!selectedMonth)return;if(!validationPassed){setMsg('This scorecard has not passed all required league checks.');return}if(existing?.status==='pending'||existing?.status==='approved'){setMsg('That league round has already been submitted or completed.');return}if(playedHoles.some(h=>!scores[h-1]||!pars[h-1])){setMsg('Please confirm every played hole before submitting.');return}setSaving(true);setMsg('');const ext=file.name.split('.').pop()||'jpg',path=`${ctx.userId}/${monthId}-${ctx.teamId}-w${week}-${Date.now()}.${ext}`;const up=await supabase.storage.from('round-scorecards').upload(path,file,{upsert:false});if(up.error){setMsg(up.error.message);setSaving(false);return}const row={league_month_id:monthId,team_id:ctx.teamId,week_number:week,submitted_by:ctx.userId,image_path:path,hole_scores:scores,hole_pars:pars,stableford_points:sf,raw_stableford:raw,bonus_birdies:bonusBirdies,bonus_points:bonus,handicap_points:handicap,official_total:official,status:'pending'};const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'});setMsg(error?error.message:'Scorecard submitted. It is now awaiting admin approval.');if(!error)setExisting({...row,status:'pending'});setSaving(false)}
- if(!ctx||!selectedMonth)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
+ const selectedMonth=ctx?.months.find(m=>m.id===monthId)
  const locked=existing?.status==='approved'||existing?.status==='pending'
- return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page"><h1>Submit Score</h1><div className="card"><h2>{ctx.teamName}</h2><div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}</div>{changeRound&&<div className="round-picker"><label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label><button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button></div>}{existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>This round has already been submitted.</span></div>:locked?<div className="round-status complete"><b>Complete ✓</b><span>This round has already been posted for official scoring.</span></div>:<><p className="muted">Upload a clear GSPro scorecard that also shows the round setup. The app will verify the league settings before any score can be submitted.</p><div className="score-photo-actions"><label className="btn score-photo-btn" onPointerDown={primeFailureAudio}>Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label><label className="btn secondary score-photo-btn" onPointerDown={primeFailureAudio}>Photo Library<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label></div>{preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}{msg&&!reading&&<p className={`message ${validationPassed?'score-ready-message':''}`}><span>{msg}</span></p>}</>}</div>{file&&!locked&&checks.length>0&&<div className="card score-check-card"><div className="score-check-heading"><div><h2>Scorecard Check</h2><p className="muted">All checks must pass before Verify Scores unlocks.</p></div>{reading&&<span className="checking-pill">Checking…</span>}</div><div className="score-check-progress"><span style={{width:`${Math.round((checks.filter(c=>c.status==='pass'||c.status==='fail').length/checks.length)*100)}%`}}/></div><div className="score-check-list">{checks.map(c=><div className={`score-check-item ${c.status}`} key={c.key}><span className="check-dot">{c.status==='pass'?'✓':c.status==='fail'?'!':'•'}</span><div><b>{c.label}</b><small>{c.detail||'Waiting…'}</small></div></div>)}</div></div>}{file&&!locked&&validationPassed&&<div className="card"><h2>Verify Scores</h2><p className="muted">Only the holes used in this league round are shown. Choose the scoring result for each hole.</p><div className="score-entry-grid"><b>Hole</b><b>Par</b><b>Score</b><b>Pts</b>{playedHoles.map(h=>{const i=h-1;return <div className="score-entry-row" key={h}><span>{h}{bonusHoles.includes(h)?' ★':''}</span><input inputMode="numeric" value={pars[i]??''} onChange={e=>setPars(v=>v.map((x,j)=>j===i?(e.target.value?Number(e.target.value):null):x))}/><select value={scoreLabel(scores[i],pars[i])} onChange={e=>setScores(v=>v.map((x,j)=>j===i?scoreFromLabel(e.target.value,pars[i],x):x))}><option value="—">Select</option><option>Albatross+</option><option>Eagle</option><option>Birdie</option><option>Par</option><option>Bogey</option><option>Double Bogey+</option></select><strong>{h<=10&&scores[i]&&pars[i]?pts(scores[i]!,pars[i]!):bonusHoles.includes(h)&&scores[i]&&pars[i]&&scores[i]===pars[i]!-1?`+${bonusValue}`:'—'}</strong></div>})}</div><div className="round-calc"><p>Raw Stableford <b>{raw}</b></p><p>Bonus Birdies <b>{bonusBirdies} (+{bonus.toFixed(1)})</b></p><p>Monthly Handicap <b>{handicap>=0?'+':''}{handicap.toFixed(1)}</b></p><p className="official">Calculated Round Score <b>{official.toFixed(1)}</b></p></div><button className="btn" disabled={saving||reading} onClick={submit}>{saving?'Submitting…':'✓ Scores Are Correct — Submit'}</button></div>}{failureModalOpen&&<div className="score-failure-modal-backdrop" role="presentation" onClick={()=>{if(!reading)setFailureModalOpen(false)}}><div className={`score-failure-modal ${reading?'score-progress-modal':''}`} role="alertdialog" aria-modal="true" aria-labelledby={reading?'score-progress-title':'score-failure-title'} onClick={e=>e.stopPropagation()}>{reading?<><div className="score-progress-spinner" aria-hidden="true"/><h2 id="score-progress-title">Checking Scorecard</h2><p className="score-progress-message">{msg||'Checking scorecard…'}</p><div className="score-modal-progress" aria-label={`Scorecard check ${checkProgress}% complete`}><span style={{width:`${checkProgress}%`}}/></div><strong className="score-progress-percent">{checkProgress}%</strong><small className="score-progress-note">Please keep this window open while the scorecard is being read and verified.</small></>:<><div className="score-failure-modal-icon" aria-hidden="true">×</div><h2 id="score-failure-title">Scorecard check failed and cannot be submitted!</h2><p>Please fix the items marked in red below and upload a new image. Make sure when taking a photo that you take the image from the computer monitor and not the hitting screen. Be sure to get the entire card in the photo including the course name and all of the round settings at the bottom.</p><button type="button" className="btn" onClick={()=>setFailureModalOpen(false)}>View Failed Checks</button></>}</div></div>}</div></PlayerPage>
+
+ function choose(f:File){
+   setFile(f)
+   if(preview)URL.revokeObjectURL(preview)
+   setPreview(URL.createObjectURL(f))
+   setMsg('')
+ }
+
+ async function submit(){
+   if(!ctx||!selectedMonth||!file)return
+   const entered=Number(score)
+   if(!Number.isFinite(entered)||entered<0){setMsg('Please enter the total score you believe your team earned.');return}
+   if(existing?.status==='pending'||existing?.status==='approved'){setMsg('That league round has already been submitted or completed.');return}
+   setSaving(true);setMsg('')
+   const ext=(file.name.split('.').pop()||'jpg').toLowerCase()
+   const path=`${ctx.userId}/${monthId}-${ctx.teamId}-w${week}-${Date.now()}.${ext}`
+   const up=await supabase.storage.from('round-scorecards').upload(path,file,{upsert:false})
+   if(up.error){setMsg(up.error.message);setSaving(false);return}
+
+   const row={
+     league_month_id:monthId,
+     team_id:ctx.teamId,
+     week_number:week,
+     submitted_by:ctx.userId,
+     image_path:path,
+     hole_scores:[],
+     hole_pars:[],
+     stableford_points:[],
+     raw_stableford:0,
+     bonus_birdies:0,
+     bonus_points:0,
+     handicap_points:0,
+     official_total:entered,
+     status:'pending',
+     admin_note:null,
+     approved_by:null,
+     approved_at:null,
+     validation_passed:false,
+     validation_report:[],
+     detected_course_name:null,
+     detected_player_names:[],
+     detected_settings:{},
+     played_holes:[]
+   }
+   const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'})
+   if(error){setMsg(error.message);setSaving(false);return}
+   setExisting({...row,status:'pending'})
+   setSuccessOpen(true)
+   setSaving(false)
+ }
+
+ if(!ctx||!selectedMonth)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
+
+ return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page">
+   <h1>Submit Score</h1>
+   <div className="card">
+     <h2>{ctx.teamName}</h2>
+     <div className="selected-round">
+       <strong>{monthName(selectedMonth)} · Week {week}</strong>
+       {!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}
+     </div>
+     {changeRound&&<div className="round-picker">
+       <label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label>
+       <label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label>
+       <button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button>
+     </div>}
+
+     {existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>Your scorecard and submitted score are waiting for review.</span></div>
+     :existing?.status==='approved'?<div className="round-status complete"><b>Complete ✓</b><span>This round has been approved and posted as an official score.</span></div>
+     :<>
+       {existing?.status==='rejected'&&<div className="round-status rejected"><b>Scorecard Denied — Please Resubmit</b><span>{existing.admin_note||'The admin returned this scorecard. Please correct the issue and submit it again.'}</span></div>}
+       <p className="muted">Take or choose a photo of the final scorecard, then enter the total score your team believes it earned. The admin will review both before the score becomes official.</p>
+       <div className="score-photo-actions">
+         <label className="btn score-photo-btn">Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
+         <label className="btn secondary score-photo-btn">Photo Library<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
+       </div>
+       {preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}
+       <label className="field submitted-score-field">Your Team's Total Score
+         <input type="number" inputMode="decimal" step="0.1" min="0" value={score} onChange={e=>setScore(e.target.value)} placeholder="Example: 28.2"/>
+       </label>
+       <button className="btn submit-score-review-btn" disabled={saving||!file||score.trim()===''} onClick={submit}>{saving?'Submitting…':'Submit Scorecard & Score for Approval'}</button>
+       {msg&&<p className="message">{msg}</p>}
+     </>}
+   </div>
+
+   {successOpen&&<div className="score-success-modal-backdrop" role="presentation">
+     <div className="score-success-modal" role="alertdialog" aria-modal="true" aria-labelledby="score-submit-success-title">
+       <div className="score-success-icon" aria-hidden="true">✓</div>
+       <h2 id="score-submit-success-title">Scorecard and Score Successfully Submitted!</h2>
+       <p>Your scorecard and score has been successfully submitted to the admin.</p>
+       <p><strong>Your score is not official and will not be posted until the admin approves your scorecard.</strong></p>
+       <button type="button" className="btn" onClick={()=>setSuccessOpen(false)}>OK</button>
+     </div>
+   </div>}
+ </div></PlayerPage>
 }
