@@ -522,7 +522,10 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 /* v12.68 Recorded Rounds: keep the official raw score visible beside the video description. */
 .recorded-card-copy-score-v1268{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
 .recorded-card-copy-main-v1268{display:flex;min-width:0;flex:1;flex-direction:column}
-.recorded-inline-score-v1268{flex:0 0 auto;width:70px;height:70px;border:2px solid #f1b7b7;border-radius:50%;background:#fff5f5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box}
+.recorded-inline-score-v1268{flex:0 0 auto;min-width:68px;border:1px solid #f1b7b7;border-radius:10px;background:#fff5f5;padding:6px 8px;text-align:center;box-sizing:border-box}
 .recorded-inline-score-v1268 small{display:block;margin:0 0 2px;color:#9f1c1c;font-size:8px;font-weight:900;line-height:1;letter-spacing:.055em}
 .recorded-inline-score-v1268 strong{display:block;color:#c91919;font-size:24px;font-weight:950;line-height:1}
-@media (max-width:420px){.recorded-inline-score-v1268{width:64px;height:64px}.recorded-inline-score-v1268 strong{font-size:22px}}
+@media (max-width:420px){.recorded-inline-score-v1268{min-width:62px;padding:6px}.recorded-inline-score-v1268 strong{font-size:22px}}
+
+/* v12.72 Recorded Rounds: five archive filters including raw-score order. */
+@media(min-width:700px){.recorded-filters-v1265{grid-template-columns:repeat(5,minmax(0,1fr))}}

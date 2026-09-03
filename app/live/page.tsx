@@ -18,7 +18,7 @@ function durationText(value?:string){
 export default function LivePage(){
   const [status,setStatus]=useState<LiveStatus|null>(null)
   const [archive,setArchive]=useState<ArchiveResponse|null>(null)
-  const [team,setTeam]=useState('all'),[season,setSeason]=useState('all'),[month,setMonth]=useState('all'),[round,setRound]=useState('all')
+  const [team,setTeam]=useState('all'),[season,setSeason]=useState('all'),[month,setMonth]=useState('all'),[round,setRound]=useState('all'),[scoreOrder,setScoreOrder]=useState('all')
   const [activeVideo,setActiveVideo]=useState<string>('')
 
   const loadLive=useCallback(async()=>{
@@ -34,8 +34,17 @@ export default function LivePage(){
 
   const filtered=useMemo(()=>{
     const items=(archive?.recordings||[]).filter(x=>x.videoId!==status?.videoId)
-    return items.filter(x=>(team==='all'||x.team===team)&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
-  },[archive,status?.videoId,team,season,month,round])
+    const matches=items.filter(x=>(team==='all'||x.team===team)&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
+    if(scoreOrder==='all')return matches
+    return [...matches].sort((a,b)=>{
+      const aScore=typeof a.rawScore==='number'&&Number.isFinite(a.rawScore)?a.rawScore:null
+      const bScore=typeof b.rawScore==='number'&&Number.isFinite(b.rawScore)?b.rawScore:null
+      if(aScore===null&&bScore===null)return 0
+      if(aScore===null)return 1
+      if(bScore===null)return -1
+      return scoreOrder==='high' ? bScore-aScore : aScore-bScore
+    })
+  },[archive,status?.videoId,team,season,month,round,scoreOrder])
   const grouped=useMemo(()=>{
     const map=new Map<string,Recording[]>()
     for(const video of filtered){
@@ -49,8 +58,8 @@ export default function LivePage(){
       return b.localeCompare(a)
     })
   },[filtered])
-  const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'
-  function clearFilters(){setTeam('all');setSeason('all');setMonth('all');setRound('all');setActiveVideo('')}
+  const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
+  function clearFilters(){setTeam('all');setSeason('all');setMonth('all');setRound('all');setScoreOrder('all');setActiveVideo('')}
 
   return <PlayerPage title="">
     <div className="simple-mobile-page recorded-page-v1265">
@@ -65,12 +74,13 @@ export default function LivePage(){
       </section>}
 
       <section className="recorded-archive-v1265">
-        <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, or round.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>
+        <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, round, or raw score.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>
         <div className="recorded-filters-v1265">
           <label>Team<select value={team} onChange={e=>{setTeam(e.target.value);setActiveVideo('')}}><option value="all">All Teams</option>{archive?.filters.teams.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Season<select value={season} onChange={e=>{setSeason(e.target.value);setActiveVideo('')}}><option value="all">All Seasons</option>{archive?.filters.seasons.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Month<select value={month} onChange={e=>{setMonth(e.target.value);setActiveVideo('')}}><option value="all">All Months</option>{archive?.filters.months.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Round<select value={round} onChange={e=>{setRound(e.target.value);setActiveVideo('')}}><option value="all">All Rounds</option>{archive?.filters.rounds.map(x=><option key={x} value={String(x)}>Round {x}</option>)}</select></label>
+          <label>Raw Score<select value={scoreOrder} onChange={e=>{setScoreOrder(e.target.value);setActiveVideo('')}}><option value="all">All Scores</option><option value="high">High to Low</option><option value="low">Low to High</option></select></label>
         </div>
 
         {archive&&!archive.error&&<div className="recorded-count-v1267">{filtered.length} recorded round{filtered.length===1?'':'s'} found</div>}

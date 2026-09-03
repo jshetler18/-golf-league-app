@@ -33,3 +33,9 @@ Recorded Rounds cards now display archive metadata on separate lines: team, mont
 - Live/recorded-round metadata parsing now recognizes known team names even when the month is typed immediately after the team name in OBS/YouTube, e.g. `Team SmolnikDecember 2025 Week 4`.
 - `Week 1`–`Week 4` and `Wk 1`–`Wk 4` are treated as the corresponding Round 1–Round 4 in the shared live/archive parser.
 - The parsed result for the example above is Team Smolnik / December 2025 / Round 4, so archive filtering, raw-score matching, Home live banner, and live push text can use the correct metadata.
+
+
+## v12.72
+- Restored the Recorded Rounds raw-score badge to the prior rounded-square style.
+- Added a Raw Score archive control with All Scores, High to Low, and Low to High.
+- Recordings without a matched score remain visible and sort after scored recordings when score sorting is active.
