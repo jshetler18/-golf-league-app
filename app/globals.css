@@ -555,3 +555,20 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 /* v12.84 scorecard failure feedback */
 .score-failed-message{display:flex;align-items:flex-start;gap:10px;background:#fff0f0!important;border:2px solid #c62828!important;color:#8b1515!important;font-weight:800;box-shadow:0 0 0 1px rgba(198,40,40,.04)}
 .score-failure-x{display:grid;place-items:center;flex:0 0 auto;width:25px;height:25px;border-radius:50%;background:#c62828;color:#fff;font-size:21px;line-height:1;font-weight:900;margin-top:-1px}
+
+/* v12.87 failed scorecard popup */
+.score-failure-modal-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.55)}
+.score-failure-modal{width:min(520px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#fff;border:3px solid #c62828;border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.28);text-align:center;color:#641515}
+.score-failure-modal-icon{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 12px;border-radius:50%;background:#c62828;color:#fff;font-size:42px;font-weight:900;line-height:1}
+.score-failure-modal h2{margin:0 0 14px;color:#a51f1f;font-size:22px;line-height:1.2;font-weight:900}
+.score-failure-modal p{margin:0 0 20px;color:#3d2c2c;line-height:1.5;text-align:left}
+.score-failure-modal .btn{width:100%}
+.score-progress-modal{border-color:#c8d0ca;color:#243029}
+.score-progress-modal h2{color:#243029;margin-bottom:10px}
+.score-progress-modal .score-progress-message{margin:0 0 14px;text-align:center;color:#465149;font-weight:700}
+.score-progress-spinner{width:48px;height:48px;margin:0 auto 14px;border:5px solid #e2e7e3;border-top-color:#465149;border-radius:50%;animation:score-spin .9s linear infinite}
+.score-modal-progress{height:12px;background:#e5e9e6;border-radius:999px;overflow:hidden;margin:14px 0 8px}
+.score-modal-progress span{display:block;height:100%;background:#465149;transition:width .2s ease}
+.score-progress-percent{display:block;font-size:18px;margin-bottom:8px}
+.score-progress-note{display:block;color:#69736c;line-height:1.4}
+@keyframes score-spin{to{transform:rotate(360deg)}}
