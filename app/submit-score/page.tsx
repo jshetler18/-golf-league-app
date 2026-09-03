@@ -174,7 +174,7 @@ export default function SubmitScore(){
      const T=(window as any).Tesseract;if(!T)throw new Error('OCR is still loading. Please wait a moment and try again.')
      setCheckProgress(10);setMsg('Preparing image for a clearer read…')
      const ocrImage=await enhanceImageForOcr(f)
-     const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(85,15+Math.round(m.progress*70)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}}})
+     const r=await T.recognize(ocrImage,'eng',{logger:(m:any)=>{if(m?.status==='recognizing text'&&typeof m.progress==='number'){setCheckProgress(Math.min(85,15+Math.round(m.progress*70)));setMsg(`Reading scorecard… ${Math.round(m.progress*100)}%`)}}})
      setCheckProgress(90);setMsg('Comparing scorecard to league settings…');const text=String(r?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const grid=extractGrid(lines);setPars(grid.pars);setScores(grid.scores)
      const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>grid.pars[i]!=null&&grid.scores[i]!=null)
      const matchedPlayers=playerMatches(lines,ctx.players)
