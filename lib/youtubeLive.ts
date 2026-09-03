@@ -68,7 +68,10 @@ function findTeamName(text:string,teamNames:string[]){
     if(re.test(normalized))return teamName
     const short=n.replace(/^team\s+/,'').trim()
     if(short&&short!==n){
-      const shortRe=new RegExp(`(^|\\s)team\\s+${escapeRegExp(short)}(?=\\s|$)`,'i')
+      // Older YouTube recordings often used only the team surname (for example,
+      // "Billow Round 1") instead of the full database name "Team Billow".
+      // Match either form as a standalone phrase so archived rounds can still be classified.
+      const shortRe=new RegExp(`(^|\\s)${escapeRegExp(short)}(?=\\s|$)`,'i')
       if(shortRe.test(normalized))return teamName
     }
   }
