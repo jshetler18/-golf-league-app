@@ -1,3 +1,5 @@
+import {createClient} from '@supabase/supabase-js'
+
 export type YouTubeLiveStatus={
   configured:boolean
   isLive:boolean
@@ -10,48 +12,90 @@ export type YouTubeLiveStatus={
   channelTitle?:string
   liveHeadline?:string
   liveSubtext?:string
+  matchedTeam?:string
+  roundText?:string
 }
 
 const HANDLE='Toms19thHole'
-
-const MONTHS='January|February|March|April|May|June|July|August|September|October|November|December'
-
-function normalizeLine(value:string){
-  return value.replace(/\s+/g,' ').trim()
+const FULL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December']
+const MONTH_ALIASES:Record<string,string>={
+  jan:'January',january:'January',feb:'February',february:'February',mar:'March',march:'March',apr:'April',april:'April',
+  may:'May',jun:'June',june:'June',jul:'July',july:'July',aug:'August',august:'August',sep:'September',sept:'September',september:'September',
+  oct:'October',october:'October',nov:'November',november:'November',dec:'December',december:'December'
 }
 
-export function getLiveDisplayText(description?:string){
-  const text=String(description||'')
-  const lines=text.split(/\r?\n/).map(normalizeLine).filter(Boolean)
+function normalize(value:string){
+  return value
+    .normalize('NFKD')
+    .replace(/[’‘]/g,"'")
+    .replace(/[–—]/g,'-')
+    .replace(/[^a-zA-Z0-9'&.-]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim()
+    .toLowerCase()
+}
 
-  let teamName=''
-  for(const line of lines){
-    const match=line.match(/\bTeam\s+([A-Za-z][A-Za-z'’.-]*(?:\s+[A-Za-z][A-Za-z'’.-]*){0,2})\b/i)
-    if(match){
-      teamName=`Team ${match[1].trim()}`
-      break
+function escapeRegExp(value:string){return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+
+async function getKnownTeamNames(){
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key=process.env.SUPABASE_SECRET_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  if(!url||!key)return [] as string[]
+  try{
+    const supabase=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})
+    const {data,error}=await supabase.from('teams').select('name')
+    if(error)return []
+    return [...new Set((data||[]).map((x:any)=>String(x.name||'').trim()).filter(Boolean))]
+  }catch{return []}
+}
+
+function findTeamName(text:string,teamNames:string[]){
+  const normalized=normalize(text)
+  const ordered=[...teamNames].sort((a,b)=>b.length-a.length)
+  for(const teamName of ordered){
+    const n=normalize(teamName)
+    if(!n)continue
+    const re=new RegExp(`(^|\\s)${escapeRegExp(n)}(?=\\s|$)`,'i')
+    if(re.test(normalized))return teamName
+    // Also accept the team name without the literal "Team" prefix in descriptions.
+    const short=n.replace(/^team\s+/,'').trim()
+    if(short&&short!==n){
+      const shortRe=new RegExp(`(^|\\s)team\\s+${escapeRegExp(short)}(?=\\s|$)`,'i')
+      if(shortRe.test(normalized))return teamName
     }
   }
+  return ''
+}
 
-  let roundText=''
-  const roundPattern=new RegExp(`\\b(${MONTHS})\\s+(20\\d{2})\\s*(?:[-–—:]\\s*)?Round\\s*(\\d{1,2})\\b`,'i')
-  for(const line of lines){
-    const match=line.match(roundPattern)
-    if(match){
-      const month=match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()
-      roundText=`${month} ${match[2]} Round ${match[3]}`
-      break
-    }
+function findRoundText(text:string){
+  const compact=normalize(text)
+  const monthToken='(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
+  const patterns=[
+    new RegExp(`\\b${monthToken}\\s+(20\\d{2})\\s*(?:-|:)??\\s*(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\b`,'i'),
+    new RegExp(`\\b(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s*(?:-|:)??\\s*${monthToken}\\s+(20\\d{2})\\b`,'i'),
+    new RegExp(`\\b${monthToken}\\s+(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s+(20\\d{2})\\b`,'i')
+  ]
+  for(let i=0;i<patterns.length;i++){
+    const match=compact.match(patterns[i])
+    if(!match)continue
+    let month='',year='',round=''
+    if(i===0){month=match[1];year=match[2];round=match[3]}
+    else if(i===1){round=match[1];month=match[2];year=match[3]}
+    else {month=match[1];round=match[2];year=match[3]}
+    const fullMonth=MONTH_ALIASES[month.toLowerCase()]||FULL_MONTHS.find(m=>m.toLowerCase().startsWith(month.toLowerCase()))||month
+    return `${fullMonth} ${year} Round ${Number(round)}`
   }
-  if(!roundText){
-    const match=text.replace(/\s+/g,' ').match(roundPattern)
-    if(match){
-      const month=match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()
-      roundText=`${month} ${match[2]} Round ${match[3]}`
-    }
-  }
+  return ''
+}
 
+export function getLiveDisplayText(description?:string,title?:string,teamNames:string[]=[]){
+  // Search the title and description together because OBS/YouTube creators often put metadata in either place.
+  const text=[title||'',description||''].filter(Boolean).join('\n')
+  const teamName=findTeamName(text,teamNames)
+  const roundText=findRoundText(text)
   return {
+    matchedTeam:teamName||undefined,
+    roundText:roundText||undefined,
     liveHeadline:teamName?`${teamName} is now LIVE!`:'A League Round is now LIVE!',
     liveSubtext:roundText||'Tap to watch'
   }
@@ -93,15 +137,17 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
   if(!videoRes.ok)throw new Error(`YouTube live video lookup failed (${videoRes.status}).`)
   const videoJson=await videoRes.json()
   const video=videoJson?.items?.[0]
+  const title=video?.snippet?.title||item?.snippet?.title||'Tom’s 19th Hole Live'
   const description=video?.snippet?.description||item?.snippet?.description||''
-  const display=getLiveDisplayText(description)
+  const teamNames=await getKnownTeamNames()
+  const display=getLiveDisplayText(description,title,teamNames)
 
   return {
     configured:true,
     isLive:true,
     channelId:channel.id,
     videoId,
-    title:video?.snippet?.title||item?.snippet?.title||'Tom’s 19th Hole Live',
+    title,
     description,
     startedAt:video?.liveStreamingDetails?.actualStartTime,
     thumbnail:video?.snippet?.thumbnails?.high?.url||video?.snippet?.thumbnails?.medium?.url||item?.snippet?.thumbnails?.high?.url,
