@@ -529,3 +529,11 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 
 /* v12.72 Recorded Rounds: five archive filters including raw-score order. */
 @media(min-width:700px){.recorded-filters-v1265{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+
+/* v12.73 Recorded Rounds: show both teams' raw scores for identifiable matchup rounds. */
+.recorded-matchup-scores-v1273{margin-left:auto;display:flex;flex-direction:column;gap:7px;min-width:132px;align-items:flex-end}
+.recorded-matchup-score-row-v1273{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%}
+.recorded-matchup-score-row-v1273>span{font-size:11px;line-height:1.15;font-weight:700;text-align:right;max-width:82px;color:var(--muted,#667085)}
+.recorded-matchup-score-row-v1273 .recorded-inline-score-v1268{flex:0 0 auto}
+@media(max-width:520px){.recorded-matchup-scores-v1273{min-width:122px}.recorded-matchup-score-row-v1273>span{font-size:10px;max-width:74px}}

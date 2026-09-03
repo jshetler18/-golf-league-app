@@ -4,7 +4,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
-type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number}
+type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;matchupScores?:{team:string;rawScore:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
 
 function durationText(value?:string){
@@ -34,7 +34,7 @@ export default function LivePage(){
 
   const filtered=useMemo(()=>{
     const items=(archive?.recordings||[]).filter(x=>x.videoId!==status?.videoId)
-    const matches=items.filter(x=>(team==='all'||x.team===team)&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
+    const matches=items.filter(x=>(team==='all'||x.team===team||x.matchupScores?.some(s=>s.team===team))&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
     if(scoreOrder==='all')return matches
     return [...matches].sort((a,b)=>{
       const aScore=typeof a.rawScore==='number'&&Number.isFinite(a.rawScore)?a.rawScore:null
@@ -99,13 +99,13 @@ export default function LivePage(){
                 {durationText(video.duration)&&<span className="recorded-duration-v1267">{durationText(video.duration)}</span>}
               </button>}
               <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
-                <div className="recorded-card-copy-main-v1268"><strong>{video.team||video.title}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.roundText||video.title}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
-                {typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>}
+                <div className="recorded-card-copy-main-v1268"><strong>{video.championshipRound&&video.matchupScores&&video.matchupScores.length>=2?`${video.matchupScores[0].team} vs ${video.matchupScores[1].team}`:(video.team||video.title)}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.championshipRound?<span>Championship Round</span>:video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.championshipRound?'Championship Round':(video.roundText||video.title)}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
+                {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1273">{video.matchupScores.map(score=><div className="recorded-matchup-score-row-v1273" key={score.team}><span>{score.team}</span><div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div></div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>}
               </div>
             </article>)}
           </div>
         </div>)}
-        {filtered.some(v=>typeof v.rawScore==='number')&&<div className="recorded-score-note-v1267">Raw Score shown is the official score saved for that team, month, and round. If a recording cannot be matched confidently, no score badge is shown.</div>}
+        {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Raw Scores shown are the official scores saved for that team, month, and round. Match-play recordings show both teams when the matchup can be identified. If a recording cannot be matched confidently, no score badge is shown.</div>}
       </section>
     </div>
   </PlayerPage>

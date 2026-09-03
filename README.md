@@ -39,3 +39,15 @@ Recorded Rounds cards now display archive metadata on separate lines: team, mont
 - Restored the Recorded Rounds raw-score badge to the prior rounded-square style.
 - Added a Raw Score archive control with All Scores, High to Low, and Low to High.
 - Recordings without a matched score remain visible and sort after scored recordings when score sorting is active.
+
+
+## v12.73
+Recorded Rounds now detects two-team recordings and displays both official raw scores beneath the video. For Round/Week 4, if only one team is named in YouTube metadata, the archive can use the saved Week 4 matchup to identify the opponent. Team Smith remains normalized to Team Shingler. Team filtering matches either team in a matchup.
+
+
+## v12.74 Recorded Rounds Championship display
+- Detects archived YouTube videos containing the word `Championship` in the title or description.
+- Treats a Championship Round as Round 4 internally when no explicit round/week number is present, allowing matchup and raw-score lookup to work.
+- Championship archive cards show `Team A vs Team B`, then month/year, then `Championship Round`, then the existing smaller season line.
+- When both matchup raw scores are available, both labeled team scores continue to display under the video.
+- Team Smith remains canonicalized to Team Shingler for archive search and raw-score matching.

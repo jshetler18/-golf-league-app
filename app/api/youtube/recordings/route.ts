@@ -19,6 +19,8 @@ type Recording={
   roundText?:string
   season?:string
   rawScore?:number
+  matchupScores?:{team:string;rawScore:number}[]
+  championshipRound?:boolean
 }
 
 function chunks<T>(items:T[],size:number){const out:T[][]=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}
@@ -47,6 +49,7 @@ function looseMonthYear(text:string){
 
 
 type RawScoreRow={team:string;ym:string;roundNumber:number;rawScore:number}
+type MatchupRow={ym:string;teamA:string;teamB:string}
 
 function normalizeTeam(value:string){
   const normalized=value.toLowerCase().replace(/^team\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()
@@ -92,6 +95,57 @@ function findRawScore(rows:RawScoreRow[],team:string|undefined,month:string|unde
   const ym=`${year}-${String(monthIndex).padStart(2,'0')}`
   const exact=rows.find(row=>row.team===normalizedTeam&&row.ym===ym&&row.roundNumber===roundNumber)
   return exact?.rawScore
+}
+
+
+function findMentionedTeams(text:string,teamNames:string[]){
+  const lower=text.toLowerCase()
+  const found:string[]=[]
+  for(const original of teamNames){
+    const canonical=canonicalArchiveTeam(original)||original
+    const base=normalizeTeam(original)
+    const variants=[`team ${base}`,`team${base}`,base]
+    if(variants.some(v=>lower.includes(v))&&!found.some(x=>normalizeTeam(x)===normalizeTeam(canonical)))found.push(canonical)
+  }
+  return found
+}
+
+async function getMatchupRows(){
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key=process.env.SUPABASE_SECRET_KEY
+  const rows:MatchupRow[]=[]
+  if(!url||!key)return rows
+  try{
+    const supabase=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})
+    const [{data:months},{data:teams},{data:matchups}]=await Promise.all([
+      supabase.from('league_months').select('id,month_start'),
+      supabase.from('teams').select('id,name'),
+      supabase.from('week4_matchups').select('league_month_id,team_high_id,team_low_id')
+    ])
+    const monthById=new Map((months||[]).map((x:any)=>[x.id,String(x.month_start||'').slice(0,7)]))
+    const teamById=new Map((teams||[]).map((x:any)=>[x.id,canonicalArchiveTeam(String(x.name||''))||String(x.name||'')]))
+    for(const row of matchups||[]){
+      const ym=monthById.get((row as any).league_month_id)
+      const teamA=teamById.get((row as any).team_high_id)
+      const teamB=teamById.get((row as any).team_low_id)
+      if(ym&&teamA&&teamB)rows.push({ym,teamA,teamB})
+    }
+  }catch{}
+  return rows
+}
+
+function matchupTeamsForVideo(text:string,teamNames:string[],matchups:MatchupRow[],month:string|undefined,year:number|undefined,roundNumber:number|undefined,primaryTeam:string|undefined){
+  const mentioned=findMentionedTeams(text,teamNames)
+  if(mentioned.length>=2)return mentioned.slice(0,2)
+  if(roundNumber!==4||!month||!year)return mentioned
+  const monthIndex=FULL_MONTHS.indexOf(month)+1
+  if(monthIndex<1)return mentioned
+  const ym=`${year}-${String(monthIndex).padStart(2,'0')}`
+  const anchor=primaryTeam||mentioned[0]
+  if(!anchor)return mentioned
+  const match=matchups.find(m=>m.ym===ym&&(normalizeTeam(m.teamA)===normalizeTeam(anchor)||normalizeTeam(m.teamB)===normalizeTeam(anchor)))
+  if(!match)return mentioned
+  return [match.teamA,match.teamB]
 }
 
 function dateParts(value?:string){
@@ -140,7 +194,7 @@ export async function GET(){
       for(const item of json?.items||[])detailsById.set(item.id,item)
     }
 
-    const [knownTeams,rawScoreRows]=await Promise.all([getKnownTeamNames(),getRawScoreRows()])
+    const [knownTeams,rawScoreRows,matchupRows]=await Promise.all([getKnownTeamNames(),getRawScoreRows(),getMatchupRows()])
     const teamNames=[...new Set([...knownTeams,'Team Smith'])]
     const recordings:Recording[]=[]
     for(const item of playlistItems){
@@ -154,6 +208,7 @@ export async function GET(){
       const description=String(snippet?.description||'')
       const publishedAt=snippet?.publishedAt||item?.contentDetails?.videoPublishedAt
       const text=`${title}\n${description}`
+      const championshipRound=/\bchampionship\b/i.test(text)
       const strict=getRoundMetadata(description,title,teamNames)
       const looseDate=looseMonthYear(text)
       const fallbackDate=dateParts(detail?.liveStreamingDetails?.actualStartTime||publishedAt)
@@ -163,11 +218,16 @@ export async function GET(){
       // the old description did not include a month/year.
       const month=strict.month||looseDate.month||fallbackDate.month
       const year=strict.year||looseDate.year||fallbackDate.year
-      const roundNumber=strict.roundNumber||looseRoundNumber(text)
+      // In this league the monthly Championship Round is the Week 4 / Round 4
+      // head-to-head. Older YouTube descriptions may say only "Championship"
+      // without "Week 4", so use Round 4 internally for score/matchup lookup.
+      const roundNumber=strict.roundNumber||looseRoundNumber(text)||(championshipRound?4:undefined)
       const season=month&&year?seasonForMonthYear(month,year):undefined
       const roundText=month&&year&&roundNumber?`${month} ${year} Round ${roundNumber}`:(month&&year?`${month} ${year}`:undefined)
       const archiveTeam=canonicalArchiveTeam(strict.matchedTeam)
       const rawScore=findRawScore(rawScoreRows,archiveTeam,month,year,roundNumber)
+      const matchupTeams=matchupTeamsForVideo(text,teamNames,matchupRows,month,year,roundNumber,archiveTeam)
+      const matchupScores=matchupTeams.map(team=>({team,rawScore:findRawScore(rawScoreRows,team,month,year,roundNumber)})).filter((x):x is {team:string;rawScore:number}=>typeof x.rawScore==='number'&&Number.isFinite(x.rawScore))
 
       recordings.push({
         videoId,
@@ -182,7 +242,9 @@ export async function GET(){
         roundNumber,
         roundText,
         season,
-        rawScore
+        rawScore,
+        matchupScores:matchupScores.length>=2?matchupScores:undefined,
+        championshipRound
       })
     }
 
