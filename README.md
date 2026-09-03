@@ -73,3 +73,13 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Added server-only `youtube_live_state` singleton so player devices read one shared status instead of each device querying YouTube.
 - The Home LIVE banner and Recorded Rounds page continue polling the app every minute, but those polls no longer consume YouTube quota.
 - Designed for the Supabase reminder/live cron to run every minute after v12.77 is deployed.
+
+## v12.78 — Team Scorecard Submission
+- Added **Submit Score** as the first item in the player profile dropdown (above My Profile).
+- Players upload/take a final GSPro scorecard photo; free browser-based Tesseract OCR attempts to read the grid.
+- Players verify/edit hole pars and scores before submitting. Stableford holes 1–10, designated bonus par-3 birdies, monthly handicap, and official total calculate automatically.
+- One submission per team/month/week prevents duplicate scorecards; pending submissions show Awaiting Admin Approval.
+- New Admin **Score Submissions** page shows calculated totals and enhanced scorecard, with Approve & Post / Reject controls.
+- Admin approval posts the score into weekly_scores and sends a league-wide **Round Complete** push notification deep-linked to the enhanced scorecard.
+- Added enhanced digital round scorecard with roster names, hole pars/scores, Stableford points, raw score, bonus, handicap, and official total. Original GSPro photo remains available to the submitter/admin for verification.
+- Added private `round-scorecards` Storage bucket and RLS-protected `round_score_submissions` table.

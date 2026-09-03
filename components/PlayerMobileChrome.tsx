@@ -52,7 +52,7 @@ export function PlayerMobileHeader({title}:{title:string}){
         <b>⌄</b>
       </button>
       {open&&<div className="profile-menu">
-        <Link href="/profile">My Profile</Link>
+        <Link href="/submit-score">📷 Submit Score</Link><Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
       </div>}
