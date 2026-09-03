@@ -1,5 +1,5 @@
 'use client'
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 import {supabase} from '@/lib/supabase'
 
@@ -18,19 +18,41 @@ const defaultWeek=(d:Date)=>Math.min(4,Math.floor((d.getDate()-1)/7)+1)
 const clean=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()
 const scoreLabel=(score:number|null,par:number|null)=>{if(!score||!par)return '—';const d=score-par;return d<=-3?'Albatross+':d===-2?'Eagle':d===-1?'Birdie':d===0?'Par':d===1?'Bogey':'Double Bogey+'}
 const scoreFromLabel=(label:string,par:number|null,current:number|null)=>{if(!par)return current;return label==='Albatross+'?Math.max(1,par-3):label==='Eagle'?par-2:label==='Birdie'?par-1:label==='Par'?par:label==='Bogey'?par+1:label==='Double Bogey+'?par+2:current}
-const aliases=(s:string|null|undefined)=>{const n=clean(String(s||''));return [...new Set([n,n.replace(/feet?/g,'ft'),n.replace(/normal/g,'normal')].filter(Boolean))]}
+const aliases=(s:string|null|undefined)=>{
+ const n=clean(String(s||''));
+ const out=[n,n.replace(/feet?/g,'ft')]
+ if(['none','no wind','off','calm'].includes(n))out.push('none','no wind','no winds','off','calm','0 mph','0 0 mph')
+ if(n==='normal')out.push('normal','default')
+ return [...new Set(out.filter(Boolean))]
+}
+const editDistance=(a:string,b:string)=>{const m=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=0;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
+const fuzzyToken=(needle:string,haystack:string)=>{if(haystack.includes(needle))return true;const words=haystack.split(' ').filter(Boolean);return words.some(w=>needle.length>=4&&editDistance(needle,w)<=Math.max(1,Math.floor(needle.length*.25)))}
+const labelFound=(line:string,labels:string[])=>{const n=clean(line);return labels.map(clean).some(l=>n.includes(l)||fuzzyToken(l,n))}
+const windowAround=(lines:string[],i:number,radius=4)=>clean(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+radius+1)).join(' '))
+const numericOcr=(s:string)=>clean(s).replace(/\b[iIl|]+\b/g,m=>'1'.repeat(m.length)).replace(/\bo\b/g,'0')
 
 function lineHas(textLines:string[],labels:string[],values:string[]){
- const ll=labels.map(clean), vv=values.map(clean).filter(Boolean)
+ const vv=values.map(clean).filter(Boolean)
  return textLines.some((line,i)=>{
-   const n=clean(line);if(!ll.some(l=>n.includes(l)))return false
-   const window=clean([line,textLines[i+1]||'',textLines[i+2]||''].join(' '))
-   return vv.some(v=>window.includes(v))
+   if(!labelFound(line,labels))return false
+   const w=windowAround(textLines,i,5)
+   return vv.some(v=>w.includes(v)||v.split(' ').filter(Boolean).every(t=>fuzzyToken(t,w)))
  })
 }
 function numberNearLabel(lines:string[],labels:string[],expected:number){
- const ll=labels.map(clean)
- return lines.some((line,i)=>{const n=clean(line);if(!ll.some(l=>n.includes(l)))return false;const w=[line,lines[i+1]||''].join(' ');return new RegExp(`(^|\\D)${expected}(?:\\.0+)?(\\D|$)`).test(w)})
+ return lines.some((line,i)=>{
+   if(!labelFound(line,labels))return false
+   const w=numericOcr(lines.slice(Math.max(0,i-1),Math.min(lines.length,i+6)).join(' '))
+   const compact=w.replace(/\s+/g,' ')
+   const variants=[String(expected),String(expected).split('').join(' ')]
+   return variants.some(v=>new RegExp(`(^|\\D)${v.replace(/ /g,'\\s*')}(?:\\.0+)?(\\D|$)`).test(compact))
+ })
+}
+function fuzzyCourseMatch(text:string,expected:string){
+ const hay=clean(text), exp=clean(expected);if(!exp)return false;if(hay.includes(exp))return true
+ const tokens=exp.split(' ').filter(t=>t.length>2);if(!tokens.length)return false
+ const matched=tokens.filter(t=>fuzzyToken(t,hay)).length
+ return matched>=Math.max(1,Math.ceil(tokens.length*.6))
 }
 function playerMatches(lines:string[],players:string[]){
  const normalized=lines.map(clean)
@@ -54,6 +76,7 @@ function extractGrid(lines:string[]){
 
 export default function SubmitScore(){
  const [ctx,setCtx]=useState<Ctx|null>(null),[monthId,setMonthId]=useState(''),[week,setWeek]=useState(1),[changeRound,setChangeRound]=useState(false),[existing,setExisting]=useState<any>(null),[handicap,setHandicap]=useState(0),[scores,setScores]=useState<(number|null)[]>(Array(18).fill(null)),[pars,setPars]=useState<(number|null)[]>(Array(18).fill(null)),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState(''),[reading,setReading]=useState(false),[msg,setMsg]=useState(''),[saving,setSaving]=useState(false),[checks,setChecks]=useState<Check[]>([]),[validationPassed,setValidationPassed]=useState(false)
+ const audioCtxRef=useRef<AudioContext|null>(null)
  useEffect(()=>{if(!(window as any).Tesseract&&!document.querySelector('script[data-score-ocr]')){const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';sc.async=true;sc.dataset.scoreOcr='1';document.head.appendChild(sc)};(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return;const {data:p}=await supabase.from('profiles').select('player_id').eq('id',user.id).single();if(!p?.player_id){setMsg('Your account must be linked to a league player before submitting a score.');return}const {data:pl}=await supabase.from('players').select('team_id,teams(name)').eq('id',p.player_id).single();const teamId=pl?.team_id;if(!teamId)return;const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).maybeSingle();if(!season)return;const {data:months}=await supabase.from('league_months').select('id,month_start,course_name,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start');const {data:roster}=await supabase.from('players').select('full_name').eq('team_id',teamId).eq('is_active',true).order('full_name');const ms=(months||[]) as Month[];const now=new Date(),key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;const current=ms.find(m=>String(m.month_start).startsWith(key))||ms[0];if(!current)return;setCtx({userId:user.id,teamId,teamName:(pl as any)?.teams?.name||'My Team',players:(roster||[]).map((x:any)=>x.full_name),months:ms});setMonthId(current.id);setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)})()},[])
  useEffect(()=>{if(!ctx||!monthId)return;(async()=>{const [{data:s},{data:h}]=await Promise.all([supabase.from('round_score_submissions').select('*').eq('league_month_id',monthId).eq('team_id',ctx.teamId).eq('week_number',week).maybeSingle(),supabase.from('monthly_team_handicaps').select('handicap_points').eq('league_month_id',monthId).eq('team_id',ctx.teamId).maybeSingle()]);setExisting(s||null);setHandicap(Number(h?.handicap_points||0));setFile(null);setPreview('');setScores(Array(18).fill(null));setPars(Array(18).fill(null));setMsg('');setChecks([]);setValidationPassed(false)})()},[ctx,monthId,week])
  const selectedMonth=ctx?.months.find(m=>m.id===monthId)||null,bonusHoles=selectedMonth?[Number(selectedMonth.bonus_hole_1),Number(selectedMonth.bonus_hole_2)].filter(Boolean):[],bonusValue=Number(selectedMonth?.bonus_birdie_value||0.1)
@@ -61,8 +84,34 @@ export default function SubmitScore(){
  const sf=useMemo(()=>scores.slice(0,10).map((s,i)=>s&&pars[i]?pts(s,pars[i]!):0),[scores,pars]);const raw=sf.reduce<number>((a,b)=>a+b,0);const bonusBirdies=bonusHoles.filter(h=>scores[h-1]&&pars[h-1]&&scores[h-1]===pars[h-1]!-1).length;const bonus=bonusBirdies*bonusValue;const official=raw+bonus+handicap
  const selectedPins=selectedMonth?String((selectedMonth as any)[`pins_week_${week}`]||'').trim():''
 
+
+ function primeFailureAudio(){
+   try{
+     const AC=(window as any).AudioContext||(window as any).webkitAudioContext
+     if(!AC)return
+     if(!audioCtxRef.current)audioCtxRef.current=new AC()
+     if(audioCtxRef.current.state==='suspended')audioCtxRef.current.resume().catch(()=>{})
+   }catch{}
+ }
+ function playFailureTone(){
+   try{
+     const AC=(window as any).AudioContext||(window as any).webkitAudioContext
+     if(!AC)return
+     const ac=audioCtxRef.current||new AC();audioCtxRef.current=ac
+     if(ac.state==='suspended')ac.resume().catch(()=>{})
+     const now=ac.currentTime
+     ;[0,0.18].forEach((delay,idx)=>{
+       const osc=ac.createOscillator(),gain=ac.createGain()
+       osc.type='square';osc.frequency.setValueAtTime(idx===0?330:220,now+delay)
+       gain.gain.setValueAtTime(0.0001,now+delay);gain.gain.exponentialRampToValueAtTime(0.16,now+delay+0.015);gain.gain.exponentialRampToValueAtTime(0.0001,now+delay+0.16)
+       osc.connect(gain);gain.connect(ac.destination);osc.start(now+delay);osc.stop(now+delay+0.17)
+     })
+   }catch{}
+ }
+
  async function choose(f:File){
    if(!ctx||!selectedMonth)return
+   primeFailureAudio()
    setFile(f);setPreview(URL.createObjectURL(f));setReading(true);setValidationPassed(false);setScores(Array(18).fill(null));setPars(Array(18).fill(null));setMsg('Checking scorecard…')
    const base:Check[]=[
      {key:'ocr',label:'Read scorecard image',status:'checking',detail:'Reading text and score data…'},
@@ -75,35 +124,35 @@ export default function SubmitScore(){
      const text=String(r?.data?.text||'');const lines=text.split(/\n/).map((x:string)=>x.trim()).filter(Boolean);const grid=extractGrid(lines);setPars(grid.pars);setScores(grid.scores)
      const required=playedHoles.map(h=>h-1);const gridOk=required.every(i=>grid.pars[i]!=null&&grid.scores[i]!=null)
      const matchedPlayers=playerMatches(lines,ctx.players)
-     const courseExpected=clean(selectedMonth.course_name||'');const courseTokens=courseExpected.split(' ').filter(x=>x.length>2);const normalizedText=clean(text);const courseOk=!!courseExpected&&(normalizedText.includes(courseExpected)||courseTokens.filter(t=>normalizedText.includes(t)).length>=Math.max(2,Math.ceil(courseTokens.length*.7)))
-     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>numberNearLabel(lines,['stimp','green speed'],v));const stimpOk=foundStimp!=null
+     const courseExpected=String(selectedMonth.course_name||'');const courseOk=fuzzyCourseMatch(text,courseExpected)
+     const stimpOptions=(selectedMonth.stimp_options?.length?selectedMonth.stimp_options:[10,11]).map(Number);const foundStimp=stimpOptions.find(v=>numberNearLabel(lines,['stimp','green stimp','green speed','speed'],v));const stimpOk=foundStimp!=null
      const pinsOk=!!selectedPins&&lineHas(lines,['pins','pin','pin position','pin location'],aliases(selectedPins))
-     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=numberNearLabel(lines,['gimmie','gimmies','gimme','gimmes'],gimmie)
-     const windOk=lineHas(lines,['wind'],aliases(selectedMonth.wind))
+     const gimmie=Number(selectedMonth.gimmie_feet??5);const gimmieOk=numberNearLabel(lines,['gimmie','gimmies','gimme','gimmes','gimme distance','gimme radius','gimmie distance','gimmie radius'],gimmie)
+     const windOk=lineHas(lines,['wind','winds','wind speed'],aliases(selectedMonth.wind))
      const fairwaysOk=lineHas(lines,['fairway','fairways'],aliases(selectedMonth.fairways))
      const greensOk=lineHas(lines,['green','greens'],aliases(selectedMonth.greens))
      const mulliganExpected=selectedMonth.mulligans?'on':'off';const mulligansOk=lineHas(lines,['mulligan','mulligans'],selectedMonth.mulligans?['on','yes','enabled']:['off','no','disabled'])
      const elevation=Number(selectedMonth.elevation_ft??2000);const elevationOk=numberNearLabel(lines,['elevation','altitude'],elevation)
      const next:Check[]=[
        {key:'ocr',label:'Read scorecard image',status:text.trim()?'pass':'fail',detail:text.trim()?'Image text captured.':'No readable text was found.'},
-       {key:'course',label:'Course name',status:courseOk?'pass':'fail',detail:courseOk?selectedMonth.course_name||'Matched':`Expected: ${selectedMonth.course_name||'Not configured'}`},
+       {key:'course',label:'Course name',status:courseOk?'pass':'fail',detail:courseOk?`${selectedMonth.course_name||'Course'} matched.`:`Could not confidently read the configured course: ${selectedMonth.course_name||'Not configured'}.`},
        {key:'holes',label:'Required holes + bonus holes',status:gridOk?'pass':'fail',detail:gridOk?`Holes ${playedHoles.join(', ')} have score/par data.`:`Missing score or par data for: ${playedHoles.filter(h=>grid.pars[h-1]==null||grid.scores[h-1]==null).join(', ')||'required holes'}`},
        {key:'players',label:'At least 2 team players',status:matchedPlayers.length>=2?'pass':'fail',detail:matchedPlayers.length>=2?`Matched: ${matchedPlayers.join(', ')}`:`Only matched ${matchedPlayers.length}: ${matchedPlayers.join(', ')||'none'}`},
-       {key:'stimp',label:'Stimp',status:stimpOk?'pass':'fail',detail:stimpOk?`Matched ${foundStimp}.`:`Expected ${stimpOptions.join(' or ')}.`},
+       {key:'stimp',label:'Stimp',status:stimpOk?'pass':'fail',detail:stimpOk?`Matched ${foundStimp}.`:`Could not confidently read Stimp ${stimpOptions.join(' or ')} from the image.`},
        {key:'pins',label:`Week ${week} pins`,status:pinsOk?'pass':'fail',detail:pinsOk?`Matched ${selectedPins}.`:selectedPins?`Expected: ${selectedPins}.`:'Admin has not set pins for this week.'},
-       {key:'gimmies',label:'Gimmies',status:gimmieOk?'pass':'fail',detail:gimmieOk?`Matched ${gimmie} ft.`:`Expected ${gimmie} ft.`},
-       {key:'wind',label:'Wind',status:windOk?'pass':'fail',detail:windOk?`Matched ${selectedMonth.wind}.`:`Expected: ${selectedMonth.wind}.`},
+       {key:'gimmies',label:'Gimmies',status:gimmieOk?'pass':'fail',detail:gimmieOk?`Matched ${gimmie} ft.`:`Could not confidently read ${gimmie} ft gimmies from the image.`},
+       {key:'wind',label:'Wind',status:windOk?'pass':'fail',detail:windOk?`Matched ${selectedMonth.wind}.`:`Could not confidently read wind setting ${selectedMonth.wind} from the image.`},
        {key:'fairways',label:'Fairways',status:fairwaysOk?'pass':'fail',detail:fairwaysOk?`Matched ${selectedMonth.fairways}.`:`Expected: ${selectedMonth.fairways}.`},
        {key:'greens',label:'Greens',status:greensOk?'pass':'fail',detail:greensOk?`Matched ${selectedMonth.greens}.`:`Expected: ${selectedMonth.greens}.`},
        {key:'mulligans',label:'Mulligans',status:mulligansOk?'pass':'fail',detail:mulligansOk?`Matched ${mulliganExpected}.`:`Expected: ${mulliganExpected}.`},
        {key:'elevation',label:'Elevation',status:elevationOk?'pass':'fail',detail:elevationOk?`Matched ${elevation} ft.`:`Expected ${elevation} ft.`}
      ]
-     setChecks(next);const ok=next.every(c=>c.status==='pass');setValidationPassed(ok);setMsg(ok?'Scorecard Ready — every required league setting matches. Verify the scores below.':'Scorecard check failed. Fix the items marked in red and upload a new scorecard. This card cannot be submitted.')
-   }catch(e:any){setChecks(v=>v.map(c=>c.key==='ocr'?{...c,status:'fail',detail:e?.message||'Could not read this image.'}:c));setMsg(e?.message||'Unable to check this scorecard. Please try another photo.')}
+     setChecks(next);const ok=next.every(c=>c.status==='pass');setValidationPassed(ok);setMsg(ok?'Scorecard Ready — every required league setting matches. Verify the scores below.':'Scorecard check failed. Fix the items marked in red and upload a new scorecard. This card cannot be submitted.');if(!ok)playFailureTone()
+   }catch(e:any){setChecks(v=>v.map(c=>c.key==='ocr'?{...c,status:'fail',detail:e?.message||'Could not read this image.'}:c));setMsg(e?.message||'Unable to check this scorecard. Please try another photo.');playFailureTone()}
    finally{setReading(false)}
  }
  async function submit(){if(!ctx||!file||!selectedMonth)return;if(!validationPassed){setMsg('This scorecard has not passed all required league checks.');return}if(existing?.status==='pending'||existing?.status==='approved'){setMsg('That league round has already been submitted or completed.');return}if(playedHoles.some(h=>!scores[h-1]||!pars[h-1])){setMsg('Please confirm every played hole before submitting.');return}setSaving(true);setMsg('');const ext=file.name.split('.').pop()||'jpg',path=`${ctx.userId}/${monthId}-${ctx.teamId}-w${week}-${Date.now()}.${ext}`;const up=await supabase.storage.from('round-scorecards').upload(path,file,{upsert:false});if(up.error){setMsg(up.error.message);setSaving(false);return}const row={league_month_id:monthId,team_id:ctx.teamId,week_number:week,submitted_by:ctx.userId,image_path:path,hole_scores:scores,hole_pars:pars,stableford_points:sf,raw_stableford:raw,bonus_birdies:bonusBirdies,bonus_points:bonus,handicap_points:handicap,official_total:official,status:'pending'};const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'});setMsg(error?error.message:'Scorecard submitted. It is now awaiting admin approval.');if(!error)setExisting({...row,status:'pending'});setSaving(false)}
  if(!ctx||!selectedMonth)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
  const locked=existing?.status==='approved'||existing?.status==='pending'
- return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page"><h1>Submit Score</h1><div className="card"><h2>{ctx.teamName}</h2><div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}</div>{changeRound&&<div className="round-picker"><label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label><button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button></div>}{existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>This round has already been submitted.</span></div>:locked?<div className="round-status complete"><b>Complete ✓</b><span>This round has already been posted for official scoring.</span></div>:<><p className="muted">Upload a clear GSPro scorecard that also shows the round setup. The app will verify the league settings before any score can be submitted.</p><div className="score-photo-actions"><label className="btn score-photo-btn">Take Scorecard Photo<input hidden type="file" accept="image/*" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label><label className="btn secondary score-photo-btn">Choose from Photos<input hidden type="file" accept="image/*" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label></div>{preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}{msg&&<p className={`message ${validationPassed?'score-ready-message':''}`}>{msg}</p>}</>}</div>{file&&!locked&&checks.length>0&&<div className="card score-check-card"><div className="score-check-heading"><div><h2>Scorecard Check</h2><p className="muted">All checks must pass before Verify Scores unlocks.</p></div>{reading&&<span className="checking-pill">Checking…</span>}</div><div className="score-check-progress"><span style={{width:`${Math.round((checks.filter(c=>c.status==='pass'||c.status==='fail').length/checks.length)*100)}%`}}/></div><div className="score-check-list">{checks.map(c=><div className={`score-check-item ${c.status}`} key={c.key}><span className="check-dot">{c.status==='pass'?'✓':c.status==='fail'?'!':'•'}</span><div><b>{c.label}</b><small>{c.detail||'Waiting…'}</small></div></div>)}</div></div>}{file&&!locked&&validationPassed&&<div className="card"><h2>Verify Scores</h2><p className="muted">Only the holes used in this league round are shown. Choose the scoring result for each hole.</p><div className="score-entry-grid"><b>Hole</b><b>Par</b><b>Score</b><b>Pts</b>{playedHoles.map(h=>{const i=h-1;return <div className="score-entry-row" key={h}><span>{h}{bonusHoles.includes(h)?' ★':''}</span><input inputMode="numeric" value={pars[i]??''} onChange={e=>setPars(v=>v.map((x,j)=>j===i?(e.target.value?Number(e.target.value):null):x))}/><select value={scoreLabel(scores[i],pars[i])} onChange={e=>setScores(v=>v.map((x,j)=>j===i?scoreFromLabel(e.target.value,pars[i],x):x))}><option value="—">Select</option><option>Albatross+</option><option>Eagle</option><option>Birdie</option><option>Par</option><option>Bogey</option><option>Double Bogey+</option></select><strong>{h<=10&&scores[i]&&pars[i]?pts(scores[i]!,pars[i]!):bonusHoles.includes(h)&&scores[i]&&pars[i]&&scores[i]===pars[i]!-1?`+${bonusValue}`:'—'}</strong></div>})}</div><div className="round-calc"><p>Raw Stableford <b>{raw}</b></p><p>Bonus Birdies <b>{bonusBirdies} (+{bonus.toFixed(1)})</b></p><p>Monthly Handicap <b>{handicap>=0?'+':''}{handicap.toFixed(1)}</b></p><p className="official">Calculated Round Score <b>{official.toFixed(1)}</b></p></div><button className="btn" disabled={saving||reading} onClick={submit}>{saving?'Submitting…':'✓ Scores Are Correct — Submit'}</button></div>}</div></PlayerPage>
+ return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page"><h1>Submit Score</h1><div className="card"><h2>{ctx.teamName}</h2><div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}</div>{changeRound&&<div className="round-picker"><label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label><button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button></div>}{existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>This round has already been submitted.</span></div>:locked?<div className="round-status complete"><b>Complete ✓</b><span>This round has already been posted for official scoring.</span></div>:<><p className="muted">Upload a clear GSPro scorecard that also shows the round setup. The app will verify the league settings before any score can be submitted.</p><div className="score-photo-actions"><label className="btn score-photo-btn">Take Scorecard Photo<input hidden type="file" accept="image/*" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label><label className="btn secondary score-photo-btn">Choose from Photos<input hidden type="file" accept="image/*" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label></div>{preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}{msg&&<p className={`message ${validationPassed?'score-ready-message':file&&!reading&&checks.some(c=>c.status==='fail')?'score-failed-message':''}`}>{file&&!reading&&checks.some(c=>c.status==='fail')&&<span className="score-failure-x" aria-hidden="true">×</span>}<span>{msg}</span></p>}</>}</div>{file&&!locked&&checks.length>0&&<div className="card score-check-card"><div className="score-check-heading"><div><h2>Scorecard Check</h2><p className="muted">All checks must pass before Verify Scores unlocks.</p></div>{reading&&<span className="checking-pill">Checking…</span>}</div><div className="score-check-progress"><span style={{width:`${Math.round((checks.filter(c=>c.status==='pass'||c.status==='fail').length/checks.length)*100)}%`}}/></div><div className="score-check-list">{checks.map(c=><div className={`score-check-item ${c.status}`} key={c.key}><span className="check-dot">{c.status==='pass'?'✓':c.status==='fail'?'!':'•'}</span><div><b>{c.label}</b><small>{c.detail||'Waiting…'}</small></div></div>)}</div></div>}{file&&!locked&&validationPassed&&<div className="card"><h2>Verify Scores</h2><p className="muted">Only the holes used in this league round are shown. Choose the scoring result for each hole.</p><div className="score-entry-grid"><b>Hole</b><b>Par</b><b>Score</b><b>Pts</b>{playedHoles.map(h=>{const i=h-1;return <div className="score-entry-row" key={h}><span>{h}{bonusHoles.includes(h)?' ★':''}</span><input inputMode="numeric" value={pars[i]??''} onChange={e=>setPars(v=>v.map((x,j)=>j===i?(e.target.value?Number(e.target.value):null):x))}/><select value={scoreLabel(scores[i],pars[i])} onChange={e=>setScores(v=>v.map((x,j)=>j===i?scoreFromLabel(e.target.value,pars[i],x):x))}><option value="—">Select</option><option>Albatross+</option><option>Eagle</option><option>Birdie</option><option>Par</option><option>Bogey</option><option>Double Bogey+</option></select><strong>{h<=10&&scores[i]&&pars[i]?pts(scores[i]!,pars[i]!):bonusHoles.includes(h)&&scores[i]&&pars[i]&&scores[i]===pars[i]!-1?`+${bonusValue}`:'—'}</strong></div>})}</div><div className="round-calc"><p>Raw Stableford <b>{raw}</b></p><p>Bonus Birdies <b>{bonusBirdies} (+{bonus.toFixed(1)})</b></p><p>Monthly Handicap <b>{handicap>=0?'+':''}{handicap.toFixed(1)}</b></p><p className="official">Calculated Round Score <b>{official.toFixed(1)}</b></p></div><button className="btn" disabled={saving||reading} onClick={submit}>{saving?'Submitting…':'✓ Scores Are Correct — Submit'}</button></div>}</div></PlayerPage>
 }
