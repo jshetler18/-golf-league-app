@@ -150,6 +150,34 @@ export function getLiveDisplayText(description?:string,title?:string,teamNames:s
   }
 }
 
+
+function decodeHtml(value:string){
+  return value.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+}
+
+function metaContent(html:string,property:string){
+  const escaped=escapeRegExp(property)
+  const a=html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${escaped}["'][^>]+content=["']([^"']*)["']`,'i'))
+  const b=html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${escaped}["']`,'i'))
+  return decodeHtml((a?.[1]||b?.[1]||'').trim())
+}
+
+async function getLiveFromChannelRedirect():Promise<{videoId:string,title:string,description:string,thumbnail?:string}|null>{
+  try{
+    const res=await fetch(`https://www.youtube.com/@${HANDLE}/live`,{
+      cache:'no-store',redirect:'follow',headers:{'User-Agent':'Mozilla/5.0'}
+    })
+    const finalUrl=new URL(res.url)
+    const videoId=finalUrl.hostname.includes('youtube.com')&&finalUrl.pathname==='/watch'?finalUrl.searchParams.get('v'):null
+    if(!videoId)return null
+    const html=await res.text()
+    const title=metaContent(html,'og:title')||'Tom’s 19th Hole Live'
+    const description=metaContent(html,'og:description')||metaContent(html,'description')||''
+    const thumbnail=metaContent(html,'og:image')||undefined
+    return {videoId,title,description,thumbnail}
+  }catch{return null}
+}
+
 async function getChannel(key:string,part='id,snippet'){
   const channelUrl=new URL('https://www.googleapis.com/youtube/v3/channels')
   channelUrl.searchParams.set('part',part)
@@ -165,33 +193,53 @@ async function getChannel(key:string,part='id,snippet'){
 
 export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
   const key=process.env.YOUTUBE_API_KEY
+
+  // First try YouTube's public /live redirect. This uses zero Data API quota and
+  // keeps live detection working even if the Data API quota is temporarily exhausted.
+  const direct=await getLiveFromChannelRedirect()
+  if(direct){
+    const teamNames=await getKnownTeamNames()
+    const display=getLiveDisplayText(direct.description,direct.title,teamNames)
+    return {configured:true,isLive:true,videoId:direct.videoId,title:direct.title,description:direct.description,thumbnail:direct.thumbnail,...display}
+  }
+
   if(!key)return {configured:false,isLive:false}
 
-  const channel=await getChannel(key)
-  const liveUrl=new URL('https://www.googleapis.com/youtube/v3/search')
-  liveUrl.searchParams.set('part','snippet')
-  liveUrl.searchParams.set('channelId',channel.id)
-  liveUrl.searchParams.set('eventType','live')
-  liveUrl.searchParams.set('type','video')
-  liveUrl.searchParams.set('maxResults','1')
-  liveUrl.searchParams.set('key',key)
-  const liveRes=await fetch(liveUrl,{cache:'no-store'})
-  if(!liveRes.ok)throw new Error(`YouTube live lookup failed (${liveRes.status}).`)
-  const liveJson=await liveRes.json()
-  const item=liveJson?.items?.[0]
-  const videoId=item?.id?.videoId
-  if(!videoId)return {configured:true,isLive:false,channelId:channel.id,channelTitle:channel.snippet?.title}
+  // v12.77: avoid YouTube Search API for live detection. Search costs 100 quota
+  // units per call and exhausted the daily quota during frequent polling. The
+  // uploads playlist + videos lookup costs only a few units and is safe to run
+  // once per minute.
+  const channel=await getChannel(key,'id,snippet,contentDetails')
+  const uploadsId=channel?.contentDetails?.relatedPlaylists?.uploads
+  if(!uploadsId)throw new Error('YouTube uploads playlist was not found.')
+
+  const playlistUrl=new URL('https://www.googleapis.com/youtube/v3/playlistItems')
+  playlistUrl.searchParams.set('part','snippet,contentDetails')
+  playlistUrl.searchParams.set('playlistId',uploadsId)
+  playlistUrl.searchParams.set('maxResults','10')
+  playlistUrl.searchParams.set('key',key)
+  const playlistRes=await fetch(playlistUrl,{cache:'no-store'})
+  if(!playlistRes.ok)throw new Error(`YouTube uploads lookup failed (${playlistRes.status}).`)
+  const playlistJson=await playlistRes.json()
+  const items=playlistJson?.items||[]
+  const ids=items.map((x:any)=>x?.contentDetails?.videoId||x?.snippet?.resourceId?.videoId).filter(Boolean)
+  if(!ids.length)return {configured:true,isLive:false,channelId:channel.id,channelTitle:channel.snippet?.title}
 
   const videoUrl=new URL('https://www.googleapis.com/youtube/v3/videos')
   videoUrl.searchParams.set('part','snippet,liveStreamingDetails')
-  videoUrl.searchParams.set('id',videoId)
+  videoUrl.searchParams.set('id',ids.join(','))
   videoUrl.searchParams.set('key',key)
   const videoRes=await fetch(videoUrl,{cache:'no-store'})
   if(!videoRes.ok)throw new Error(`YouTube live video lookup failed (${videoRes.status}).`)
   const videoJson=await videoRes.json()
-  const video=videoJson?.items?.[0]
-  const title=video?.snippet?.title||item?.snippet?.title||'Tom’s 19th Hole Live'
-  const description=video?.snippet?.description||item?.snippet?.description||''
+  const video=(videoJson?.items||[]).find((v:any)=>
+    v?.snippet?.liveBroadcastContent==='live' ||
+    (!!v?.liveStreamingDetails?.actualStartTime && !v?.liveStreamingDetails?.actualEndTime)
+  )
+  if(!video?.id)return {configured:true,isLive:false,channelId:channel.id,channelTitle:channel.snippet?.title}
+  const videoId=video.id
+  const title=video?.snippet?.title||'Tom’s 19th Hole Live'
+  const description=video?.snippet?.description||''
   const teamNames=await getKnownTeamNames()
   const display=getLiveDisplayText(description,title,teamNames)
 
@@ -203,7 +251,7 @@ export async function getYouTubeLiveStatus():Promise<YouTubeLiveStatus>{
     title,
     description,
     startedAt:video?.liveStreamingDetails?.actualStartTime,
-    thumbnail:video?.snippet?.thumbnails?.high?.url||video?.snippet?.thumbnails?.medium?.url||item?.snippet?.thumbnails?.high?.url,
+    thumbnail:video?.snippet?.thumbnails?.high?.url||video?.snippet?.thumbnails?.medium?.url ,
     channelTitle:channel.snippet?.title,
     ...display
   }

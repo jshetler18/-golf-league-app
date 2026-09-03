@@ -6,14 +6,27 @@ const PUBLIC='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEh
 
 export async function runYouTubeLiveCheck(){
   const status=await getYouTubeLiveStatus()
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL
+  const adminKey=process.env.SUPABASE_SECRET_KEY
+  if(!url||!adminKey)throw new Error('Live status storage is not fully configured.')
+  const admin=createClient(url,adminKey,{auth:{persistSession:false,autoRefreshToken:false}})
+
+  // Store one shared live-status snapshot. Player devices read this instead of
+  // each device calling YouTube, which keeps YouTube quota use predictable.
+  const {error:stateError}=await admin.from('youtube_live_state').upsert({
+    id:1,is_live:!!status.isLive,video_id:status.videoId||null,title:status.title||null,
+    description:status.description||null,started_at:status.startedAt||null,thumbnail:status.thumbnail||null,
+    channel_id:status.channelId||null,channel_title:status.channelTitle||null,matched_team:status.matchedTeam||null,
+    round_text:status.roundText||null,live_headline:status.liveHeadline||null,live_subtext:status.liveSubtext||null,
+    checked_at:new Date().toISOString()
+  },{onConflict:'id'})
+  if(stateError)throw stateError
+
   if(!status.configured)return {ok:true,configured:false,isLive:false,sent:0}
   if(!status.isLive||!status.videoId)return {ok:true,configured:true,isLive:false,sent:0}
 
-  const url=process.env.NEXT_PUBLIC_SUPABASE_URL
-  const adminKey=process.env.SUPABASE_SECRET_KEY
   const privateKey=process.env.VAPID_PRIVATE_KEY
-  if(!url||!adminKey||!privateKey)throw new Error('Live push notifications are not fully configured.')
-  const admin=createClient(url,adminKey,{auth:{persistSession:false,autoRefreshToken:false}})
+  if(!privateKey)throw new Error('Live push notifications are not fully configured.')
 
   const {data:existing,error:existingError}=await admin.from('youtube_live_notifications').select('video_id,notified_at').eq('video_id',status.videoId).maybeSingle()
   if(existingError)throw existingError

@@ -65,3 +65,11 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Uses both detected teams in Team filtering.
 - Keeps Team Smith normalized to Team Shingler before matchup detection.
 - Verified April 2026 Round 4 raw scores exist for Team Hutzel (22) and Team Mock (22).
+
+## v12.77 — reliable 1-minute YouTube LIVE detection
+- Replaced the quota-heavy YouTube Search API live lookup (100 quota units/call).
+- Live detection first uses the public `@Toms19thHole/live` redirect (zero Data API quota).
+- Falls back to the channel uploads playlist + video details (low quota cost) instead of Search API.
+- Added server-only `youtube_live_state` singleton so player devices read one shared status instead of each device querying YouTube.
+- The Home LIVE banner and Recorded Rounds page continue polling the app every minute, but those polls no longer consume YouTube quota.
+- Designed for the Supabase reminder/live cron to run every minute after v12.77 is deployed.
