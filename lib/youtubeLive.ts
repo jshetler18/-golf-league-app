@@ -58,8 +58,26 @@ export async function getKnownTeamNames(){
   }catch{return []}
 }
 
+const JOINED_MONTH_TOKEN='jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?'
+
+function expandJoinedTeamMetadata(text:string,teamNames:string[]){
+  // OBS/YouTube descriptions are sometimes entered without a space between the
+  // team name and month, e.g. "Team SmolnikDecember 2025 Week 4". Insert only
+  // that missing separator for known team names so normal parsing can continue.
+  let expanded=text
+  const ordered=[...teamNames].sort((a,b)=>b.length-a.length)
+  for(const teamName of ordered){
+    const variants=[teamName,teamName.replace(/^team\s+/i,'').trim()].filter(Boolean)
+    for(const variant of variants){
+      const re=new RegExp(`(${escapeRegExp(variant)})(${JOINED_MONTH_TOKEN})(?=\\s*20\\d{2}\\b)`,'ig')
+      expanded=expanded.replace(re,'$1 $2')
+    }
+  }
+  return expanded
+}
+
 function findTeamName(text:string,teamNames:string[]){
-  const normalized=normalize(text)
+  const normalized=normalize(expandJoinedTeamMetadata(text,teamNames))
   const ordered=[...teamNames].sort((a,b)=>b.length-a.length)
   for(const teamName of ordered){
     const n=normalize(teamName)
@@ -80,11 +98,12 @@ function findTeamName(text:string,teamNames:string[]){
 
 function findRoundParts(text:string){
   const compact=normalize(text)
-  const monthToken='(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
+  const monthToken=`(${JOINED_MONTH_TOKEN})`
+  const roundToken='(?:round|rnd|r|week|wk)'
   const patterns=[
-    new RegExp(`\\b${monthToken}\\s+(20\\d{2})\\s*(?:-|:)?\\s*(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\b`,'i'),
-    new RegExp(`\\b(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s*(?:-|:)?\\s*${monthToken}\\s+(20\\d{2})\\b`,'i'),
-    new RegExp(`\\b${monthToken}\\s+(?:round|rnd|r)\\s*#?\\s*(\\d{1,2})\\s+(20\\d{2})\\b`,'i')
+    new RegExp(`\\b${monthToken}\\s+(20\\d{2})\\s*(?:-|:)?\\s*${roundToken}\\s*#?\\s*(\\d{1,2})\\b`,'i'),
+    new RegExp(`\\b${roundToken}\\s*#?\\s*(\\d{1,2})\\s*(?:-|:)?\\s*${monthToken}\\s+(20\\d{2})\\b`,'i'),
+    new RegExp(`\\b${monthToken}\\s+${roundToken}\\s*#?\\s*(\\d{1,2})\\s+(20\\d{2})\\b`,'i')
   ]
   for(let i=0;i<patterns.length;i++){
     const match=compact.match(patterns[i])
@@ -107,7 +126,7 @@ export function seasonForMonthYear(month:string,year:number){
 }
 
 export function getRoundMetadata(description?:string,title?:string,teamNames:string[]=[]):RoundMetadata{
-  const text=[title||'',description||''].filter(Boolean).join('\n')
+  const text=expandJoinedTeamMetadata([title||'',description||''].filter(Boolean).join('\n'),teamNames)
   const teamName=findTeamName(text,teamNames)
   const round=findRoundParts(text)
   if(!round)return {matchedTeam:teamName||undefined}

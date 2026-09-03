@@ -20,3 +20,16 @@ Recorded Rounds raw-score thumbnail update.
 
 ## v12.69
 Recorded Rounds cards now display archive metadata on separate lines: team, month/year, round number, then season in smaller text.
+
+
+## v12.71
+- Historical Team Smith YouTube recordings are grouped under Team Shingler for archive filtering.
+- Team Smith recordings use Team Shingler raw-score history when matching scores.
+- Removed the raw-score overlay from video thumbnails.
+- Changed the raw-score display beside each recording description from a rounded square to a circle.
+
+
+## v12.71
+- Live/recorded-round metadata parsing now recognizes known team names even when the month is typed immediately after the team name in OBS/YouTube, e.g. `Team SmolnikDecember 2025 Week 4`.
+- `Week 1`–`Week 4` and `Wk 1`–`Wk 4` are treated as the corresponding Round 1–Round 4 in the shared live/archive parser.
+- The parsed result for the example above is Team Smolnik / December 2025 / Round 4, so archive filtering, raw-score matching, Home live banner, and live push text can use the correct metadata.

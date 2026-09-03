@@ -49,7 +49,15 @@ function looseMonthYear(text:string){
 type RawScoreRow={team:string;ym:string;roundNumber:number;rawScore:number}
 
 function normalizeTeam(value:string){
-  return value.toLowerCase().replace(/^team\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()
+  const normalized=value.toLowerCase().replace(/^team\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()
+  // Historical YouTube recordings may use Team Smith. Treat those as Team Shingler
+  // everywhere in the archive so searching and raw-score matching stay unified.
+  return normalized==='smith'?'shingler':normalized
+}
+
+function canonicalArchiveTeam(value:string|undefined){
+  if(!value)return undefined
+  return normalizeTeam(value)==='shingler'?'Team Shingler':value
 }
 
 async function getRawScoreRows(){
@@ -132,7 +140,8 @@ export async function GET(){
       for(const item of json?.items||[])detailsById.set(item.id,item)
     }
 
-    const [teamNames,rawScoreRows]=await Promise.all([getKnownTeamNames(),getRawScoreRows()])
+    const [knownTeams,rawScoreRows]=await Promise.all([getKnownTeamNames(),getRawScoreRows()])
+    const teamNames=[...new Set([...knownTeams,'Team Smith'])]
     const recordings:Recording[]=[]
     for(const item of playlistItems){
       const videoId=item?.contentDetails?.videoId||item?.snippet?.resourceId?.videoId
@@ -157,7 +166,8 @@ export async function GET(){
       const roundNumber=strict.roundNumber||looseRoundNumber(text)
       const season=month&&year?seasonForMonthYear(month,year):undefined
       const roundText=month&&year&&roundNumber?`${month} ${year} Round ${roundNumber}`:(month&&year?`${month} ${year}`:undefined)
-      const rawScore=findRawScore(rawScoreRows,strict.matchedTeam,month,year,roundNumber)
+      const archiveTeam=canonicalArchiveTeam(strict.matchedTeam)
+      const rawScore=findRawScore(rawScoreRows,archiveTeam,month,year,roundNumber)
 
       recordings.push({
         videoId,
@@ -166,7 +176,7 @@ export async function GET(){
         thumbnail:snippet?.thumbnails?.maxres?.url||snippet?.thumbnails?.standard?.url||snippet?.thumbnails?.high?.url||snippet?.thumbnails?.medium?.url,
         publishedAt,
         duration:detail?.contentDetails?.duration,
-        team:strict.matchedTeam,
+        team:archiveTeam,
         month,
         year,
         roundNumber,

@@ -85,7 +85,6 @@ export default function LivePage(){
               {activeVideo===video.videoId?<div className="recorded-video-v1265 recorded-active-video-v1267"><iframe src={`https://www.youtube.com/embed/${encodeURIComponent(video.videoId)}?playsinline=1&rel=0&autoplay=1`} title={`${video.team||'Recorded round'} ${video.roundText||''}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>:
               <button className="recorded-thumb-v1267" onClick={()=>setActiveVideo(video.videoId)} aria-label={`Play ${video.team||video.title} ${video.roundText||''}`}>
                 {video.thumbnail?<img src={video.thumbnail} alt="" loading="lazy"/>:<span className="recorded-thumb-fallback-v1267">Recorded Round</span>}
-                {typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<span className="recorded-score-v1267"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></span>}
                 <span className="recorded-play-v1267">▶</span>
                 {durationText(video.duration)&&<span className="recorded-duration-v1267">{durationText(video.duration)}</span>}
               </button>}
