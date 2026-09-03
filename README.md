@@ -11,3 +11,12 @@ Recorded Rounds raw-score thumbnail update.
 - YouTube video duration is shown on the thumbnail when available.
 - Added recorded-round result count and season grouping while preserving the existing Team / Season / Month / Round filters.
 - Existing live broadcast area, Live badge behavior, and archive fallback behavior remain unchanged.
+
+## v12.68
+- Recorded Rounds now shows the official Raw Score on the right side of each recording description, so it remains visible below the thumbnail.
+- Raw-score matching was hardened by normalizing team names (with or without the word "Team") and recognizing additional Round/Week number formats in older YouTube metadata.
+- The thumbnail score badge remains available when a match is found.
+
+
+## v12.69
+Recorded Rounds cards now display archive metadata on separate lines: team, month/year, round number, then season in smaller text.

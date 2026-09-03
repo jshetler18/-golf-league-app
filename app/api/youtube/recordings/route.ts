@@ -30,8 +30,13 @@ const MONTH_LOOKUP:Record<string,string>={
 }
 
 function looseRoundNumber(text:string){
-  const match=text.match(/\b(?:round|rnd)\s*#?\s*(\d{1,2})\b/i)
-  return match?Number(match[1]):undefined
+  const patterns=[
+    /\b(?:round|rnd|rd)\s*#?\s*(\d{1,2})\b/i,
+    /\b(?:week|wk)\s*#?\s*(\d{1,2})\b/i,
+    /\b(?:round|rnd|rd)\s*(?:number|no\.?)?\s*#?\s*(\d{1,2})\b/i
+  ]
+  for(const pattern of patterns){const match=text.match(pattern);if(match)return Number(match[1])}
+  return undefined
 }
 
 function looseMonthYear(text:string){
@@ -41,35 +46,44 @@ function looseMonthYear(text:string){
 }
 
 
-async function getRawScoreLookup(){
+type RawScoreRow={team:string;ym:string;roundNumber:number;rawScore:number}
+
+function normalizeTeam(value:string){
+  return value.toLowerCase().replace(/^team\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()
+}
+
+async function getRawScoreRows(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL
   const key=process.env.SUPABASE_SECRET_KEY
-  const lookup=new Map<string,number>()
-  if(!url||!key)return lookup
+  const rows:RawScoreRow[]=[]
+  if(!url||!key)return rows
   try{
     const supabase=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})
     const {data,error}=await supabase
       .from('team_raw_score_history')
       .select('canonical_team_name,score_month,round_number,raw_score')
       .not('round_number','is',null)
-    if(error)return lookup
+    if(error)return rows
     for(const row of data||[]){
-      const team=String((row as any).canonical_team_name||'').trim().toLowerCase()
+      const team=normalizeTeam(String((row as any).canonical_team_name||''))
       const scoreMonth=String((row as any).score_month||'')
       const roundNumber=Number((row as any).round_number)
       const rawScore=Number((row as any).raw_score)
       if(!team||!/^\d{4}-\d{2}/.test(scoreMonth)||!Number.isFinite(roundNumber)||!Number.isFinite(rawScore))continue
-      const ym=scoreMonth.slice(0,7)
-      lookup.set(`${team}|${ym}|${roundNumber}`,rawScore)
+      rows.push({team,ym:scoreMonth.slice(0,7),roundNumber,rawScore})
     }
   }catch{}
-  return lookup
+  return rows
 }
 
-function rawScoreKey(team:string,month:string,year:number,roundNumber:number){
+function findRawScore(rows:RawScoreRow[],team:string|undefined,month:string|undefined,year:number|undefined,roundNumber:number|undefined){
+  if(!team||!month||!year||!roundNumber)return undefined
   const monthIndex=FULL_MONTHS.indexOf(month)+1
-  if(monthIndex<1)return ''
-  return `${team.trim().toLowerCase()}|${year}-${String(monthIndex).padStart(2,'0')}|${roundNumber}`
+  if(monthIndex<1)return undefined
+  const normalizedTeam=normalizeTeam(team)
+  const ym=`${year}-${String(monthIndex).padStart(2,'0')}`
+  const exact=rows.find(row=>row.team===normalizedTeam&&row.ym===ym&&row.roundNumber===roundNumber)
+  return exact?.rawScore
 }
 
 function dateParts(value?:string){
@@ -118,7 +132,7 @@ export async function GET(){
       for(const item of json?.items||[])detailsById.set(item.id,item)
     }
 
-    const [teamNames,rawScoreLookup]=await Promise.all([getKnownTeamNames(),getRawScoreLookup()])
+    const [teamNames,rawScoreRows]=await Promise.all([getKnownTeamNames(),getRawScoreRows()])
     const recordings:Recording[]=[]
     for(const item of playlistItems){
       const videoId=item?.contentDetails?.videoId||item?.snippet?.resourceId?.videoId
@@ -143,7 +157,7 @@ export async function GET(){
       const roundNumber=strict.roundNumber||looseRoundNumber(text)
       const season=month&&year?seasonForMonthYear(month,year):undefined
       const roundText=month&&year&&roundNumber?`${month} ${year} Round ${roundNumber}`:(month&&year?`${month} ${year}`:undefined)
-      const rawScore=strict.matchedTeam&&month&&year&&roundNumber?rawScoreLookup.get(rawScoreKey(strict.matchedTeam,month,year,roundNumber)):undefined
+      const rawScore=findRawScore(rawScoreRows,strict.matchedTeam,month,year,roundNumber)
 
       recordings.push({
         videoId,

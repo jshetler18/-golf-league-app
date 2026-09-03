@@ -89,7 +89,10 @@ export default function LivePage(){
                 <span className="recorded-play-v1267">▶</span>
                 {durationText(video.duration)&&<span className="recorded-duration-v1267">{durationText(video.duration)}</span>}
               </button>}
-              <div className="recorded-card-copy-v1265"><strong>{video.team||video.title}</strong>{(video.roundText||video.team)&&<span>{video.roundText||video.title}</span>}{video.season&&<small>Season {video.season}</small>}</div>
+              <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
+                <div className="recorded-card-copy-main-v1268"><strong>{video.team||video.title}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.roundText||video.title}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
+                {typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>}
+              </div>
             </article>)}
           </div>
         </div>)}
