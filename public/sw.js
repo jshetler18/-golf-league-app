@@ -39,6 +39,7 @@ self.addEventListener('push', event => {
       icon: '/icon-192.png',
       badge: '/favicon-48.png',
       data: { url: data.url || '/messages' },
+      actions: data.kind==='round-review' && data.url ? [{action:'see-scorecard', title:'See Scorecard'}] : [],
       tag: data.tag || 'league-message',
       renotify: true
     })

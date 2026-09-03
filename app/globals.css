@@ -591,3 +591,8 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .admin-denial-note{display:grid;gap:5px;padding:13px 15px;border-radius:10px;background:#fdeaea;color:#812020;border:1px solid #efb2b2}
 .round-review-public-card{display:grid;gap:15px}
 @media(max-width:700px){.submitted-total-admin strong{font-size:26px}}
+
+/* v12.96 */
+.mobile-brand{position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.recorded-scorecard-actions-v1296{padding:0 14px 14px;display:grid;gap:10px}.recorded-scorecard-item-v1296{scroll-margin-top:110px}.recorded-scorecard-button-v1296{width:100%;border:0;border-radius:10px;background:#173759;color:#fff;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer}.recorded-scorecard-image-v1296{display:grid;gap:7px;margin-top:9px}.recorded-scorecard-image-v1296 img{width:100%;max-height:650px;object-fit:contain;background:#111;border-radius:10px;border:1px solid #d6ddd8}.recorded-scorecard-image-v1296 small{text-align:center;color:var(--muted)}
+.my-team-cup-match-v1296{overflow:hidden;border:1px solid #dce5df;border-radius:16px;background:#fff;box-shadow:0 5px 16px rgba(23,55,89,.07)}

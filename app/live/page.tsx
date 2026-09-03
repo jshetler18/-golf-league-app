@@ -6,6 +6,7 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
 type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
+type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;imageUrl:string}
 
 function durationText(value?:string){
   if(!value)return ''
@@ -20,17 +21,20 @@ export default function LivePage(){
   const [archive,setArchive]=useState<ArchiveResponse|null>(null)
   const [team,setTeam]=useState('all'),[season,setSeason]=useState('all'),[month,setMonth]=useState('all'),[round,setRound]=useState('all'),[scoreOrder,setScoreOrder]=useState('all')
   const [activeVideo,setActiveVideo]=useState<string>('')
+  const [scorecards,setScorecards]=useState<ApprovedCard[]>([])
+  const [openScorecard,setOpenScorecard]=useState<string>('')
 
   const loadLive=useCallback(async()=>{
     try{const res=await fetch('/api/youtube/live',{cache:'no-store'});setStatus(await res.json())}
     catch{setStatus({configured:true,isLive:false,error:'Unable to check the livestream right now.'})}
   },[])
+  const loadScorecards=useCallback(async()=>{try{const {data:{session}}=await (await import('@/lib/supabase')).supabase.auth.getSession();if(!session?.access_token)return;const res=await fetch('/api/round-scorecards/approved',{headers:{Authorization:`Bearer ${session.access_token}`},cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
   const loadArchive=useCallback(async()=>{
     try{const res=await fetch('/api/youtube/recordings');setArchive(await res.json())}
     catch{setArchive({configured:true,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]},error:'Unable to load recorded rounds right now.'})}
   },[])
 
-  useEffect(()=>{loadLive();loadArchive();const timer=window.setInterval(loadLive,60000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive])
+  useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,60000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
 
   const filtered=useMemo(()=>{
     const items=(archive?.recordings||[]).filter(x=>x.videoId!==status?.videoId)
@@ -58,6 +62,12 @@ export default function LivePage(){
       return b.localeCompare(a)
     })
   },[filtered])
+  const cardsForVideo=(video:Recording)=>scorecards.filter(c=>{
+    const d=new Date(c.monthStart+'T12:00:00'),m=d.toLocaleString('en-US',{month:'long'}),y=d.getFullYear()
+    const teams=[video.team,...(video.matchupTeams||[])].filter(Boolean).map(x=>String(x).trim().toLowerCase())
+    return teams.includes(c.team.trim().toLowerCase())&&video.month===m&&video.year===y&&Number(video.roundNumber)===Number(c.weekNumber)
+  })
+  useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
   function clearFilters(){setTeam('all');setSeason('all');setMonth('all');setRound('all');setScoreOrder('all');setActiveVideo('')}
 
@@ -102,6 +112,7 @@ export default function LivePage(){
                 <div className="recorded-card-copy-main-v1268"><strong>{video.matchupTeams&&video.matchupTeams.length>=2?`${video.matchupTeams[0]} vs ${video.matchupTeams[1]}`:(video.team||video.title)}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.championshipRound?<span>Championship Round</span>:video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.championshipRound?'Championship Round':(video.roundText||video.title)}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
                 {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1273">{video.matchupScores.map(score=><div className="recorded-matchup-score-row-v1273" key={score.team}><span>{score.team}</span><div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div></div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>}
               </div>
+              {cardsForVideo(video).length>0&&<div className="recorded-scorecard-actions-v1296">{cardsForVideo(video).map(card=><div id={`scorecard-${card.id}`} className="recorded-scorecard-item-v1296" key={card.id}><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>View Scorecard — {card.team}</button>{openScorecard===card.id&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a><small>Tap the image to open it full screen and zoom.</small></div>}</div>)}</div>}
             </article>)}
           </div>
         </div>)}

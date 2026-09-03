@@ -16,7 +16,7 @@ export async function POST(req:NextRequest){
   const admin=createClient(url,secret,{auth:{persistSession:false}})
   const {submissionId,action,reason}=await req.json()
   if(!['approved','denied'].includes(action))return NextResponse.json({error:'Invalid review action.'},{status:400})
-  const {data:r}=await admin.from('round_score_submissions').select('id,submitted_by,official_total,teams(name)').eq('id',submissionId).single()
+  const {data:r}=await admin.from('round_score_submissions').select('id,submitted_by,official_total,week_number,league_months(month_start),teams(name)').eq('id',submissionId).single()
   if(!r)return NextResponse.json({error:'Submission not found.'},{status:404})
 
   const team=(r as any).teams?.name||'A team'
@@ -24,7 +24,8 @@ export async function POST(req:NextRequest){
   let title='',body='',subs:any[]=[]
   if(action==='approved'){
     title='Round Complete'
-    body=`${team} has completed their round with a score of ${score}.`
+    const month=new Date((r as any).league_months.month_start+'T12:00:00').toLocaleString('en-US',{month:'long'})
+    body=`${team} has completed their ${month} Week ${(r as any).week_number} round with a score of ${score}.`
     const {data}=await admin.from('push_subscriptions').select('*')
     subs=data||[]
   }else{
@@ -41,7 +42,7 @@ export async function POST(req:NextRequest){
     if(!s.p256dh||!s.auth)continue
     try{
       await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({
-        title,body,url:action==='approved'?`/rounds/${r.id}`:'/submit-score',tag:`round-review-${r.id}-${action}`,kind:'round-review'
+        title,body,url:action==='approved'?`/live?submission=${r.id}#scorecard-${r.id}`:'/submit-score',tag:`round-review-${r.id}-${action}`,kind:'round-review'
       }))
       sent++
     }catch(e:any){
