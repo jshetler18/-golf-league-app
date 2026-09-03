@@ -4,7 +4,7 @@ import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
 import {syncAppBadge} from '@/lib/appBadge'
-import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,ChatIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon,LiveIcon,SubmitScoreIcon} from '@/components/PlayerIcons'
+import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,ChatIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon,LiveIcon} from '@/components/PlayerIcons'
 
 type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string}
 const items:MenuItem[]=[
@@ -28,7 +28,7 @@ export default function Home(){
  useEffect(()=>{let alive=true;const check=async()=>{try{const r=await fetch('/api/youtube/live',{cache:'no-store'});const j=await r.json();if(alive)setYoutubeLive(j?.isLive?j:null)}catch{}};check();const timer=window.setInterval(check,60000);return()=>{alive=false;window.clearInterval(timer)}},[])
  async function logout(){await supabase.auth.signOut();location.href='/login'}
  return <div className="mobile-home">
-  <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/submit-score" className="profile-menu-icon-link"><SubmitScoreIcon /> <span>Submit Score</span></Link><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
+  <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/submit-score">📷 Submit Score</Link><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
   {youtubeLive&&<Link href="/live" className="home-live-alert-v1263" aria-label="Watch live round"><span className="home-live-orb-v1263"><i/>LIVE</span><span className="home-live-copy-v1263"><strong>{youtubeLive.liveHeadline||'A League Round is now LIVE!'}</strong><small>{youtubeLive.liveSubtext||'Tap to watch'}</small></span><span className="home-live-arrow-v1263">›</span></Link>}
   <nav className="mobile-menu">{items.map(({href,Icon,title})=><Link href={href} className="mobile-menu-row" key={title}><span className="menu-icon"><Icon /></span><span className="menu-copy"><span className="menu-title">{title}</span></span>{title==='Messages'&&unread>0&&<span className="unread-badge">{unread}</span>}{title==='League Chat'&&chatUnread>0&&<span className="unread-badge">{chatUnread}</span>}{title==='Recorded Rounds'&&!!youtubeLive&&<span className="live-home-badge-v1260"><i/>LIVE</span>}<span className="menu-arrow">›</span></Link>)}</nav>
   <Bottom unread={unread}/>

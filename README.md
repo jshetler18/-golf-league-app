@@ -86,8 +86,4 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 
 
 ## v12.80
-- Submit Score defaults to the current league month and week.
-- Added Change Round for makeup rounds, early rounds, and multiple rounds played in one calendar week.
-- Players can select any league month in the active season and Week 1-4 before uploading.
-- Completed and pending rounds are protected from duplicate submissions.
-- Keeps separate Take Scorecard Photo and Choose from Photos actions and the updated profile-menu icon.
+Score submission refinements: no profile-menu icon, current round default with Change Round selector, duplicate-round blocking, OCR processing percent, score-result names, and only holes 1-10 plus the two monthly bonus holes shown.
