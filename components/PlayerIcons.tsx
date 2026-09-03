@@ -64,6 +64,11 @@ export function RulesIcon(props: IconProps){
   return <svg {...base(props)}><path d="M15 8h25l10 10v38H15V8Z" fill="currentColor" stroke="none"/><path d="M40 8v12h10" stroke="white"/><path d="M23 29h19M23 38h19M23 47h14" stroke="white" strokeWidth="3.5"/></svg>
 }
 
+
+export function SubmitScoreIcon(props: IconProps){
+  return <svg {...base(props)}><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h3"/><path d="m14 15 1.5 1.5L19 13"/></svg>
+}
+
 export function HomeIcon(props: IconProps){
   return <svg {...base(props)}><path d="M8 30 32 9l24 21"/><path d="M14 28v25h14V39h8v14h14V28" fill="currentColor" stroke="none"/></svg>
 }

@@ -83,3 +83,11 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Admin approval posts the score into weekly_scores and sends a league-wide **Round Complete** push notification deep-linked to the enhanced scorecard.
 - Added enhanced digital round scorecard with roster names, hole pars/scores, Stableford points, raw score, bonus, handicap, and official total. Original GSPro photo remains available to the submitter/admin for verification.
 - Added private `round-scorecards` Storage bucket and RLS-protected `round_score_submissions` table.
+
+
+## v12.80
+- Submit Score defaults to the current league month and week.
+- Added Change Round for makeup rounds, early rounds, and multiple rounds played in one calendar week.
+- Players can select any league month in the active season and Week 1-4 before uploading.
+- Completed and pending rounds are protected from duplicate submissions.
+- Keeps separate Take Scorecard Photo and Choose from Photos actions and the updated profile-menu icon.
