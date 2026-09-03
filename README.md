@@ -97,3 +97,9 @@ Recorded Rounds now detects two-team recordings and displays both official raw s
 - Hole pars are aligned by OCR word position to reduce row/column shifting.
 - Pins were tightened back up so the configured weekly pin value has to be recognized near the Pins label; the ultra-loose global fallback is no longer used for pins.
 - Stimp detection now distinguishes 10/11 only near the Stimp label and the UI reports an approved league Stimp rather than claiming an exact value when OCR may be ambiguous.
+
+## v12.97 — Submit Steps + Past Scorecard Archive
+- Submit Score is now a two-step workflow: (1) take/select scorecard photo, (2) enter team total score including handicap.
+- Change Round now requires selecting both month and week before the photo/score steps are shown again.
+- Home-screen league logo reduced about 20% while retaining the sticky logo/profile header.
+- Admin Score Submissions now includes Upload a Past Scorecard. Admin selects team, league month, week, and image; the image is attached to that round and appears with the matching Recorded Rounds video.

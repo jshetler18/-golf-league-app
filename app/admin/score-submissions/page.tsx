@@ -12,6 +12,14 @@ export default function ScoreSubmissions(){
  const [submitters,setSubmitters]=useState<Record<string,string>>({})
  const [msg,setMsg]=useState('')
  const [busy,setBusy]=useState('')
+ const [archiveTeams,setArchiveTeams]=useState<any[]>([])
+ const [archiveMonths,setArchiveMonths]=useState<any[]>([])
+ const [archiveTeamId,setArchiveTeamId]=useState('')
+ const [archiveMonthId,setArchiveMonthId]=useState('')
+ const [archiveWeek,setArchiveWeek]=useState('')
+ const [archiveFile,setArchiveFile]=useState<File|null>(null)
+ const [archivePreview,setArchivePreview]=useState('')
+ const [archiveSaving,setArchiveSaving]=useState(false)
 
  async function load(){
    const {data,error}=await supabase.from('round_score_submissions').select('*,teams(name),league_months(month_start,course_name)').order('created_at',{ascending:false})
@@ -31,6 +39,54 @@ export default function ScoreSubmissions(){
  }
 
  useEffect(()=>{if(guard.admin)load()},[guard.admin])
+ useEffect(()=>{if(!guard.admin)return;(async()=>{
+   const [{data:t,error:te},{data:m,error:me}]=await Promise.all([
+     supabase.from('teams').select('id,name').order('name'),
+     supabase.from('league_months').select('id,month_start,course_name,seasons(name)').order('month_start',{ascending:false})
+   ])
+   if(te||me){setMsg(te?.message||me?.message||'Unable to load past scorecard options.');return}
+   setArchiveTeams(t||[]);setArchiveMonths(m||[])
+ })()},[guard.admin])
+
+ function chooseArchiveFile(f:File){
+   setArchiveFile(f)
+   if(archivePreview)URL.revokeObjectURL(archivePreview)
+   setArchivePreview(URL.createObjectURL(f))
+ }
+
+ async function uploadPastScorecard(){
+   if(!archiveTeamId||!archiveMonthId||!archiveWeek||!archiveFile){setMsg('Choose a team, month, week, and scorecard image first.');return}
+   setArchiveSaving(true);setMsg('Uploading past scorecard…')
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!user){setMsg('Please sign in again.');setArchiveSaving(false);return}
+   const weekNum=Number(archiveWeek)
+   const {data:existing,error:existingError}=await supabase.from('round_score_submissions').select('id,image_path,status').eq('league_month_id',archiveMonthId).eq('team_id',archiveTeamId).eq('week_number',weekNum).maybeSingle()
+   if(existingError){setMsg(existingError.message);setArchiveSaving(false);return}
+   const ext=(archiveFile.name.split('.').pop()||'jpg').toLowerCase()
+   const path=`${user.id}/archive-${archiveMonthId}-${archiveTeamId}-w${weekNum}-${Date.now()}.${ext}`
+   const up=await supabase.storage.from('round-scorecards').upload(path,archiveFile,{upsert:false})
+   if(up.error){setMsg(up.error.message);setArchiveSaving(false);return}
+
+   if(existing?.id){
+     const {error}=await supabase.from('round_score_submissions').update({image_path:path,admin_note:existing.status==='rejected'?'Historical scorecard uploaded by admin.':null}).eq('id',existing.id)
+     if(error){setMsg(error.message);setArchiveSaving(false);return}
+   }else{
+     const {data:official}=await supabase.from('weekly_scores').select('raw_stableford,bonus_birdies,bonus_points,handicap_points,official_total,status').eq('league_month_id',archiveMonthId).eq('team_id',archiveTeamId).eq('week_number',weekNum).maybeSingle()
+     const row={
+       league_month_id:archiveMonthId,team_id:archiveTeamId,week_number:weekNum,submitted_by:user.id,image_path:path,
+       hole_scores:[],hole_pars:[],stableford_points:[],raw_stableford:Number(official?.raw_stableford||0),bonus_birdies:Number(official?.bonus_birdies||0),bonus_points:Number(official?.bonus_points||0),handicap_points:Number(official?.handicap_points||0),official_total:Number(official?.official_total||0),
+       status:'approved',admin_note:'Historical scorecard uploaded by admin.',approved_by:user.id,approved_at:new Date().toISOString(),validation_passed:false,validation_report:[],detected_player_names:[],detected_settings:{},played_holes:[]
+     }
+     const {error}=await supabase.from('round_score_submissions').insert(row)
+     if(error){setMsg(error.message);setArchiveSaving(false);return}
+   }
+   const teamName=archiveTeams.find(t=>t.id===archiveTeamId)?.name||'Team'
+   const month=archiveMonths.find(m=>m.id===archiveMonthId)
+   const label=month?new Date(month.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'}):'selected month'
+   setMsg(`${teamName} ${label} Week ${weekNum} scorecard uploaded. It will appear with the matching recorded round.`)
+   setArchiveFile(null);setArchivePreview('');setArchiveWeek('')
+   await load();setArchiveSaving(false)
+ }
 
  async function syncCompletedWeek4(monthId:string){
    const [{data:m,error:matchLoadErr},{data:s,error:scoreLoadErr}]=await Promise.all([
@@ -111,6 +167,17 @@ export default function ScoreSubmissions(){
  if(!guard.ready||!guard.admin)return <AdminDenied {...guard}/>
  return <><section className="hero"><div className="eyebrow">Administration</div><h1>Score Submissions</h1><p>Review the player's scorecard image and submitted total. Nothing is posted until you approve it.</p></section>
  {msg&&<p className="message">{msg}</p>}
+ <section className="card archive-scorecard-upload-v1297">
+   <div className="section-title compact"><div><div className="eyebrow">Recorded Rounds Archive</div><h2>Upload a Past Scorecard</h2><p className="muted">Choose the team, month, and week that match the recorded video. The image will appear under that video's information on the Recorded Rounds page.</p></div></div>
+   <div className="archive-scorecard-grid-v1297">
+     <label className="field">Team<select value={archiveTeamId} onChange={e=>setArchiveTeamId(e.target.value)}><option value="">Select team…</option>{archiveTeams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+     <label className="field">League Month<select value={archiveMonthId} onChange={e=>setArchiveMonthId(e.target.value)}><option value="">Select month…</option>{archiveMonths.map(m=><option key={m.id} value={m.id}>{new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}{m.seasons?.name?` — ${m.seasons.name}`:''}</option>)}</select></label>
+     <label className="field">Week<select value={archiveWeek} onChange={e=>setArchiveWeek(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>
+   </div>
+   <label className="btn secondary archive-scorecard-file-v1297">Choose Scorecard Image<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&chooseArchiveFile(e.target.files[0])}/></label>
+   {archivePreview&&<img className="archive-scorecard-preview-v1297" src={archivePreview} alt="Past scorecard preview"/>}
+   <button className="btn" disabled={archiveSaving||!archiveTeamId||!archiveMonthId||!archiveWeek||!archiveFile} onClick={uploadPastScorecard}>{archiveSaving?'Uploading…':'Upload Past Scorecard'}</button>
+ </section>
  <div className="admin-score-list">{rows.length===0?<div className="card"><p>No scorecards have been submitted yet.</p></div>:rows.map(r=><div className="card manual-score-review-card" key={r.id}>
    <div className="submission-head"><div><h2>{r.teams?.name}</h2><p>{new Date(r.league_months?.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})} · Week {r.week_number}</p><small>Submitted by {submitters[r.submitted_by]||'Player'}</small></div><span className={'submission-status '+r.status}>{r.status}</span></div>
    <div className="submitted-total-admin"><span>Player Submitted Score</span><strong>{Number(r.official_total).toFixed(1)}</strong></div>

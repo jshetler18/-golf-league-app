@@ -596,3 +596,18 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .mobile-brand{position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 .recorded-scorecard-actions-v1296{padding:0 14px 14px;display:grid;gap:10px}.recorded-scorecard-item-v1296{scroll-margin-top:110px}.recorded-scorecard-button-v1296{width:100%;border:0;border-radius:10px;background:#173759;color:#fff;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer}.recorded-scorecard-image-v1296{display:grid;gap:7px;margin-top:9px}.recorded-scorecard-image-v1296 img{width:100%;max-height:650px;object-fit:contain;background:#111;border-radius:10px;border:1px solid #d6ddd8}.recorded-scorecard-image-v1296 small{text-align:center;color:var(--muted)}
 .my-team-cup-match-v1296{overflow:hidden;border:1px solid #dce5df;border-radius:16px;background:#fff;box-shadow:0 5px 16px rgba(23,55,89,.07)}
+
+/* v12.97 submit steps, required round picker, smaller home logo, admin archive scorecards */
+.mobile-brand>img{width:min(312px,38.4vw)}
+.submit-step-v1297{margin-top:16px;padding:16px;border:1px solid #dce5df;border-radius:14px;background:#fbfdfb}
+.submit-step-heading-v1297{display:flex;align-items:flex-start;gap:12px}
+.submit-step-heading-v1297>span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;background:#173759;color:#fff;font-weight:900;font-size:18px}
+.submit-step-heading-v1297>div{display:grid;gap:3px}.submit-step-heading-v1297 strong{font-size:17px;color:#102a1c}.submit-step-heading-v1297 small{color:var(--muted);line-height:1.35}
+.submit-step-v1297 .score-photo-actions{margin-top:12px}.submit-step-v1297 .submitted-score-field{margin-top:12px}
+.round-picker-required-v1297{margin-top:14px;padding:16px;border:2px solid #d4ded8;border-radius:14px;background:#f8fbf9;display:grid;gap:12px}
+.round-picker-intro-v1297{display:grid;gap:3px}.round-picker-intro-v1297 strong{font-size:17px}.round-picker-intro-v1297 span{font-size:13px;color:var(--muted)}
+.round-picker-required-v1297 label{display:grid;gap:6px;font-weight:800}.round-picker-required-v1297 select{width:100%}
+.archive-scorecard-upload-v1297{margin-bottom:18px}.archive-scorecard-grid-v1297{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.archive-scorecard-file-v1297{display:inline-block;margin-bottom:12px;cursor:pointer}.archive-scorecard-preview-v1297{display:block;width:100%;max-height:480px;object-fit:contain;background:#111;border-radius:12px;margin:0 0 12px}
+@media(max-width:700px){.archive-scorecard-grid-v1297{grid-template-columns:1fr}}
+@media(max-width:520px){.mobile-brand>img{width:41.6vw}}

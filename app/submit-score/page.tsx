@@ -14,6 +14,8 @@ export default function SubmitScore(){
  const [monthId,setMonthId]=useState('')
  const [week,setWeek]=useState(1)
  const [changeRound,setChangeRound]=useState(false)
+ const [roundMonthChoice,setRoundMonthChoice]=useState('')
+ const [roundWeekChoice,setRoundWeekChoice]=useState('')
  const [existing,setExisting]=useState<any>(null)
  const [file,setFile]=useState<File|null>(null)
  const [preview,setPreview]=useState('')
@@ -111,30 +113,37 @@ export default function SubmitScore(){
      <h2>{ctx.teamName}</h2>
      <div className="selected-round">
        <strong>{monthName(selectedMonth)} · Week {week}</strong>
-       {!changeRound&&<button type="button" className="change-round-link" onClick={()=>setChangeRound(true)}>Change Round</button>}
+       {!changeRound&&<button type="button" className="change-round-link" onClick={()=>{setRoundMonthChoice('');setRoundWeekChoice('');setChangeRound(true)}}>Change Round</button>}
      </div>
-     {changeRound&&<div className="round-picker">
-       <label>League Month<select value={monthId} onChange={e=>setMonthId(e.target.value)}>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label>
-       <label>League Week<select value={week} onChange={e=>setWeek(Number(e.target.value))}>{[1,2,3,4].map(w=><option key={w} value={w}>Week {w}</option>)}</select></label>
-       <button type="button" className="btn secondary" onClick={()=>setChangeRound(false)}>Use This Round</button>
+     {changeRound&&<div className="round-picker round-picker-required-v1297">
+       <div className="round-picker-intro-v1297"><strong>Select the round you are submitting</strong><span>Choose both the league month and week before continuing.</span></div>
+       <label>League Month<select value={roundMonthChoice} onChange={e=>setRoundMonthChoice(e.target.value)}><option value="">Select month…</option>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label>
+       <label>League Week<select value={roundWeekChoice} onChange={e=>setRoundWeekChoice(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>
+       <button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{setMonthId(roundMonthChoice);setWeek(Number(roundWeekChoice));setChangeRound(false)}}>Continue to Scorecard</button>
      </div>}
 
-     {existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>Your scorecard and submitted score are waiting for review.</span></div>
+     {!changeRound&&(existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>Your scorecard and submitted score are waiting for review.</span></div>
      :existing?.status==='approved'?<div className="round-status complete"><b>Complete ✓</b><span>This round has been approved and posted as an official score.</span></div>
      :<>
        {existing?.status==='rejected'&&<div className="round-status rejected"><b>Scorecard Denied — Please Resubmit</b><span>{existing.admin_note||'The admin returned this scorecard. Please correct the issue and submit it again.'}</span></div>}
-       <p className="muted">Take or choose a photo of the final scorecard, then enter the total score your team believes it earned. The admin will review both before the score becomes official.</p>
-       <div className="score-photo-actions">
-         <label className="btn score-photo-btn">Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
-         <label className="btn secondary score-photo-btn">Photo Library<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
-       </div>
-       {preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}
-       <label className="field submitted-score-field">Your Team's Total Score
-         <input type="number" inputMode="decimal" step="0.1" min="0" value={score} onChange={e=>setScore(e.target.value)} placeholder="Example: 28.2"/>
-       </label>
+       <p className="muted">Complete both steps below. The admin will review the scorecard image and your submitted total before the round becomes official.</p>
+       <section className="submit-step-v1297">
+         <div className="submit-step-heading-v1297"><span>1</span><div><strong>Take a photo of your scorecard</strong><small>Take a new photo or select the final scorecard from your photo library.</small></div></div>
+         <div className="score-photo-actions">
+           <label className="btn score-photo-btn">Take Photo<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
+           <label className="btn secondary score-photo-btn">Photo Library<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&choose(e.target.files[0])}/></label>
+         </div>
+         {preview&&<img className="score-preview" src={preview} alt="Scorecard preview"/>}
+       </section>
+       <section className="submit-step-v1297">
+         <div className="submit-step-heading-v1297"><span>2</span><div><strong>Enter your team's total score with handicap</strong><small>Enter the final total after your team's handicap has been included.</small></div></div>
+         <label className="field submitted-score-field">Team Total Score (with handicap)
+           <input type="number" inputMode="decimal" step="0.1" min="0" value={score} onChange={e=>setScore(e.target.value)} placeholder="Example: 28.2"/>
+         </label>
+       </section>
        <button className="btn submit-score-review-btn" disabled={saving||!file||score.trim()===''} onClick={submit}>{saving?'Submitting…':'Submit Scorecard & Score for Approval'}</button>
        {msg&&<p className="message">{msg}</p>}
-     </>}
+     </>)}
    </div>
 
    {successOpen&&<div className="score-success-modal-backdrop" role="presentation">
