@@ -18,7 +18,7 @@ export function PlayerMobileHeader({title}:{title:string}){
     ;(async()=>{
       const {data:{user}}=await supabase.auth.getUser()
       if(!user)return
-      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url').eq('id',user.id).single()
+      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url,is_scorecard_official,role,status').eq('id',user.id).single()
       setProfile(p)
     })()
   },[])
@@ -52,7 +52,7 @@ export function PlayerMobileHeader({title}:{title:string}){
         <b>⌄</b>
       </button>
       {open&&<div className="profile-menu">
-        <Link href="/submit-score">Submit Score</Link><Link href="/profile">My Profile</Link>
+        <Link href="/submit-score">Submit Score</Link>{(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link className="scorecard-official-menu-link-v1298" href="/scorecard-official">✓ Scorecard Official</Link>}<Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
       </div>}

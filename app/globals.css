@@ -611,3 +611,11 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .archive-scorecard-file-v1297{display:inline-block;margin-bottom:12px;cursor:pointer}.archive-scorecard-preview-v1297{display:block;width:100%;max-height:480px;object-fit:contain;background:#111;border-radius:12px;margin:0 0 12px}
 @media(max-width:700px){.archive-scorecard-grid-v1297{grid-template-columns:1fr}}
 @media(max-width:520px){.mobile-brand>img{width:41.6vw}}
+
+/* v12.98 scorecard officials + tighter home header */
+.mobile-brand{min-height:190px;padding:12px 5vw}
+.home-scorecard-official-v1298{display:flex;align-items:center;gap:14px;margin:14px 5vw 0;padding:14px 16px;border-radius:14px;background:#eef8ee;border:1px solid #cfe2d1;color:#143b28;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.home-scorecard-official-v1298>span:nth-child(2){display:grid;gap:2px;flex:1}.home-scorecard-official-v1298 strong{font-size:18px}.home-scorecard-official-v1298 small{font-size:13px;color:#52655a}.home-scorecard-official-v1298>b{font-size:28px;color:#238408}.home-scorecard-official-icon-v1298{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#238408;color:#fff;font-size:24px;font-weight:900}
+.scorecard-official-menu-link-v1298{font-weight:900;color:#176629!important;background:#f1faf0!important}
+.scorecard-official-page-v1298{display:grid;gap:14px}.scorecard-official-title-v1298{display:flex;align-items:center;gap:12px}.scorecard-official-title-v1298>span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#238408;color:#fff;font-size:26px;font-weight:900}.scorecard-official-title-v1298 h1{margin:0}.scorecard-official-title-v1298 p{margin:3px 0 0;color:var(--muted)}.scorecard-official-list-v1298{display:grid;gap:16px}.scorecard-official-card-v1298{display:grid;gap:14px}.scorecard-official-actions-v1298{display:grid;grid-template-columns:1fr auto;gap:10px}.scorecard-official-empty-v1298{display:grid;gap:5px;text-align:center}.scorecard-official-empty-v1298 strong{font-size:22px;color:#176629}
+@media(max-width:520px){.mobile-brand{min-height:118px;padding:8px 18px}.scorecard-official-actions-v1298{grid-template-columns:1fr}.home-scorecard-official-v1298{margin:10px 18px 0}}

@@ -11,8 +11,8 @@ export async function POST(req:NextRequest){
   const authClient=createClient(url,pub,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}})
   const {data:{user}}=await authClient.auth.getUser(token)
   if(!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
-  const {data:p}=await authClient.from('profiles').select('role').eq('id',user.id).single()
-  if(p?.role!=='admin')return NextResponse.json({error:'Admin required.'},{status:403})
+  const {data:p}=await authClient.from('profiles').select('role,is_scorecard_official,status').eq('id',user.id).single()
+  if(!p||p.status!=='approved'||(p.role!=='admin'&&!p.is_scorecard_official))return NextResponse.json({error:'Scorecard Official access required.'},{status:403})
   const admin=createClient(url,secret,{auth:{persistSession:false}})
   const {submissionId,action,reason}=await req.json()
   if(!['approved','denied'].includes(action))return NextResponse.json({error:'Invalid review action.'},{status:400})
@@ -30,7 +30,7 @@ export async function POST(req:NextRequest){
     subs=data||[]
   }else{
     title='Scorecard Needs Correction'
-    body=`Your scorecard was denied by the admin. ${String(reason||'Please review the scorecard and resubmit.').trim()}`
+    body=`Your scorecard was denied. ${String(reason||'Please review the scorecard and resubmit.').trim()}`
     const {data}=await admin.from('push_subscriptions').select('*').eq('user_id',(r as any).submitted_by)
     subs=data||[]
   }

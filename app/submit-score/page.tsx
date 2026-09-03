@@ -122,7 +122,7 @@ export default function SubmitScore(){
        <button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{setMonthId(roundMonthChoice);setWeek(Number(roundWeekChoice));setChangeRound(false)}}>Continue to Scorecard</button>
      </div>}
 
-     {!changeRound&&(existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Admin Approval</b><span>Your scorecard and submitted score are waiting for review.</span></div>
+     {!changeRound&&(existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Approval — {monthName(selectedMonth)} Week {week} Round</b><span>Your {monthName(selectedMonth)} Week {week} scorecard and submitted score are waiting for a Scorecard Official or admin to review.</span></div>
      :existing?.status==='approved'?<div className="round-status complete"><b>Complete ✓</b><span>This round has been approved and posted as an official score.</span></div>
      :<>
        {existing?.status==='rejected'&&<div className="round-status rejected"><b>Scorecard Denied — Please Resubmit</b><span>{existing.admin_note||'The admin returned this scorecard. Please correct the issue and submit it again.'}</span></div>}
@@ -150,8 +150,8 @@ export default function SubmitScore(){
      <div className="score-success-modal" role="alertdialog" aria-modal="true" aria-labelledby="score-submit-success-title">
        <div className="score-success-icon" aria-hidden="true">✓</div>
        <h2 id="score-submit-success-title">Scorecard and Score Successfully Submitted!</h2>
-       <p>Your scorecard and score has been successfully submitted to the admin.</p>
-       <p><strong>Your score is not official and will not be posted until the admin approves your scorecard.</strong></p>
+       <p>Your scorecard and score has been successfully submitted for approval.</p>
+       <p><strong>Your score is not official and will not be posted until a Scorecard Official or admin approves your scorecard.</strong></p>
        <button type="button" className="btn" onClick={()=>setSuccessOpen(false)}>OK</button>
      </div>
    </div>}
