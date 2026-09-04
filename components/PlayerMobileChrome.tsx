@@ -52,7 +52,7 @@ export function PlayerMobileHeader({title}:{title:string}){
         <b>⌄</b>
       </button>
       {open&&<div className="profile-menu">
-        <Link href="/submit-score">Submit Score</Link>{(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link className="scorecard-official-menu-link-v1298" href="/scorecard-official">Scorecard Admin</Link>}<Link href="/profile">My Profile</Link>
+        <Link href="/submit-score">Submit Score</Link>{(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link href="/scorecard-official">Scorecard Admin</Link>}<Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
       </div>}
