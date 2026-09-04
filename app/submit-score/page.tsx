@@ -134,12 +134,12 @@ export default function SubmitScore(){
        <div className="round-picker-intro-v1297"><strong>Select the round you are submitting</strong><span>Choose both the league month and week before continuing.</span></div>
        <label>League Month<select value={roundMonthChoice} onChange={e=>setRoundMonthChoice(e.target.value)}><option value="">Select month…</option>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label>
        <label>League Week<select value={roundWeekChoice} onChange={e=>setRoundWeekChoice(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>
-       {msg&&<p className="message">{msg}</p>}
+       {msg&&(msg.startsWith('ROUND_BLOCKED:')?<div className="round-blocked-alert-v1305" role="alert"><span className="round-blocked-x-v1305" aria-hidden="true">×</span><div><strong>Scorecard Cannot Be Submitted</strong><span>{msg.replace('ROUND_BLOCKED:','')}</span></div></div>:<p className="message">{msg}</p>)}
        <button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{
          const nextWeek=Number(roundWeekChoice)
          if(pendingFor(roundMonthChoice,nextWeek)){
            const m=ctx.months.find(x=>x.id===roundMonthChoice)
-           setMsg(`Your ${m?monthName(m):'selected'} Week ${nextWeek} scorecard is already waiting for approval. You cannot submit another scorecard for the same month and week until that submission is reviewed. Please choose a different round.`)
+           setMsg(`ROUND_BLOCKED:Your ${m?monthName(m):'selected'} Week ${nextWeek} scorecard is already waiting for approval. You cannot submit another scorecard for the same month and week until that submission is reviewed. Please choose a different round.`)
            return
          }
          setMsg('')

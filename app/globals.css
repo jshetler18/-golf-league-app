@@ -648,3 +648,10 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .pending-round-card-v1304 span{line-height:1.4}
 .pending-round-card-v1304 small{color:var(--muted);font-weight:700}
 .submit-another-round-v1304{width:100%}
+
+/* v13.05 Prominent duplicate pending-round rejection */
+.round-blocked-alert-v1305{display:flex;align-items:flex-start;gap:12px;padding:14px 15px;border-radius:12px;background:#d71920;border:1px solid #a80f15;color:#fff;box-shadow:0 4px 12px rgba(150,0,0,.18)}
+.round-blocked-x-v1305{flex:0 0 34px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#d71920;font-size:28px;font-weight:900;line-height:1}
+.round-blocked-alert-v1305>div{display:grid;gap:4px}
+.round-blocked-alert-v1305 strong{font-size:17px;color:#fff}
+.round-blocked-alert-v1305 span{color:#fff;line-height:1.4}
