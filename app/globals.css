@@ -639,3 +639,12 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .home-scorecard-official-v1300>b{font-size:30px;color:#fff}
 .home-scorecard-official-icon-v1300{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;background:#fff;color:#d71920;font-size:28px;font-weight:900;line-height:1}
 @media(max-width:520px){.home-scorecard-official-v1300{margin:10px 18px 0}}
+
+/* v13.04 Multiple pending scorecards + submit another round */
+.pending-rounds-wrap-v1304{display:grid;gap:14px}
+.pending-rounds-list-v1304{display:grid;gap:10px}
+.pending-round-card-v1304{display:grid;gap:4px;padding:13px 14px;border:1px solid #ead5a3;border-radius:12px;background:#fffaf0}
+.pending-round-card-v1304 strong{font-size:17px}
+.pending-round-card-v1304 span{line-height:1.4}
+.pending-round-card-v1304 small{color:var(--muted);font-weight:700}
+.submit-another-round-v1304{width:100%}

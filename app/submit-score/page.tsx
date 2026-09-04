@@ -5,6 +5,7 @@ import {supabase} from '@/lib/supabase'
 
 type Month={id:string;month_start:string;course_name:string|null}
 type Ctx={userId:string;teamId:string;teamName:string;months:Month[]}
+type PendingRound={id:string;league_month_id:string;week_number:number;official_total:number}
 
 const monthName=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long'})
 const defaultWeek=(d:Date)=>Math.min(4,Math.floor((d.getDate()-1)/7)+1)
@@ -17,6 +18,7 @@ export default function SubmitScore(){
  const [roundMonthChoice,setRoundMonthChoice]=useState('')
  const [roundWeekChoice,setRoundWeekChoice]=useState('')
  const [existing,setExisting]=useState<any>(null)
+ const [pendingRounds,setPendingRounds]=useState<PendingRound[]>([])
  const [file,setFile]=useState<File|null>(null)
  const [preview,setPreview]=useState('')
  const [score,setScore]=useState('')
@@ -44,16 +46,28 @@ export default function SubmitScore(){
    setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)
  })()},[])
 
+ async function loadPendingRounds(){
+   if(!ctx)return
+   const {data}=await supabase.from('round_score_submissions')
+     .select('id,league_month_id,week_number,official_total')
+     .eq('team_id',ctx.teamId)
+     .eq('status','pending')
+     .order('created_at',{ascending:true})
+   setPendingRounds((data||[]) as PendingRound[])
+ }
+
  async function loadExisting(){
    if(!ctx||!monthId)return
    const {data}=await supabase.from('round_score_submissions').select('*').eq('league_month_id',monthId).eq('team_id',ctx.teamId).eq('week_number',week).maybeSingle()
    setExisting(data||null)
    setFile(null);setPreview('');setScore('');setMsg('');setSuccessOpen(false)
+   await loadPendingRounds()
  }
  useEffect(()=>{loadExisting()},[ctx?.teamId,monthId,week])
 
  const selectedMonth=ctx?.months.find(m=>m.id===monthId)
  const locked=existing?.status==='approved'||existing?.status==='pending'
+ const pendingFor=(m:string,w:number)=>pendingRounds.some(r=>r.league_month_id===m&&r.week_number===w)
 
  function choose(f:File){
    setFile(f)
@@ -101,6 +115,7 @@ export default function SubmitScore(){
    const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'})
    if(error){setMsg(error.message);setSaving(false);return}
    setExisting({...row,status:'pending'})
+   await loadPendingRounds()
    setSuccessOpen(true)
    setSaving(false)
  }
@@ -119,10 +134,33 @@ export default function SubmitScore(){
        <div className="round-picker-intro-v1297"><strong>Select the round you are submitting</strong><span>Choose both the league month and week before continuing.</span></div>
        <label>League Month<select value={roundMonthChoice} onChange={e=>setRoundMonthChoice(e.target.value)}><option value="">Select month…</option>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label>
        <label>League Week<select value={roundWeekChoice} onChange={e=>setRoundWeekChoice(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>
-       <button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{setMonthId(roundMonthChoice);setWeek(Number(roundWeekChoice));setChangeRound(false)}}>Continue to Scorecard</button>
+       {msg&&<p className="message">{msg}</p>}
+       <button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{
+         const nextWeek=Number(roundWeekChoice)
+         if(pendingFor(roundMonthChoice,nextWeek)){
+           const m=ctx.months.find(x=>x.id===roundMonthChoice)
+           setMsg(`Your ${m?monthName(m):'selected'} Week ${nextWeek} scorecard is already waiting for approval. You cannot submit another scorecard for the same month and week until that submission is reviewed. Please choose a different round.`)
+           return
+         }
+         setMsg('')
+         setMonthId(roundMonthChoice);setWeek(nextWeek);setChangeRound(false)
+       }}>Continue to Scorecard</button>
      </div>}
 
-     {!changeRound&&(existing?.status==='pending'?<div className="round-status pending"><b>Awaiting Approval — {monthName(selectedMonth)} Week {week} Round</b><span>Your {monthName(selectedMonth)} Week {week} scorecard and submitted score are waiting for a Scorecard Official or admin to review.</span></div>
+     {!changeRound&&(existing?.status==='pending'?<div className="pending-rounds-wrap-v1304">
+       <div className="round-status pending"><b>Awaiting Approval</b><span>Your submitted scorecard{pendingRounds.length===1?' is':'s are'} waiting for a Scorecard Official to review.</span></div>
+       <div className="pending-rounds-list-v1304">
+         {pendingRounds.map(r=>{
+           const m=ctx.months.find(x=>x.id===r.league_month_id)
+           return <div className="pending-round-card-v1304" key={r.id}>
+             <strong>{m?monthName(m):'League'} Week {r.week_number}</strong>
+             <span>Your {m?monthName(m):'League'} Week {r.week_number} scorecard and submitted score are waiting for a Scorecard Official to review.</span>
+             <small>Submitted score: {Number(r.official_total).toFixed(1)}</small>
+           </div>
+         })}
+       </div>
+       <button type="button" className="btn secondary submit-another-round-v1304" onClick={()=>{setMsg('');setRoundMonthChoice('');setRoundWeekChoice('');setChangeRound(true)}}>Submit Another Round</button>
+     </div>
      :existing?.status==='approved'?<div className="round-status complete"><b>Complete ✓</b><span>This round has been approved and posted as an official score.</span></div>
      :<>
        {existing?.status==='rejected'&&<div className="round-status rejected"><b>Scorecard Denied — Please Resubmit</b><span>{existing.admin_note||'The admin returned this scorecard. Please correct the issue and submit it again.'}</span></div>}
