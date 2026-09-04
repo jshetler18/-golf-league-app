@@ -50,7 +50,7 @@ export default function ScorecardOfficialPage(){
  if(allowed===null)return <PlayerPage title="Scorecard Official"><div className="simple-mobile-page"><p>Loading scorecards…</p></div></PlayerPage>
  if(!allowed)return <PlayerPage title="Scorecard Official"><div className="simple-mobile-page"><div className="card"><h1>Scorecard Officials</h1><p>This area is available only to players designated as Scorecard Officials by the league admin.</p></div></div></PlayerPage>
  return <PlayerPage title="Scorecard Official"><div className="simple-mobile-page scorecard-official-page-v1298">
-  <div className="scorecard-official-title-v1298"><span>✓</span><div><h1>Scorecard Official</h1><p>Review submitted scorecards and scores waiting for league approval.</p></div></div>
+  {rows.length>0&&<div className="scorecard-official-title-v1298"><span>✓</span><div><h1>Scorecard Official</h1><p>Review submitted scorecards and scores waiting for league approval.</p></div></div>}
   {msg&&<p className="message">{msg}</p>}
   {rows.length===0?<div className="card scorecard-official-empty-v1298"><strong>All caught up!</strong><span>There are no scorecards waiting for approval.</span></div>:<div className="scorecard-official-list-v1298">{rows.map(r=>{
    const month=r.league_months?.month_start?new Date(r.league_months.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'}):'League Round'
