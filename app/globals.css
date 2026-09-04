@@ -655,3 +655,7 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .round-blocked-alert-v1305>div{display:grid;gap:4px}
 .round-blocked-alert-v1305 strong{font-size:17px;color:#fff}
 .round-blocked-alert-v1305 span{color:#fff;line-height:1.4}
+
+/* v13.06 Ensure rejection X remains red */
+
+.round-blocked-alert-v1305 .round-blocked-x-v1305{color:#d71920}
