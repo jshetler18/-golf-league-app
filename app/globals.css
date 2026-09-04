@@ -627,3 +627,15 @@ body:has(.auth-app-shell-v1230)>.topbar{display:none}body:has(.auth-app-shell-v1
 .scorecard-official-score-summary-v1299 strong{font-size:27px;line-height:1.05;color:#0b5335}
 .scorecard-official-score-summary-v1299 small{font-size:11px;color:var(--muted);line-height:1.3}
 @media(max-width:680px){.scorecard-official-score-summary-v1299{grid-template-columns:1fr}.scorecard-official-score-summary-v1299>div{grid-template-columns:1fr auto;align-items:center;text-align:left}.scorecard-official-score-summary-v1299 small{grid-column:1/-1}.scorecard-official-score-summary-v1299 strong{font-size:24px}}
+
+
+/* v13.00 Pending-only Scorecard Official alert + locked home viewport */
+body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
+.mobile-home{height:100dvh;min-height:100dvh;overflow-y:auto;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
+.home-scorecard-official-v1300{display:flex;align-items:center;gap:14px;margin:12px 5vw 0;padding:15px 16px;border-radius:14px;background:#d71920;border:1px solid #a80f15;color:#fff;text-decoration:none;box-shadow:0 5px 14px rgba(150,0,0,.22)}
+.home-scorecard-official-v1300>span:nth-child(2){display:grid;gap:3px;flex:1}
+.home-scorecard-official-v1300 strong{font-size:18px;color:#fff}
+.home-scorecard-official-v1300 small{font-size:13px;color:#fff}
+.home-scorecard-official-v1300>b{font-size:30px;color:#fff}
+.home-scorecard-official-icon-v1300{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;background:#fff;color:#d71920;font-size:28px;font-weight:900;line-height:1}
+@media(max-width:520px){.home-scorecard-official-v1300{margin:10px 18px 0}}
