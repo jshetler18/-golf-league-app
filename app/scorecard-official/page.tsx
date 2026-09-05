@@ -10,7 +10,7 @@ export default function ScorecardOfficialPage(){
  const [rows,setRows]=useState<Submission[]>([])
  const [loadingRows,setLoadingRows]=useState(true)
  const [msg,setMsg]=useState('')
- const [busy,setBusy]=useState('')
+ const [busyIds,setBusyIds]=useState<Set<string>>(new Set())
 
  const load=useCallback(async()=>{
   setLoadingRows(true)
@@ -40,14 +40,39 @@ export default function ScorecardOfficialPage(){
    reason=entered.trim()
    if(!reason){setMsg('Please enter an explanation before denying the scorecard.');return}
   }
-  setBusy(row.id);setMsg(action==='approved'?'Approving scorecard…':'Returning scorecard to player…')
-  const {data:{session}}=await supabase.auth.getSession()
-  if(!session?.access_token){setMsg('Please sign in again.');setBusy('');return}
-  const r=await fetch('/api/scorecard-review',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({submissionId:row.id,action,reason})})
-  const j=await r.json()
-  if(!r.ok){setMsg(j.error||'Unable to review scorecard.');setBusy('');return}
-  setMsg(j.message||'Scorecard review saved.')
-  setBusy('');await load()
+  if(busyIds.has(row.id))return
+  setBusyIds(prev=>new Set(prev).add(row.id));setMsg(action==='approved'?'Approving scorecard…':'Returning scorecard to player…')
+  try{
+   const {data:{session}}=await supabase.auth.getSession()
+   if(!session?.access_token){setMsg('Please sign in again.');return}
+   let lastError='Unable to review scorecard.'
+   for(let attempt=0;attempt<2;attempt++){
+    const controller=new AbortController()
+    const timer=window.setTimeout(()=>controller.abort(),15000)
+    try{
+     const r=await fetch('/api/scorecard-review',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({submissionId:row.id,action,reason}),signal:controller.signal})
+     const j=await r.json().catch(()=>({}))
+     if(r.ok){
+      setRows(prev=>prev.filter(x=>x.id!==row.id))
+      setMsg(j.message||'Scorecard review saved.')
+      return
+     }
+     if(r.status===409&&action==='approved'){
+      setRows(prev=>prev.filter(x=>x.id!==row.id))
+      setMsg(`${row.teams?.name||'This scorecard'} has already been approved.`)
+      return
+     }
+     lastError=j.error||lastError
+     if(r.status<500)break
+    }catch(e:any){
+     lastError=e?.name==='AbortError'?'The approval request took too long. Retrying…':(e?.message||lastError)
+    }finally{window.clearTimeout(timer)}
+    if(attempt===0)await new Promise(resolve=>window.setTimeout(resolve,400))
+   }
+   setMsg(`${lastError} Please try again.`)
+  }finally{
+   setBusyIds(prev=>{const next=new Set(prev);next.delete(row.id);return next})
+  }
  }
 
  if(allowed===null||loadingRows)return <PlayerPage title="Scorecard Official"><div className="simple-mobile-page"><p>Loading scorecards…</p></div></PlayerPage>
@@ -64,7 +89,7 @@ export default function ScorecardOfficialPage(){
      <div><span>Score Before Handicap</span><strong>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)}</strong><small>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)} {Number(r.monthly_handicap||0)>=0?'+':'−'} {Math.abs(Number(r.monthly_handicap||0)).toFixed(1)} = {Number(r.official_total).toFixed(1)}</small></div>
     </div>
     {r.image_url?<a className="admin-scorecard-image-link" href={r.image_url} target="_blank" rel="noreferrer"><img src={r.image_url} alt={`${r.teams?.name||'Team'} scorecard`}/><span>Tap scorecard to open full size</span></a>:<p className="message">Scorecard image is unavailable.</p>}
-    <div className="scorecard-official-actions-v1298"><button className="btn" disabled={busy===r.id} onClick={()=>review(r,'approved')}>✓ Approve Score & Scorecard</button><button className="btn danger" disabled={busy===r.id} onClick={()=>review(r,'denied')}>Deny</button></div>
+    <div className="scorecard-official-actions-v1298"><button className="btn" disabled={busyIds.has(r.id)} onClick={()=>review(r,'approved')}>✓ Approve Score & Scorecard</button><button className="btn danger" disabled={busyIds.has(r.id)} onClick={()=>review(r,'denied')}>Deny</button></div>
    </article>
   })}</div>}
  </div></PlayerPage>
