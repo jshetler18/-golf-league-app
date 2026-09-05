@@ -108,9 +108,14 @@ export default function SubmitScore(){
    if(up.error){setMsg(up.error.message);setSaving(false);setProgressOpen(false);return}
    setProgress(70)
    const row={league_month_id:monthId,team_id:teamId,week_number:week,submitted_by:ctx.userId,image_path:path,hole_scores:[],hole_pars:[],stableford_points:[],raw_stableford:0,bonus_birdies:0,bonus_points:0,handicap_points:0,official_total:entered,status:'pending',admin_note:null,approved_by:null,approved_at:null,validation_passed:false,validation_report:[],detected_course_name:null,detected_player_names:[],detected_settings:{},played_holes:[]}
-   const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'})
+   const {data:saved,error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'}).select('id').single()
    if(error){setMsg(error.message);setSaving(false);setProgressOpen(false);return}
-   setProgress(92);setExisting({...row,status:'pending'});setRejectedRounds(prev=>prev.filter(r=>r.id!==existing?.id));setResubmitTarget('');await loadSubmissionAlerts();setProgress(100);await new Promise(resolve=>setTimeout(resolve,250));setProgressOpen(false);setSuccessOpen(true);setSaving(false)
+   setProgress(92)
+   try{
+     const {data:{session}}=await supabase.auth.getSession()
+     if(session?.access_token&&saved?.id)await fetch('/api/push/scorecard-submitted',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({submissionId:saved.id})})
+   }catch(e){console.error('Unable to notify scorecard reviewers',e)}
+   setExisting({...row,id:saved?.id,status:'pending'});setRejectedRounds(prev=>prev.filter(r=>r.id!==existing?.id));setResubmitTarget('');await loadSubmissionAlerts();setProgress(100);await new Promise(resolve=>setTimeout(resolve,250));setProgressOpen(false);setSuccessOpen(true);setSaving(false)
  }
 
  if(!ctx||!selectedMonth||!selectedTeam)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
