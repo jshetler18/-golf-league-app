@@ -179,7 +179,7 @@ export default function ScoreSubmissions(){
    <button className="btn" disabled={archiveSaving||!archiveTeamId||!archiveMonthId||!archiveWeek||!archiveFile} onClick={uploadPastScorecard}>{archiveSaving?'Uploading…':'Upload Past Scorecard'}</button>
  </section>
  <div className="admin-score-list">{rows.length===0?<div className="card"><p>No scorecards have been submitted yet.</p></div>:rows.map(r=><div className="card manual-score-review-card" key={r.id}>
-   <div className="submission-head"><div><h2>{r.teams?.name}</h2><p>{new Date(r.league_months?.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})} · Week {r.week_number}</p><small>Submitted by {submitters[r.submitted_by]||'Player'}</small></div><span className={'submission-status '+r.status}>{r.status}</span></div>
+   <div className="submission-head"><div><h2>{r.teams?.name}</h2><small className="submission-submitter-v1307">Submitted by {submitters[r.submitted_by]||'Player'}</small><p>{new Date(r.league_months?.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})} · Week {r.week_number}</p></div><span className={'submission-status '+r.status}>{r.status}</span></div>
    <div className="submitted-total-admin"><span>Player Submitted Score</span><strong>{Number(r.official_total).toFixed(1)}</strong></div>
    {images[r.id]?<a href={images[r.id]} target="_blank" rel="noreferrer" className="admin-scorecard-image-link"><img src={images[r.id]} alt={`${r.teams?.name} submitted scorecard`}/><span>Tap image to open full size</span></a>:<p className="message">No scorecard image is available.</p>}
    {r.status==='rejected'&&r.admin_note&&<div className="admin-denial-note"><b>Denial reason</b><span>{r.admin_note}</span></div>}

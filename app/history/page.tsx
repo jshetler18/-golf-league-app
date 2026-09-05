@@ -115,7 +115,7 @@ export default function History(){
      return {...row,rank}
    })
  },[rankingRows])
- const formatRanking=(v:number|null)=>v==null?'—':Math.round(Number(v)).toLocaleString()
+ const formatRanking=(v:number|null)=>v==null?'—':(rankingMetric==='cup_titles'||rankingMetric==='monthly_titles'?Math.round(Number(v)).toLocaleString():Number(v).toFixed(1))
 
  const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
  const monthLabel=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})

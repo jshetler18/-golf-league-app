@@ -4,17 +4,15 @@ import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
 import {syncAppBadge} from '@/lib/appBadge'
-import {ReserveIcon,CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,ChatIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon,LiveIcon} from '@/components/PlayerIcons'
+import {CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon,LiveIcon} from '@/components/PlayerIcons'
 
 type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string}
 const items:MenuItem[]=[
- {href:'/book',Icon:ReserveIcon,title:'Reserve Sim'},
- {href:'/my-bookings',Icon:CalendarIcon,title:'My Sim Reservations'},
+ {href:'/my-bookings',Icon:CalendarIcon,title:'Sim Reservations'},
  {href:'/results',Icon:StandingsIcon,title:'Monthly Standings'},
  {href:'/cup',Icon:TrophyIcon,title:'Cup Standings'},
  {href:'/live',Icon:LiveIcon,title:'Recorded Rounds'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages'},
- {href:'/chat',Icon:ChatIcon,title:'League Chat'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams'},
  {href:'/history',Icon:HistoryIcon,title:'History'},
  {href:'/rules',Icon:RulesIcon,title:'Rules'}
