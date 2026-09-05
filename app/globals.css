@@ -667,3 +667,9 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 
 /* v13.08 admin score submission card ordering */
 .submission-course-v1308{display:block;margin-top:2px;color:#536159;font-weight:700}
+
+/* v13.10 Denied scorecard resubmission prompt */
+.denied-resubmit-wrap-v1310{display:grid;gap:14px}
+.denied-round-detail-v1310{display:grid;gap:6px}
+.denied-round-detail-v1310 small{font-weight:700;color:#7d2020}
+.denied-resubmit-btn-v1310{width:100%;justify-content:center}
