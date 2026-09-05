@@ -686,3 +686,13 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .denied-alert-copy-v1311 span{font-size:14px;line-height:1.4;color:#4b5563}
 .denied-alert-button-v1311{justify-self:start;margin-top:2px}
 @media(max-width:1180px){.denied-alerts-v1311{margin:0 0 14px}.denied-alert-button-v1311{width:100%;justify-content:center}}
+
+
+/* v13.13 Show every scorecard awaiting approval on Submit Score */
+.pending-alerts-v1313{display:grid;gap:10px;margin:0 0 16px}
+.pending-alerts-heading-v1313{display:grid;gap:3px;padding:0 2px}
+.pending-alerts-heading-v1313 strong{font-size:18px}
+.pending-alerts-heading-v1313 span{color:var(--muted);font-size:14px}
+.pending-alert-card-v1313{display:grid;gap:5px;padding:14px 15px;border:1px solid #ead5a3;border-radius:12px;background:#fff3cd;color:#5d4a12}
+.pending-alert-card-v1313 strong{font-size:17px;color:#5d4a12}
+.pending-alert-card-v1313 span{line-height:1.4;color:#5d4a12}
