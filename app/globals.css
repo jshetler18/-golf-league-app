@@ -673,3 +673,16 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .denied-round-detail-v1310{display:grid;gap:6px}
 .denied-round-detail-v1310 small{font-weight:700;color:#7d2020}
 .denied-resubmit-btn-v1310{width:100%;justify-content:center}
+
+/* Version 13.11: surface denied scorecards immediately on Submit Score */
+.denied-alerts-v1311{display:grid;gap:12px;margin:0 0 16px;padding:14px;border:1px solid #fecaca;border-radius:16px;background:#fff7f7}
+.denied-alerts-heading-v1311{display:grid;gap:3px}
+.denied-alerts-heading-v1311 strong{font-size:16px;color:#991b1b}
+.denied-alerts-heading-v1311 span{font-size:13px;color:#7f1d1d}
+.denied-alert-card-v1311{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #fca5a5;border-radius:14px;background:#fff}
+.denied-alert-x-v1311{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:999px;background:#dc2626;color:#fff;font-size:22px;font-weight:800;line-height:1}
+.denied-alert-copy-v1311{display:grid;gap:6px;min-width:0;flex:1}
+.denied-alert-copy-v1311 strong{font-size:15px;color:#7f1d1d}
+.denied-alert-copy-v1311 span{font-size:14px;line-height:1.4;color:#4b5563}
+.denied-alert-button-v1311{justify-self:start;margin-top:2px}
+@media(max-width:1180px){.denied-alerts-v1311{margin:0 0 14px}.denied-alert-button-v1311{width:100%;justify-content:center}}

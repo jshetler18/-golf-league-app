@@ -7,6 +7,7 @@ type Month={id:string;month_start:string;course_name:string|null}
 type Team={id:string;name:string}
 type Ctx={userId:string;submitterName:string;ownTeamId:string;months:Month[];teams:Team[]}
 type PendingRound={id:string;league_month_id:string;team_id:string;week_number:number;official_total:number;submitted_by:string;teams?:{name?:string}|null}
+type RejectedRound={id:string;league_month_id:string;team_id:string;week_number:number;official_total:number;submitted_by:string;admin_note:string|null;teams?:{name?:string}|null}
 
 const monthName=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long'})
 const defaultWeek=(d:Date)=>Math.min(4,Math.floor((d.getDate()-1)/7)+1)
@@ -21,6 +22,8 @@ export default function SubmitScore(){
  const [roundWeekChoice,setRoundWeekChoice]=useState('')
  const [existing,setExisting]=useState<any>(null)
  const [pendingRounds,setPendingRounds]=useState<PendingRound[]>([])
+ const [rejectedRounds,setRejectedRounds]=useState<RejectedRound[]>([])
+ const [resubmitTarget,setResubmitTarget]=useState('')
  const [file,setFile]=useState<File|null>(null)
  const [preview,setPreview]=useState('')
  const [score,setScore]=useState('')
@@ -54,22 +57,31 @@ export default function SubmitScore(){
    setTeamId(ownTeamId);setMonthId(current.id);setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)
  })()},[])
 
- async function loadPendingRounds(){
+ async function loadSubmissionAlerts(){
    if(!ctx)return
-   const {data}=await supabase.from('round_score_submissions')
-     .select('id,league_month_id,team_id,week_number,official_total,submitted_by,teams(name)')
-     .eq('status','pending')
-     .order('created_at',{ascending:true})
-   setPendingRounds((data||[]) as PendingRound[])
+   const [{data:pending},{data:rejected}]=await Promise.all([
+     supabase.from('round_score_submissions')
+       .select('id,league_month_id,team_id,week_number,official_total,submitted_by,teams(name)')
+       .eq('status','pending')
+       .order('created_at',{ascending:true}),
+     supabase.from('round_score_submissions')
+       .select('id,league_month_id,team_id,week_number,official_total,submitted_by,admin_note,teams(name)')
+       .eq('status','rejected')
+       .eq('submitted_by',ctx.userId)
+       .order('created_at',{ascending:false})
+   ])
+   setPendingRounds((pending||[]) as PendingRound[])
+   setRejectedRounds((rejected||[]) as RejectedRound[])
  }
 
  async function loadExisting(){
    if(!ctx||!monthId||!teamId)return
    const {data}=await supabase.from('round_score_submissions').select('*').eq('league_month_id',monthId).eq('team_id',teamId).eq('week_number',week).maybeSingle()
-   setExisting(data||null);setFile(null);setPreview('');setScore('');setMsg('');setReviewOpen(false);setSuccessOpen(false);setResubmitActive(false)
-   await loadPendingRounds()
+   const row=data||null
+   setExisting(row);setFile(null);setPreview('');setScore('');setMsg('');setReviewOpen(false);setSuccessOpen(false);setResubmitActive(Boolean(row?.status==='rejected'&&row?.id===resubmitTarget))
+   await loadSubmissionAlerts()
  }
- useEffect(()=>{loadExisting()},[ctx?.userId,teamId,monthId,week])
+ useEffect(()=>{loadExisting()},[ctx?.userId,teamId,monthId,week,resubmitTarget])
  useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview)},[preview])
 
  const selectedMonth=ctx?.months.find(m=>m.id===monthId)
@@ -98,20 +110,21 @@ export default function SubmitScore(){
    const row={league_month_id:monthId,team_id:teamId,week_number:week,submitted_by:ctx.userId,image_path:path,hole_scores:[],hole_pars:[],stableford_points:[],raw_stableford:0,bonus_birdies:0,bonus_points:0,handicap_points:0,official_total:entered,status:'pending',admin_note:null,approved_by:null,approved_at:null,validation_passed:false,validation_report:[],detected_course_name:null,detected_player_names:[],detected_settings:{},played_holes:[]}
    const {error}=await supabase.from('round_score_submissions').upsert(row,{onConflict:'league_month_id,team_id,week_number'})
    if(error){setMsg(error.message);setSaving(false);setProgressOpen(false);return}
-   setProgress(92);setExisting({...row,status:'pending'});await loadPendingRounds();setProgress(100);await new Promise(resolve=>setTimeout(resolve,250));setProgressOpen(false);setSuccessOpen(true);setSaving(false)
+   setProgress(92);setExisting({...row,status:'pending'});setRejectedRounds(prev=>prev.filter(r=>r.id!==existing?.id));setResubmitTarget('');await loadSubmissionAlerts();setProgress(100);await new Promise(resolve=>setTimeout(resolve,250));setProgressOpen(false);setSuccessOpen(true);setSaving(false)
  }
 
  if(!ctx||!selectedMonth||!selectedTeam)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
 
  return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page">
    <h1>Submit Score</h1>
+   {rejectedRounds.length>0&&<section className="denied-alerts-v1311" aria-label="Denied scorecards requiring resubmission"><div className="denied-alerts-heading-v1311"><strong>Scorecard Resubmission Required</strong><span>{rejectedRounds.length===1?'You have 1 denied scorecard that needs to be resubmitted.':`You have ${rejectedRounds.length} denied scorecards that need to be resubmitted.`}</span></div>{rejectedRounds.map(r=>{const m=ctx.months.find(x=>x.id===r.league_month_id);const teamName=r.teams?.name||ctx.teams.find(t=>t.id===r.team_id)?.name||'Team';return <div className="denied-alert-card-v1311" key={r.id}><div className="denied-alert-x-v1311" aria-hidden="true">×</div><div className="denied-alert-copy-v1311"><strong>{teamName} · {m?monthName(m):'League'} · Week {r.week_number}</strong><span>{r.admin_note||'The Scorecard Official returned this scorecard. Please correct the issue and submit it again.'}</span><button type="button" className="btn denied-alert-button-v1311" onClick={()=>{setResubmitTarget(r.id);setTeamId(r.team_id);setMonthId(r.league_month_id);setWeek(r.week_number);setChangeRound(false);setMsg('');window.scrollTo({top:0,behavior:'smooth'})}}>Resubmit Scorecard</button></div></div>})}</section>}
    <div className="card">
      <label className="field score-team-select-v1307">Team
-       <select value={teamId} onChange={e=>setTeamId(e.target.value)}>{ctx.teams.map(t=><option key={t.id} value={t.id}>{t.name}{t.id===ctx.ownTeamId?' — My Team':''}</option>)}</select>
+       <select value={teamId} onChange={e=>{setResubmitTarget('');setTeamId(e.target.value)}}>{ctx.teams.map(t=><option key={t.id} value={t.id}>{t.name}{t.id===ctx.ownTeamId?' — My Team':''}</option>)}</select>
        <small>Your team is selected by default. Choose another team only when you are submitting their scorecard for them.</small>
      </label>
      <div className="selected-round"><strong>{monthName(selectedMonth)} · Week {week}</strong>{!changeRound&&<button type="button" className="change-round-link" onClick={()=>{setRoundMonthChoice('');setRoundWeekChoice('');setChangeRound(true)}}>Change Round</button>}</div>
-     {changeRound&&<div className="round-picker round-picker-required-v1297"><div className="round-picker-intro-v1297"><strong>Select the round you are submitting</strong><span>Choose both the league month and week before continuing.</span></div><label>League Month<select value={roundMonthChoice} onChange={e=>setRoundMonthChoice(e.target.value)}><option value="">Select month…</option>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={roundWeekChoice} onChange={e=>setRoundWeekChoice(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>{msg&&(msg.startsWith('ROUND_BLOCKED:')?<div className="round-blocked-alert-v1305" role="alert"><span className="round-blocked-x-v1305" aria-hidden="true">×</span><div><strong>Scorecard Cannot Be Submitted</strong><span>{msg.replace('ROUND_BLOCKED:','')}</span></div></div>:<p className="message">{msg}</p>)}<button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{const nextWeek=Number(roundWeekChoice);if(pendingFor(teamId,roundMonthChoice,nextWeek)){const m=ctx.months.find(x=>x.id===roundMonthChoice);setMsg(`ROUND_BLOCKED:${selectedTeam.name}'s ${m?monthName(m):'selected'} Week ${nextWeek} scorecard is already waiting for approval. You cannot submit another scorecard for the same team, month, and week until that submission is reviewed. Please choose a different round.`);return}setMsg('');setMonthId(roundMonthChoice);setWeek(nextWeek);setChangeRound(false)}}>Continue to Scorecard</button></div>}
+     {changeRound&&<div className="round-picker round-picker-required-v1297"><div className="round-picker-intro-v1297"><strong>Select the round you are submitting</strong><span>Choose both the league month and week before continuing.</span></div><label>League Month<select value={roundMonthChoice} onChange={e=>setRoundMonthChoice(e.target.value)}><option value="">Select month…</option>{ctx.months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label><label>League Week<select value={roundWeekChoice} onChange={e=>setRoundWeekChoice(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>{msg&&(msg.startsWith('ROUND_BLOCKED:')?<div className="round-blocked-alert-v1305" role="alert"><span className="round-blocked-x-v1305" aria-hidden="true">×</span><div><strong>Scorecard Cannot Be Submitted</strong><span>{msg.replace('ROUND_BLOCKED:','')}</span></div></div>:<p className="message">{msg}</p>)}<button type="button" className="btn" disabled={!roundMonthChoice||!roundWeekChoice} onClick={()=>{const nextWeek=Number(roundWeekChoice);if(pendingFor(teamId,roundMonthChoice,nextWeek)){const m=ctx.months.find(x=>x.id===roundMonthChoice);setMsg(`ROUND_BLOCKED:${selectedTeam.name}'s ${m?monthName(m):'selected'} Week ${nextWeek} scorecard is already waiting for approval. You cannot submit another scorecard for the same team, month, and week until that submission is reviewed. Please choose a different round.`);return}setMsg('');setResubmitTarget('');setMonthId(roundMonthChoice);setWeek(nextWeek);setChangeRound(false)}}>Continue to Scorecard</button></div>}
 
      {!changeRound&&(existing?.status==='pending'?<div className="pending-rounds-wrap-v1304"><div className="round-status pending"><b>Awaiting Approval</b><span>{selectedTeam.name}'s submitted scorecard is waiting for a Scorecard Official to review.</span></div><div className="pending-rounds-list-v1304">{existing?.status==='pending'&&!myPendingRounds.some(r=>r.id===existing.id)&&<div className="pending-round-card-v1304"><strong>{selectedTeam.name} · {monthName(selectedMonth)} Week {week}</strong><span>This team and round already have a scorecard waiting for approval. You cannot submit another one until it is reviewed.</span><small>Submitted score: {Number(existing.official_total).toFixed(1)}</small></div>}{myPendingRounds.map(r=>{const m=ctx.months.find(x=>x.id===r.league_month_id);const teamName=r.teams?.name||ctx.teams.find(t=>t.id===r.team_id)?.name||'Team';return <div className="pending-round-card-v1304" key={r.id}><strong>{teamName} · {m?monthName(m):'League'} Week {r.week_number}</strong><span>Your submitted scorecard and score are waiting for a Scorecard Official to review.</span><small>Submitted score: {Number(r.official_total).toFixed(1)}</small></div>})}</div><button type="button" className="btn secondary submit-another-round-v1304" onClick={()=>{setMsg('');setRoundMonthChoice('');setRoundWeekChoice('');setChangeRound(true)}}>Submit Another Round</button></div>
      :existing?.status==='approved'?<div className="round-status complete"><b>Complete ✓</b><span>This round has been approved and posted as an official score.</span></div>
