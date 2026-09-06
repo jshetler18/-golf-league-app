@@ -20,11 +20,6 @@ function orderedMatchupScores(video:Recording){
   })
 }
 
-function scoreText(value?:number){
-  if(typeof value!=='number'||!Number.isFinite(value))return '—'
-  return Number.isInteger(value)?String(value):value.toFixed(1)
-}
-
 function durationText(value?:string){
   if(!value)return ''
   const m=value.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/)
@@ -126,29 +121,15 @@ export default function LivePage(){
           <div className="recorded-grid-v1265">
             {videos.map(video=><article className="recorded-card-v1265" key={video.videoId}>
               {activeVideo===video.videoId?<div className="recorded-video-v1265 recorded-active-video-v1267"><iframe src={`https://www.youtube.com/embed/${encodeURIComponent(video.videoId)}?playsinline=1&rel=0&autoplay=1`} title={`${video.team||'Recorded round'} ${video.roundText||''}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>:
-              video.matchupTeams&&video.matchupTeams.length>=2&&video.matchupScores&&video.matchupScores.length>=2?
-              <button className="recorded-custom-matchup-thumb-v1322" onClick={()=>setActiveVideo(video.videoId)} aria-label={`Play ${video.matchupTeams[0]} vs ${video.matchupTeams[1]} ${video.roundText||''}`}>
-                <span className="recorded-custom-sim-v1322" aria-hidden="true"><i/><i/><i/></span>
-                <span className="recorded-custom-title-v1322" style={{fontSize:((video.matchupTeams[0]?.length||0)+(video.matchupTeams[1]?.length||0))>30?'3.55cqw':((video.matchupTeams[0]?.length||0)+(video.matchupTeams[1]?.length||0))>24?'4.15cqw':'5.1cqw'}}><b>{video.matchupTeams[0]}</b><em>VS</em><b>{video.matchupTeams[1]}</b></span>
-                <span className="recorded-custom-round-v1322">{video.month&&video.year?<><b>{video.month} {video.year}</b><i>•</i><b>{video.championshipRound?'Championship Round':`Round ${video.roundNumber||''}`}</b></>:<b>{video.roundText||'Recorded Round'}</b>}</span>
-                {video.season&&<span className="recorded-custom-season-v1322">{video.season} SEASON</span>}
-                <span className="recorded-custom-play-v1322">▶</span>
-                <span className={`recorded-custom-scores-v1322 ${video.showAdjustedScore?'is-current':'is-past'}`}>
-                  {orderedMatchupScores(video).slice(0,2).map(score=><span className="recorded-custom-score-card-v1322" key={score.team}>
-                    <b>{score.team}</b>
-                    {video.showAdjustedScore?<span className="recorded-custom-score-grid-v1322"><i><small>RAW SCORE</small><strong>{scoreText(score.rawScore)}</strong></i><i><small>HANDICAP</small><strong>{scoreText(score.handicap)}</strong></i><i><small>ADJUSTED SCORE</small><strong>{scoreText(score.adjustedScore)}</strong></i></span>:<span className="recorded-custom-raw-v1322"><small>RAW SCORE</small><strong>{scoreText(score.rawScore)}</strong></span>}
-                  </span>)}
-                </span>
-              </button>:
               <button className="recorded-thumb-v1267" onClick={()=>setActiveVideo(video.videoId)} aria-label={`Play ${video.team||video.title} ${video.roundText||''}`}>
                 {video.thumbnail?<img src={video.thumbnail} alt="" loading="lazy"/>:<span className="recorded-thumb-fallback-v1267">Recorded Round</span>}
                 <span className="recorded-play-v1267">▶</span>
                 {durationText(video.duration)&&<span className="recorded-duration-v1267">{durationText(video.duration)}</span>}
               </button>}
-              {!(video.matchupTeams&&video.matchupTeams.length>=2&&video.matchupScores&&video.matchupScores.length>=2)&&<div className={`recorded-card-copy-v1265 recorded-card-copy-score-v1268${video.matchupScores&&video.matchupScores.length>=2?' recorded-card-copy-matchup-v1321':''}`}>
+              <div className={`recorded-card-copy-v1265 recorded-card-copy-score-v1268${video.matchupScores&&video.matchupScores.length>=2?' recorded-card-copy-matchup-v1321':''}`}>
                 <div className="recorded-card-copy-main-v1268"><strong>{video.matchupTeams&&video.matchupTeams.length>=2?`${video.matchupTeams[0]} vs ${video.matchupTeams[1]}`:(video.team||video.title)}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.championshipRound?<span>Championship Round</span>:video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.championshipRound?'Championship Round':(video.roundText||video.title)}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
                 {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1321">{orderedMatchupScores(video).map(score=><div className="recorded-matchup-score-card-v1321" key={score.team}><strong className="recorded-matchup-team-v1321">{score.team}</strong>{video.showAdjustedScore?<div className="recorded-score-breakdown-v1321"><div><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof score.handicap==='number'?(Number.isInteger(score.handicap)?score.handicap:score.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof score.adjustedScore==='number'?(Number.isInteger(score.adjustedScore)?score.adjustedScore:score.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div>}</div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&(video.showAdjustedScore?<div className="recorded-score-breakdown-v1316"><div><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof video.handicap==='number'?(Number.isInteger(video.handicap)?video.handicap:video.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof video.adjustedScore==='number'?(Number.isInteger(video.adjustedScore)?video.adjustedScore:video.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>)}
-              </div>}
+              </div>
               {cardsForVideo(video).length>0&&<div className="recorded-scorecard-actions-v1296">{cardsForVideo(video).map(card=><div id={`scorecard-${card.id}`} className="recorded-scorecard-item-v1296" key={card.id}><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>View Scorecard — {card.team}</button>{openScorecard===card.id&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a><small>Tap the image to open it full screen and zoom.</small></div>}</div>)}</div>}
             </article>)}
           </div>
