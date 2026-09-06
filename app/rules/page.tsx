@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { supabase } from '@/lib/supabase'
 import {RichTextDisplay} from '@/components/RichTextEditor'
@@ -64,14 +64,29 @@ export default function Rules(){
   const [teams,setTeams]=useState<Team[]>([])
   const [settingsLoading,setSettingsLoading]=useState(true)
 
-  useEffect(()=>{(async()=>{
-    const {data}=await supabase.from('league_rules').select('page_title,sections').eq('id',1).maybeSingle()
+  const loadRules=useCallback(async()=>{
+    const {data}=await supabase.from('league_rules').select('page_title,sections,updated_at').eq('id',1).maybeSingle()
     if(data){
       const sections=Array.isArray(data.sections)?data.sections as RuleSection[]:fallback.sections
       setRules({page_title:data.page_title||fallback.page_title,sections})
     }
     setLoading(false)
-  })()},[])
+  },[])
+
+  useEffect(()=>{
+    loadRules()
+    const channel=supabase.channel('league-rules-live-v1336')
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'league_rules',filter:'id=eq.1'},()=>loadRules())
+      .subscribe()
+    const refreshWhenVisible=()=>{if(document.visibilityState==='visible')loadRules()}
+    document.addEventListener('visibilitychange',refreshWhenVisible)
+    window.addEventListener('focus',loadRules)
+    return()=>{
+      document.removeEventListener('visibilitychange',refreshWhenVisible)
+      window.removeEventListener('focus',loadRules)
+      supabase.removeChannel(channel)
+    }
+  },[loadRules])
 
   useEffect(()=>{(async()=>{
     setSettingsLoading(true)
