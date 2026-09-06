@@ -129,7 +129,7 @@ export default function LivePage(){
               video.matchupTeams&&video.matchupTeams.length>=2&&video.matchupScores&&video.matchupScores.length>=2?
               <button className="recorded-custom-matchup-thumb-v1322" onClick={()=>setActiveVideo(video.videoId)} aria-label={`Play ${video.matchupTeams[0]} vs ${video.matchupTeams[1]} ${video.roundText||''}`}>
                 <span className="recorded-custom-sim-v1322" aria-hidden="true"><i/><i/><i/></span>
-                <span className="recorded-custom-title-v1322"><b>{video.matchupTeams[0]}</b><em>VS</em><b>{video.matchupTeams[1]}</b></span>
+                <span className="recorded-custom-title-v1322" style={{fontSize:((video.matchupTeams[0]?.length||0)+(video.matchupTeams[1]?.length||0))>30?'3.55cqw':((video.matchupTeams[0]?.length||0)+(video.matchupTeams[1]?.length||0))>24?'4.15cqw':'5.1cqw'}}><b>{video.matchupTeams[0]}</b><em>VS</em><b>{video.matchupTeams[1]}</b></span>
                 <span className="recorded-custom-round-v1322">{video.month&&video.year?<><b>{video.month} {video.year}</b><i>•</i><b>{video.championshipRound?'Championship Round':`Round ${video.roundNumber||''}`}</b></>:<b>{video.roundText||'Recorded Round'}</b>}</span>
                 {video.season&&<span className="recorded-custom-season-v1322">{video.season} SEASON</span>}
                 <span className="recorded-custom-play-v1322">▶</span>

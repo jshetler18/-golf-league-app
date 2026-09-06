@@ -891,8 +891,10 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 }
 .recorded-custom-title-v1322 b{
   min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+  flex:0 1 auto;
 }
 .recorded-custom-title-v1322 em{
   flex:0 0 auto;
@@ -1065,3 +1067,22 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .recorded-custom-round-v1322{border-width:1px}
 }
 
+
+/* v13.24 Full matchup team names */
+.recorded-custom-title-v1322{
+  left:2.2%;
+  right:2.2%;
+  gap:1.5%;
+  letter-spacing:-.02em;
+}
+.recorded-custom-title-v1322 em{
+  flex:0 0 auto;
+}
+@media(max-width:520px){
+  .recorded-custom-title-v1322{
+    left:1.2%;
+    right:1.2%;
+    gap:1%;
+    letter-spacing:-.03em;
+  }
+}
