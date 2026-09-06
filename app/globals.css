@@ -917,3 +917,60 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .recorded-matchup-score-card-v1321.is-past-v1327 .recorded-matchup-team-v1321{font-size:10px}
   .recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326{gap:4px;margin-left:6px}
 }
+
+/* v13.28: historical matchup panel hierarchy */
+.recorded-matchup-score-card-v1321.is-past-v1327{
+  display:block;
+  padding:0;
+  text-align:center;
+}
+.recorded-matchup-score-card-v1321.is-past-v1327 .recorded-matchup-team-v1321{
+  display:block;
+  padding:10px 10px 6px;
+  margin:0;
+  text-align:center;
+  background:transparent;
+  border:0;
+  color:#7f1d1d;
+  font-size:17px;
+  line-height:1.1;
+  font-weight:950;
+}
+.recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326{
+  display:block;
+  padding:0 8px 12px;
+  margin:0;
+  text-align:center;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326 small{
+  display:block;
+  margin:0 0 4px;
+  color:#9f1c1c;
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.03em;
+}
+.recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326 strong{
+  display:block;
+  color:#c91919;
+  font-size:24px;
+  line-height:1;
+  font-weight:950;
+}
+@media(max-width:420px){
+  .recorded-matchup-score-card-v1321.is-past-v1327 .recorded-matchup-team-v1321{
+    padding:9px 6px 5px;
+    font-size:15px;
+  }
+  .recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326{
+    padding:0 6px 10px;
+  }
+  .recorded-matchup-score-card-v1321.is-past-v1327 .recorded-past-raw-score-v1326 strong{
+    font-size:21px;
+  }
+}
