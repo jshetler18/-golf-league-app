@@ -36,6 +36,7 @@ export default function MyTeam(){
   const [trophies,setTrophies]=useState<Record<string,TrophyCounts>>({})
   const [rawRows,setRawRows]=useState<RawRow[]>([])
   const [seasonName,setSeasonName]=useState('')
+  const [scoreCap,setScoreCap]=useState(30)
 
   useEffect(()=>{(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -48,8 +49,9 @@ export default function MyTeam(){
     const {data:teamData}=await supabase.from('teams').select('id,name,season_id').eq('id',player.team_id).maybeSingle()
     if(!teamData){setLoading(false);return}
     setTeam(teamData as Team)
-    const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')])
+    const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name,standings_score_cap').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')])
     setSeasonName(seasonRow?.name||'')
+    setScoreCap(Number(seasonRow?.standings_score_cap||30))
     setRawRows((rawData||[]) as RawRow[])
 
     const [{data:rosterData},{data:teamDataAll},{data:monthData}]=await Promise.all([
