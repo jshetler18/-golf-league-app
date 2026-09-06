@@ -719,3 +719,55 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 /* v13.19 Recorded Rounds default ordering note */
 .recorded-count-wrap-v1319{display:grid;gap:3px}
 .recorded-order-note-v1319{font-size:13px;color:var(--muted);line-height:1.35}
+
+/* v13.20 Recorded Rounds placement + compact head-to-head score panels */
+.recorded-count-wrap-v1319 + .recorded-archive-loading-v1316{margin-top:8px}
+.recorded-matchup-scores-v1317{
+  margin-left:auto;
+  width:205px;
+  min-width:205px;
+  max-width:205px;
+  align-self:center;
+}
+.recorded-matchup-score-card-v1317{
+  width:205px;
+  min-width:205px;
+}
+.recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{
+  width:205px;
+  min-width:205px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316>div{
+  padding:6px 5px;
+}
+.recorded-matchup-team-v1317{
+  padding:6px 8px 5px;
+  font-size:11px;
+}
+@media(max-width:520px){
+  .recorded-matchup-scores-v1317{
+    width:178px;
+    min-width:178px;
+    max-width:178px;
+    margin-left:auto;
+  }
+  .recorded-matchup-score-card-v1317{
+    width:178px;
+    min-width:178px;
+  }
+  .recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{
+    width:178px;
+    min-width:178px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316>div{
+    padding:6px 3px;
+  }
+  .recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316 small{
+    font-size:6px;
+  }
+  .recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316 strong{
+    font-size:17px;
+  }
+}

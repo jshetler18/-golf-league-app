@@ -89,9 +89,7 @@ export default function LivePage(){
       </section>}
 
       <section className="recorded-archive-v1265">
-        <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, round, or raw score.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>
-        {archiveLoading&&<div className="recorded-archive-loading-v1316" role="status" aria-live="polite"><div><strong>Loading Video Archive</strong><span>{archiveProgress}%</span></div><div className="recorded-archive-progress-track-v1316"><i style={{width:`${archiveProgress}%`}}/></div><small>Loading recorded rounds and score details…</small></div>}
-        <div className="recorded-filters-v1265">
+        <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, round, or raw score.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>        <div className="recorded-filters-v1265">
           <label>Team<select value={team} onChange={e=>{setTeam(e.target.value);setActiveVideo('')}}><option value="all">All Teams</option>{archive?.filters.teams.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Season<select value={season} onChange={e=>{setSeason(e.target.value);setActiveVideo('')}}><option value="all">All Seasons</option>{archive?.filters.seasons.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Month<select value={month} onChange={e=>{setMonth(e.target.value);setActiveVideo('')}}><option value="all">All Months</option>{archive?.filters.months.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
@@ -100,6 +98,8 @@ export default function LivePage(){
         </div>
 
         {archive&&!archive.error&&<div className="recorded-count-wrap-v1319"><div className="recorded-count-v1267">{filtered.length} recorded round{filtered.length===1?'':'s'} found</div>{!hasFilters&&<div className="recorded-order-note-v1319">Videos are shown from most recent to oldest unless the filters above are used.</div>}</div>}
+
+        {archiveLoading&&<div className="recorded-archive-loading-v1316" role="status" aria-live="polite"><div><strong>Loading Video Archive</strong><span>{archiveProgress}%</span></div><div className="recorded-archive-progress-track-v1316"><i style={{width:`${archiveProgress}%`}}/></div><small>Loading recorded rounds and score details…</small></div>}
         {!archive&&<div className="recorded-empty-v1265">Loading recorded rounds…</div>}
         {archive?.error&&<div className="recorded-empty-v1265">{archive.error}</div>}
         {archive&&!archive.error&&filtered.length===0&&<div className="recorded-empty-v1265">{hasFilters?'No recorded rounds match those filters.':'No recorded rounds have been identified yet.'}</div>}
