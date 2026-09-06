@@ -696,3 +696,22 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .pending-alert-card-v1313{display:grid;gap:5px;padding:14px 15px;border:1px solid #ead5a3;border-radius:12px;background:#fff3cd;color:#5d4a12}
 .pending-alert-card-v1313 strong{font-size:17px;color:#5d4a12}
 .pending-alert-card-v1313 span{line-height:1.4;color:#5d4a12}
+
+
+/* v13.16 Recorded Rounds archive loading + current/future score breakdown */
+.recorded-archive-loading-v1316{margin:0 0 13px;padding:12px 13px;border:1px solid #e4e7ec;border-radius:13px;background:#fff;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+.recorded-archive-loading-v1316>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.recorded-archive-loading-v1316 strong{font-size:13px;color:#101828}.recorded-archive-loading-v1316 span{font-size:12px;font-weight:800;color:#475467}.recorded-archive-loading-v1316 small{display:block;margin-top:6px;color:#667085;font-size:11px}
+.recorded-archive-progress-track-v1316{height:8px;border-radius:999px;background:#eaecf0;overflow:hidden}.recorded-archive-progress-track-v1316 i{display:block;height:100%;border-radius:inherit;background:currentColor;color:#344054;transition:width .2s ease}
+.recorded-score-breakdown-v1316{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(58px,1fr));min-width:218px;border:1px solid #f1b7b7;border-radius:11px;background:#fff5f5;overflow:hidden;box-sizing:border-box}
+.recorded-score-breakdown-v1316>div{padding:7px 8px;text-align:center;min-width:0}.recorded-score-breakdown-v1316>div+div{border-left:1px solid #f1b7b7}.recorded-score-breakdown-v1316 small{display:block;margin:0 0 3px;color:#9f1c1c;font-size:7px;font-weight:900;line-height:1.05;letter-spacing:.045em;white-space:nowrap}.recorded-score-breakdown-v1316 strong{display:block;color:#c91919;font-size:20px;font-weight:950;line-height:1}
+.recorded-matchup-score-row-v1273 .recorded-score-breakdown-v1316{min-width:205px}
+@media(max-width:520px){.recorded-score-breakdown-v1316{min-width:188px;grid-template-columns:repeat(3,minmax(52px,1fr))}.recorded-score-breakdown-v1316>div{padding:7px 5px}.recorded-score-breakdown-v1316 strong{font-size:18px}.recorded-score-breakdown-v1316 small{font-size:6.5px}.recorded-matchup-score-row-v1273{align-items:flex-end;flex-direction:column;gap:4px}.recorded-matchup-score-row-v1273>span{max-width:none}.recorded-matchup-score-row-v1273 .recorded-score-breakdown-v1316{min-width:188px}}
+
+
+/* v13.17 Head-to-head Recorded Rounds: team-labeled score panels */
+.recorded-matchup-scores-v1317{margin-left:auto;display:grid;gap:8px;min-width:218px;align-items:start}
+.recorded-matchup-score-card-v1317{display:grid;gap:0;border:1px solid #f1b7b7;border-radius:12px;background:#fff5f5;overflow:hidden;box-sizing:border-box}
+.recorded-matchup-team-v1317{display:block;padding:7px 10px 6px;text-align:center;font-size:12px;line-height:1.1;font-weight:900;color:#7f1d1d;background:#fee2e2;border-bottom:1px solid #f1b7b7}
+.recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{border:0;border-radius:0;background:transparent;min-width:218px}
+.recorded-matchup-score-card-v1317 .recorded-inline-score-v1268{margin:7px auto 9px}
+@media(max-width:520px){.recorded-matchup-scores-v1317{min-width:188px;width:100%}.recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{min-width:188px}.recorded-matchup-team-v1317{font-size:11px}}

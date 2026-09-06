@@ -4,7 +4,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
-type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number}[];championshipRound?:boolean}
+type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;handicap?:number;adjustedScore?:number;showAdjustedScore?:boolean;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
 type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;imageUrl:string}
 
@@ -19,6 +19,8 @@ function durationText(value?:string){
 export default function LivePage(){
   const [status,setStatus]=useState<LiveStatus|null>(null)
   const [archive,setArchive]=useState<ArchiveResponse|null>(null)
+  const [archiveLoading,setArchiveLoading]=useState(true)
+  const [archiveProgress,setArchiveProgress]=useState(8)
   const [team,setTeam]=useState('all'),[season,setSeason]=useState('all'),[month,setMonth]=useState('all'),[round,setRound]=useState('all'),[scoreOrder,setScoreOrder]=useState('all')
   const [activeVideo,setActiveVideo]=useState<string>('')
   const [scorecards,setScorecards]=useState<ApprovedCard[]>([])
@@ -30,8 +32,11 @@ export default function LivePage(){
   },[])
   const loadScorecards=useCallback(async()=>{try{const {data:{session}}=await (await import('@/lib/supabase')).supabase.auth.getSession();if(!session?.access_token)return;const res=await fetch('/api/round-scorecards/approved',{headers:{Authorization:`Bearer ${session.access_token}`},cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
   const loadArchive=useCallback(async()=>{
-    try{const res=await fetch('/api/youtube/recordings');setArchive(await res.json())}
-    catch{setArchive({configured:true,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]},error:'Unable to load recorded rounds right now.'})}
+    setArchiveLoading(true);setArchiveProgress(8)
+    const timer=window.setInterval(()=>setArchiveProgress(p=>Math.min(88,p+(p<45?9:p<70?5:2))),220)
+    try{const res=await fetch('/api/youtube/recordings',{cache:'no-store'});setArchive(await res.json());setArchiveProgress(100)}
+    catch{setArchive({configured:true,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]},error:'Unable to load recorded rounds right now.'});setArchiveProgress(100)}
+    finally{window.clearInterval(timer);window.setTimeout(()=>setArchiveLoading(false),180)}
   },[])
 
   useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,60000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
@@ -85,6 +90,7 @@ export default function LivePage(){
 
       <section className="recorded-archive-v1265">
         <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, round, or raw score.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>
+        {archiveLoading&&<div className="recorded-archive-loading-v1316" role="status" aria-live="polite"><div><strong>Loading Video Archive</strong><span>{archiveProgress}%</span></div><div className="recorded-archive-progress-track-v1316"><i style={{width:`${archiveProgress}%`}}/></div><small>Loading recorded rounds and score details…</small></div>}
         <div className="recorded-filters-v1265">
           <label>Team<select value={team} onChange={e=>{setTeam(e.target.value);setActiveVideo('')}}><option value="all">All Teams</option>{archive?.filters.teams.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label>Season<select value={season} onChange={e=>{setSeason(e.target.value);setActiveVideo('')}}><option value="all">All Seasons</option>{archive?.filters.seasons.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
@@ -110,13 +116,13 @@ export default function LivePage(){
               </button>}
               <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
                 <div className="recorded-card-copy-main-v1268"><strong>{video.matchupTeams&&video.matchupTeams.length>=2?`${video.matchupTeams[0]} vs ${video.matchupTeams[1]}`:(video.team||video.title)}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.championshipRound?<span>Championship Round</span>:video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.championshipRound?'Championship Round':(video.roundText||video.title)}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
-                {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1273">{video.matchupScores.map(score=><div className="recorded-matchup-score-row-v1273" key={score.team}><span>{score.team}</span><div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div></div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>}
+                {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1317">{video.matchupScores.map(score=><div className="recorded-matchup-score-card-v1317" key={score.team}><strong className="recorded-matchup-team-v1317">{score.team}</strong>{video.showAdjustedScore?<div className="recorded-score-breakdown-v1316"><div><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof score.handicap==='number'?(Number.isInteger(score.handicap)?score.handicap:score.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof score.adjustedScore==='number'?(Number.isInteger(score.adjustedScore)?score.adjustedScore:score.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div>}</div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&(video.showAdjustedScore?<div className="recorded-score-breakdown-v1316"><div><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof video.handicap==='number'?(Number.isInteger(video.handicap)?video.handicap:video.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof video.adjustedScore==='number'?(Number.isInteger(video.adjustedScore)?video.adjustedScore:video.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>)}
               </div>
               {cardsForVideo(video).length>0&&<div className="recorded-scorecard-actions-v1296">{cardsForVideo(video).map(card=><div id={`scorecard-${card.id}`} className="recorded-scorecard-item-v1296" key={card.id}><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>View Scorecard — {card.team}</button>{openScorecard===card.id&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a><small>Tap the image to open it full screen and zoom.</small></div>}</div>)}</div>}
             </article>)}
           </div>
         </div>)}
-        {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Raw Scores shown are the official scores saved for that team, month, and round. Match-play recordings show both teams when the matchup can be identified. If a recording cannot be matched confidently, no score badge is shown.</div>}
+        {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Past-season recordings keep the original Raw Score display. Beginning with the 2026–2027 season, recorded rounds show Raw Score, that team’s monthly Handicap, and the Adjusted Score. Match-play recordings show both teams when the matchup can be identified.</div>}
       </section>
     </div>
   </PlayerPage>
