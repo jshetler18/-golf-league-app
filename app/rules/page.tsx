@@ -135,6 +135,21 @@ export default function Rules(){
           {rules.sections.map((section,index)=><div className="rule-section-v1230" key={`${section.heading}-${index}`}>
             <h2>{section.heading}</h2>
             <RichTextDisplay value={section.body}/>
+            {section.heading.trim().toLowerCase().includes('tee assignment')&&<div className="tee-speed-table-wrap-v1334">
+              <h3>Recommended Tee Box Guidelines</h3>
+              <p className="muted">Driver ball speed is the primary guideline. Typical driver carry and the playing length of the monthly course may also be considered when assigning tees.</p>
+              <div className="table-wrap"><table className="tee-speed-table-v1334">
+                <thead><tr><th>Tee Box</th><th>Driver Ball Speed</th><th>Approx. Driver Carry</th><th>Suggested Course Yardage</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Forward – Turquoise</strong></td><td>Under 105 mph</td><td>Under ~170 yd</td><td>4,200–4,800 yd</td></tr>
+                  <tr><td><strong>Senior – Red</strong></td><td>105–119.9 mph</td><td>~170–195 yd</td><td>4,800–5,300 yd</td></tr>
+                  <tr><td><strong>Middle – Yellow</strong></td><td>120–134.9 mph</td><td>~195–220 yd</td><td>5,300–5,800 yd</td></tr>
+                  <tr><td><strong>Back – Blue</strong></td><td>135–149.9 mph</td><td>~220–245 yd</td><td>5,800–6,300 yd</td></tr>
+                  <tr><td><strong>Tips – Black</strong></td><td>150+ mph</td><td>~245+ yd</td><td>6,300–6,800+ yd</td></tr>
+                </tbody>
+              </table></div>
+              <p className="tee-speed-note-v1334">Tee boxes are assigned by the league administrator for each monthly course. Assignments may be moved forward or back when a player’s typical driving distance or the course length warrants an adjustment.</p>
+            </div>}
           </div>)}
         </section>
       </>)}

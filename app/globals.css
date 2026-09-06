@@ -1103,3 +1103,11 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .score-cap-rule-v1332 h2{margin:0 0 7px;color:#173759}
 .score-cap-rule-v1332 p{margin:0;line-height:1.55}
 @media(max-width:520px){.standings-cap-control-v1332{display:grid}.standings-cap-control-v1332 .field{max-width:none}}
+
+/* v13.34 tee assignment ball-speed guidelines */
+.tee-speed-table-wrap-v1334{margin-top:16px;padding-top:14px;border-top:1px solid #dfe6e2}
+.tee-speed-table-wrap-v1334 h3{margin:0 0 5px;color:#173759}
+.tee-speed-table-wrap-v1334 .muted{margin:0 0 12px}
+.tee-speed-table-v1334 th,.tee-speed-table-v1334 td{white-space:nowrap}
+.tee-speed-table-v1334 td:first-child{white-space:normal;min-width:145px}
+.tee-speed-note-v1334{margin:12px 0 0;font-size:13px;line-height:1.5;color:#56645d}
