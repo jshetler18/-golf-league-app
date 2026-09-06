@@ -715,3 +715,7 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{border:0;border-radius:0;background:transparent;min-width:218px}
 .recorded-matchup-score-card-v1317 .recorded-inline-score-v1268{margin:7px auto 9px}
 @media(max-width:520px){.recorded-matchup-scores-v1317{min-width:188px;width:100%}.recorded-matchup-score-card-v1317 .recorded-score-breakdown-v1316{min-width:188px}.recorded-matchup-team-v1317{font-size:11px}}
+
+/* v13.19 Recorded Rounds default ordering note */
+.recorded-count-wrap-v1319{display:grid;gap:3px}
+.recorded-order-note-v1319{font-size:13px;color:var(--muted);line-height:1.35}

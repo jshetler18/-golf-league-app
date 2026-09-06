@@ -99,7 +99,7 @@ export default function LivePage(){
           <label>Raw Score<select value={scoreOrder} onChange={e=>{setScoreOrder(e.target.value);setActiveVideo('')}}><option value="all">All Scores</option><option value="high">High to Low</option><option value="low">Low to High</option></select></label>
         </div>
 
-        {archive&&!archive.error&&<div className="recorded-count-v1267">{filtered.length} recorded round{filtered.length===1?'':'s'} found</div>}
+        {archive&&!archive.error&&<div className="recorded-count-wrap-v1319"><div className="recorded-count-v1267">{filtered.length} recorded round{filtered.length===1?'':'s'} found</div>{!hasFilters&&<div className="recorded-order-note-v1319">Videos are shown from most recent to oldest unless the filters above are used.</div>}</div>}
         {!archive&&<div className="recorded-empty-v1265">Loading recorded rounds…</div>}
         {archive?.error&&<div className="recorded-empty-v1265">{archive.error}</div>}
         {archive&&!archive.error&&filtered.length===0&&<div className="recorded-empty-v1265">{hasFilters?'No recorded rounds match those filters.':'No recorded rounds have been identified yet.'}</div>}
