@@ -974,3 +974,99 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
     font-size:21px;
   }
 }
+
+/* v13.29 Rules & Settings */
+.rules-settings-page-v1329{padding-bottom:34px}
+.rules-settings-page-v1329>h1{margin-bottom:14px}
+.rules-settings-tabs-v1329{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:5px;margin:0 0 18px;
+  border:1px solid var(--line);border-radius:13px;background:#f2f5f3
+}
+.rules-settings-tabs-v1329 button{
+  appearance:none;border:0;border-radius:9px;padding:11px 8px;background:transparent;color:#66736d;
+  font:inherit;font-size:14px;font-weight:850;cursor:pointer
+}
+.rules-settings-tabs-v1329 button.active{
+  background:#fff;color:#173759;box-shadow:0 1px 5px rgba(0,0,0,.10)
+}
+.rules-settings-section-title-v1329{margin:0 0 9px;font-size:20px;color:#173759}
+.settings-intro-v1329{margin:2px 0 15px}
+.settings-intro-v1329 h2{margin:0 0 5px;color:#173759;font-size:22px}
+.settings-intro-v1329 p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+
+.month-picker-v1329{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:0 0 14px
+}
+.month-picker-v1329 button{
+  appearance:none;border:1px solid var(--line);border-radius:10px;background:#fff;color:#59665f;
+  padding:8px 3px 7px;display:grid;gap:1px;text-align:center;font:inherit;cursor:pointer
+}
+.month-picker-v1329 button strong{font-size:13px;line-height:1.1}
+.month-picker-v1329 button small{font-size:9px;color:#89928e;font-weight:750}
+.month-picker-v1329 button.active{border-color:#1f7a4f;background:#eaf6ef;color:#145d3b;box-shadow:inset 0 0 0 1px #1f7a4f}
+.month-picker-v1329 button.active small{color:#327251}
+
+.monthly-settings-wrap-v1329{display:grid;gap:12px}
+.monthly-settings-wrap-v1329 .card{margin:0}
+.monthly-course-card-v1329{padding:0;overflow:hidden}
+.monthly-course-heading-v1329{
+  padding:16px 17px 14px;background:linear-gradient(135deg,#153b2a,#1f6644);color:#fff
+}
+.monthly-course-heading-v1329 span{display:block;margin-bottom:3px;color:#cfe8d9;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.055em}
+.monthly-course-heading-v1329 h2{margin:0;font-size:22px;line-height:1.15;color:#fff}
+.settings-summary-grid-v1329{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fff
+}
+.settings-summary-grid-v1329>div{
+  min-width:0;padding:12px 8px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)
+}
+.settings-summary-grid-v1329>div:nth-child(3n){border-right:0}
+.settings-summary-grid-v1329>div:nth-last-child(-n+3){border-bottom:0}
+.settings-summary-grid-v1329 small{
+  display:block;margin-bottom:4px;color:#7d8983;font-size:8px;line-height:1.05;font-weight:900;letter-spacing:.035em
+}
+.settings-summary-grid-v1329 strong{
+  display:block;color:#173759;font-size:13px;line-height:1.2;font-weight:900;overflow-wrap:anywhere
+}
+
+.weekly-pins-card-v1329,.tee-setup-card-v1329,.monthly-player-tees-v1329{padding:15px}
+.weekly-pins-card-v1329 h3,.tee-setup-card-v1329 h3,.monthly-player-tees-v1329 h3{margin:0 0 11px;color:#173759;font-size:18px}
+.weekly-pins-grid-v1329{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.weekly-pins-grid-v1329>div{
+  min-width:0;padding:10px 6px;border:1px solid #dbe4df;border-radius:9px;background:#f8faf9;text-align:center
+}
+.weekly-pins-grid-v1329 small{display:block;margin-bottom:4px;color:#738078;font-size:8px;font-weight:900}
+.weekly-pins-grid-v1329 strong{display:block;color:#173759;font-size:12px;line-height:1.2;overflow-wrap:anywhere}
+
+.tee-yardage-key-v1329{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tee-yardage-key-v1329>div{
+  display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px;background:#f9fbfa
+}
+.tee-yardage-key-v1329 .tee-square{width:18px;height:18px;flex-basis:18px}
+.tee-yardage-key-v1329>div>div{display:grid;gap:2px;min-width:0}
+.tee-yardage-key-v1329 strong{color:#173759;font-size:12px}
+.tee-yardage-key-v1329 small{color:var(--muted);font-size:11px}
+
+.monthly-player-tees-v1329>p{margin:-5px 0 11px;font-size:12px;line-height:1.4}
+.monthly-player-tee-list-v1329{display:grid;border-top:1px solid var(--line)}
+.monthly-player-tee-row-v1329{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,.85fr);gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)
+}
+.monthly-player-tee-row-v1329:last-child{border-bottom:0}
+.monthly-player-tee-row-v1329>div:first-child{display:grid;gap:2px;min-width:0}
+.monthly-player-tee-row-v1329>div:first-child strong{color:#173759;font-size:13px;overflow-wrap:anywhere}
+.monthly-player-tee-row-v1329>div:first-child small{color:var(--muted);font-size:10px}
+.monthly-player-tee-value-v1329{display:flex;justify-content:flex-end;align-items:center;gap:7px;min-width:0;text-align:right}
+.monthly-player-tee-value-v1329 .tee-square{width:14px;height:14px;flex-basis:14px}
+.monthly-player-tee-value-v1329>div{display:grid;gap:2px;min-width:0}
+.monthly-player-tee-value-v1329 strong{color:#173759;font-size:11px}
+.monthly-player-tee-value-v1329 small{color:var(--muted);font-size:10px}
+
+@media(max-width:460px){
+  .month-picker-v1329{gap:4px}
+  .month-picker-v1329 button{padding:8px 1px 7px}
+  .month-picker-v1329 button strong{font-size:11px}
+  .settings-summary-grid-v1329 strong{font-size:12px}
+  .weekly-pins-grid-v1329{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tee-yardage-key-v1329{grid-template-columns:1fr}
+}

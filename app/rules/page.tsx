@@ -1,12 +1,34 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { supabase } from '@/lib/supabase'
 import {RichTextDisplay} from '@/components/RichTextEditor'
 
 type RuleSection={heading:string;body:string}
 type RulePage={page_title:string;sections:RuleSection[]}
+type LeagueMonth={
+  id:string
+  month_start:string
+  course_name:string
+  bonus_hole_1:number|null
+  bonus_hole_2:number|null
+  bonus_birdie_value:number
+  elevation_ft:number
+  stimp_options:number[]
+  gimmie_feet:number
+  wind:string
+  greens:string
+  fairways:string
+  mulligans:boolean
+  pins_week_1:string|null
+  pins_week_2:string|null
+  pins_week_3:string|null
+  pins_week_4:string|null
+}
+type TeeAssignment={player_id:string;tee_color:string;yardage:number|null}
+type Player={id:string;full_name:string;team_id:string|null}
+type Team={id:string;name:string}
 
 const fallback:RulePage={
   page_title:'League Rules',
@@ -18,9 +40,29 @@ const fallback:RulePage={
   ]
 }
 
+const teeNames:Record<string,string>={
+  turquoise:'Forward',
+  red:'Senior',
+  yellow:'Middle',
+  blue:'Back',
+  black:'Tips',
+  green:'Green',
+  gray:'Gray'
+}
+const teeClass=(color:string)=>['turquoise','red','yellow','blue','black'].includes(color.toLowerCase())?`tee-${color.toLowerCase()}`:''
+const monthLabel=(value:string)=>new Date(`${value.slice(0,10)}T12:00:00`).toLocaleDateString('en-US',{month:'long',year:'numeric'})
+
 export default function Rules(){
   const [rules,setRules]=useState<RulePage>(fallback)
   const [loading,setLoading]=useState(true)
+  const [tab,setTab]=useState<'rules'|'settings'>('rules')
+  const [months,setMonths]=useState<LeagueMonth[]>([])
+  const [selectedMonthId,setSelectedMonthId]=useState('')
+  const [tees,setTees]=useState<Record<string,TeeAssignment[]>>({})
+  const [players,setPlayers]=useState<Player[]>([])
+  const [teams,setTeams]=useState<Team[]>([])
+  const [settingsLoading,setSettingsLoading]=useState(true)
+
   useEffect(()=>{(async()=>{
     const {data}=await supabase.from('league_rules').select('page_title,sections').eq('id',1).maybeSingle()
     if(data){
@@ -29,15 +71,142 @@ export default function Rules(){
     }
     setLoading(false)
   })()},[])
+
+  useEffect(()=>{(async()=>{
+    setSettingsLoading(true)
+    const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
+    if(!season?.id){setSettingsLoading(false);return}
+    const [{data:monthRows},{data:teamRows},{data:playerRows}]=await Promise.all([
+      supabase.from('league_months').select('id,month_start,course_name,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start'),
+      supabase.from('teams').select('id,name').eq('season_id',season.id).eq('is_active',true).order('name'),
+      supabase.from('players').select('id,full_name,team_id').eq('season_id',season.id).eq('is_active',true).order('full_name')
+    ])
+    const ms=(monthRows||[]) as LeagueMonth[]
+    setMonths(ms)
+    setTeams((teamRows||[]) as Team[])
+    setPlayers((playerRows||[]) as Player[])
+    if(ms.length){
+      const assignmentResults=await Promise.all(ms.map(async m=>{
+        const {data}=await supabase.from('tee_assignments').select('player_id,tee_color,yardage').eq('league_month_id',m.id)
+        return [m.id,(data||[]) as TeeAssignment[]] as const
+      }))
+      setTees(Object.fromEntries(assignmentResults))
+      const now=new Date()
+      const currentKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+      const current=ms.find(m=>m.month_start.startsWith(currentKey))
+      setSelectedMonthId(current?.id||ms[0].id)
+    }
+    setSettingsLoading(false)
+  })()},[])
+
+  const selected=months.find(m=>m.id===selectedMonthId)||months[0]||null
+  const selectedTees=selected?tees[selected.id]||[]:[]
+  const teeLegend=useMemo(()=>{
+    const map=new Map<string,{color:string;yardages:Set<number>}>()
+    for(const t of selectedTees){
+      const key=(t.tee_color||'').toLowerCase()
+      if(!key)continue
+      if(!map.has(key))map.set(key,{color:key,yardages:new Set<number>()})
+      if(typeof t.yardage==='number')map.get(key)!.yardages.add(t.yardage)
+    }
+    const order=['turquoise','red','yellow','blue','black']
+    return [...map.values()].sort((a,b)=>{
+      const ai=order.indexOf(a.color),bi=order.indexOf(b.color)
+      return (ai<0?99:ai)-(bi<0?99:bi)
+    })
+  },[selectedTees])
+  const teamName=(teamId:string|null)=>teams.find(t=>t.id===teamId)?.name||'—'
+  const playerFor=(playerId:string)=>players.find(p=>p.id===playerId)
+
   return <PlayerPage title="">
-    <div className="simple-mobile-page rules-page-v1230">
-      <h1>{rules.page_title}</h1>
-      {loading?<section className="card"><p>Loading…</p></section>:<section className="card rules-content-v1230">
-        {rules.sections.map((section,index)=><div className="rule-section-v1230" key={`${section.heading}-${index}`}>
-          <h2>{section.heading}</h2>
-          <RichTextDisplay value={section.body}/>
-        </div>)}
-      </section>}
+    <div className="simple-mobile-page rules-page-v1230 rules-settings-page-v1329">
+      <h1>Rules &amp; Settings</h1>
+
+      <div className="rules-settings-tabs-v1329" role="tablist" aria-label="Rules and monthly settings">
+        <button className={tab==='rules'?'active':''} onClick={()=>setTab('rules')}>Rules</button>
+        <button className={tab==='settings'?'active':''} onClick={()=>setTab('settings')}>Monthly Settings</button>
+      </div>
+
+      {tab==='rules'&&(loading?<section className="card"><p>Loading…</p></section>:<>
+        <h2 className="rules-settings-section-title-v1329">{rules.page_title}</h2>
+        <section className="card rules-content-v1230">
+          {rules.sections.map((section,index)=><div className="rule-section-v1230" key={`${section.heading}-${index}`}>
+            <h2>{section.heading}</h2>
+            <RichTextDisplay value={section.body}/>
+          </div>)}
+        </section>
+      </>)}
+
+      {tab==='settings'&&<>
+        <div className="settings-intro-v1329">
+          <h2>Monthly League Settings</h2>
+          <p>Select a league month to see the course, simulator setup, weekly pins, tee yardages, and every player’s assigned tee box.</p>
+        </div>
+
+        {settingsLoading?<section className="card"><p>Loading monthly settings…</p></section>:months.length===0?
+          <section className="card"><p>Monthly league settings have not been published yet.</p></section>:
+          <>
+            <div className="month-picker-v1329" role="tablist" aria-label="League months">
+              {months.map(m=><button key={m.id} className={selected?.id===m.id?'active':''} onClick={()=>setSelectedMonthId(m.id)}>
+                <strong>{new Date(`${m.month_start.slice(0,10)}T12:00:00`).toLocaleDateString('en-US',{month:'short'})}</strong>
+                <small>{new Date(`${m.month_start.slice(0,10)}T12:00:00`).getFullYear()}</small>
+              </button>)}
+            </div>
+
+            {selected&&<div className="monthly-settings-wrap-v1329">
+              <section className="card monthly-course-card-v1329">
+                <div className="monthly-course-heading-v1329">
+                  <div><span>{monthLabel(selected.month_start)}</span><h2>{selected.course_name||'Course not set'}</h2></div>
+                </div>
+
+                <div className="settings-summary-grid-v1329">
+                  <div><small>LEAGUE HOLES</small><strong>1–10</strong></div>
+                  <div><small>BONUS PAR 3s</small><strong>{selected.bonus_hole_1&&selected.bonus_hole_2?`${selected.bonus_hole_1} & ${selected.bonus_hole_2}`:'Not set'}</strong></div>
+                  <div><small>ELEVATION</small><strong>{Number(selected.elevation_ft||0).toLocaleString()} ft</strong></div>
+                  <div><small>STIMP</small><strong>{selected.stimp_options?.length?selected.stimp_options.join(' or '):'Not set'}</strong></div>
+                  <div><small>GIMMIES</small><strong>{selected.gimmie_feet} ft</strong></div>
+                  <div><small>WIND</small><strong>{selected.wind||'Not set'}</strong></div>
+                  <div><small>GREENS</small><strong>{selected.greens||'Not set'}</strong></div>
+                  <div><small>FAIRWAYS</small><strong>{selected.fairways||'Not set'}</strong></div>
+                  <div><small>MULLIGANS</small><strong>{selected.mulligans?'On':'Off'}</strong></div>
+                </div>
+              </section>
+
+              <section className="card weekly-pins-card-v1329">
+                <h3>Weekly Pin Settings</h3>
+                <div className="weekly-pins-grid-v1329">
+                  {[1,2,3,4].map(w=><div key={w}><small>WEEK {w}</small><strong>{(selected as any)[`pins_week_${w}`]||'Not set'}</strong></div>)}
+                </div>
+              </section>
+
+              <section className="card tee-setup-card-v1329">
+                <h3>Tee Boxes &amp; Yardages</h3>
+                {teeLegend.length?<div className="tee-yardage-key-v1329">
+                  {teeLegend.map(t=><div key={t.color}><span className={`tee-square ${teeClass(t.color)}`} style={!teeClass(t.color)?{background:t.color}:undefined}/><div><strong>{teeNames[t.color]||t.color} Tees</strong><small>{t.yardages.size?[...t.yardages].sort((a,b)=>a-b).map(v=>`${v.toLocaleString()} yds`).join(' / '):'Yardage not set'}</small></div></div>)}
+                </div>:<p className="muted">Tee box yardages have not been set for this month.</p>}
+              </section>
+
+              <section className="card monthly-player-tees-v1329">
+                <h3>Player Tee Assignments</h3>
+                <p className="muted">This is the tee box each player is assigned to use for {monthLabel(selected.month_start)}.</p>
+                <div className="monthly-player-tee-list-v1329">
+                  {selectedTees.length?selectedTees
+                    .map(t=>({assignment:t,player:playerFor(t.player_id)}))
+                    .filter(x=>x.player)
+                    .sort((a,b)=>teamName(a.player!.team_id).localeCompare(teamName(b.player!.team_id))||a.player!.full_name.localeCompare(b.player!.full_name))
+                    .map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
+                      <div><strong>{player!.full_name}</strong><small>{teamName(player!.team_id)}</small></div>
+                      <div className="monthly-player-tee-value-v1329">
+                        <span className={`tee-square ${teeClass(assignment.tee_color)}`} style={!teeClass(assignment.tee_color)?{background:assignment.tee_color}:undefined}/>
+                        <div><strong>{teeNames[assignment.tee_color?.toLowerCase()]||assignment.tee_color} Tees</strong><small>{typeof assignment.yardage==='number'?`${assignment.yardage.toLocaleString()} yds`:'Yardage not set'}</small></div>
+                      </div>
+                    </div>):<p className="muted">Player tee assignments have not been set for this month.</p>}
+                </div>
+              </section>
+            </div>}
+          </>
+        }
+      </>}
     </div>
   </PlayerPage>
 }

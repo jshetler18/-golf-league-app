@@ -15,7 +15,7 @@ const items:MenuItem[]=[
  {href:'/messages',Icon:MessagesIcon,title:'Messages'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams'},
  {href:'/history',Icon:HistoryIcon,title:'History'},
- {href:'/rules',Icon:RulesIcon,title:'Rules'}
+ {href:'/rules',Icon:RulesIcon,title:'Rules & Settings'}
 ]
 export default function Home(){
  const [profile,setProfile]=useState<any>(null),[open,setOpen]=useState(false),[unread,setUnread]=useState(0),[chatUnread,setChatUnread]=useState(0),[pendingScorecards,setPendingScorecards]=useState(0),[youtubeLive,setYoutubeLive]=useState<any>(null); const wrap=useRef<HTMLDivElement>(null)
