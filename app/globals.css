@@ -1070,3 +1070,16 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .weekly-pins-grid-v1329{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tee-yardage-key-v1329{grid-template-columns:1fr}
 }
+
+/* v13.30 Sim Reservations heading updates */
+.sim-reservations-title-v1330{
+  margin:0 0 8px;
+  color:#173759;
+  font-size:24px;
+  line-height:1.15;
+  font-weight:850;
+}
+.choose-day-card>h2{
+  font-size:24px;
+  line-height:1.15;
+}
