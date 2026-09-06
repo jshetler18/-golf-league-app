@@ -55,6 +55,7 @@ const monthLabel=(value:string)=>new Date(`${value.slice(0,10)}T12:00:00`).toLoc
 export default function Rules(){
   const [rules,setRules]=useState<RulePage>(fallback)
   const [loading,setLoading]=useState(true)
+  const [scoreCap,setScoreCap]=useState(30)
   const [tab,setTab]=useState<'rules'|'settings'>('rules')
   const [months,setMonths]=useState<LeagueMonth[]>([])
   const [selectedMonthId,setSelectedMonthId]=useState('')
@@ -74,8 +75,9 @@ export default function Rules(){
 
   useEffect(()=>{(async()=>{
     setSettingsLoading(true)
-    const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
+    const {data:season}=await supabase.from('seasons').select('id,standings_score_cap').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     if(!season?.id){setSettingsLoading(false);return}
+    setScoreCap(Number(season.standings_score_cap||30))
     const [{data:monthRows},{data:teamRows},{data:playerRows}]=await Promise.all([
       supabase.from('league_months').select('id,month_start,course_name,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start'),
       supabase.from('teams').select('id,name').eq('season_id',season.id).eq('is_active',true).order('name'),

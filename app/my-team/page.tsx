@@ -137,7 +137,7 @@ export default function MyTeam(){
     const teamPoints=matchup?(matchup.team_high_id===team.id?matchup.high_points_awarded:matchup.low_points_awarded):null
     const opponentPoints=matchup?(matchup.team_high_id===team.id?matchup.low_points_awarded:matchup.high_points_awarded):null
     return {myScores,mySeedScores,myMonthlyRank,monthHandicap:monthHandicap==null?null:Number(monthHandicap),latest,matchup,opponent,teamPoints,opponentPoints}
-  },[team,selectedMonth,teams,scores,handicaps,matchups])
+  },[team,selectedMonth,teams,scores,handicaps,matchups,scoreCap])
 
   const cupInfo=useMemo(()=>{
     if(!team)return {rank:null,total:0}
@@ -158,13 +158,13 @@ export default function MyTeam(){
       <div className="card my-team-stat"><small>Monthly Position</small><strong>{monthInfo?`#${monthInfo.myMonthlyRank}`:'—'}</strong><span>{selectedMonth?monthLabel(selectedMonth.month_start):'No month set'}</span></div>
       <div className="card my-team-stat"><small>Cup Position</small><strong>{cupInfo.rank?`#${cupInfo.rank}`:'—'}</strong><span>{cupInfo.total} Cup points</span></div>
       <div className="card my-team-stat"><small>Monthly Handicap</small><strong>{monthInfo?.monthHandicap==null?'—':`${monthInfo.monthHandicap>=0?'+':''}${monthInfo.monthHandicap.toFixed(1)}`}</strong><span>Added to each round</span></div>
-      <div className="card my-team-stat"><small>Latest Round</small><strong>{scoreText(monthInfo?.latest?.official_total)}</strong><span>{monthInfo?.latest?`Week ${monthInfo.latest.week_number}`:'No score yet'}</span></div>
+      <div className="card my-team-stat"><small>Latest Round</small><strong>{scoreText(monthInfo?.latest?.official_total==null?null:Math.min(Number(monthInfo.latest.official_total),scoreCap))}</strong><span>{monthInfo?.latest?`Week ${monthInfo.latest.week_number}`:'No score yet'}</span></div>
     </div>
 
     <div className="my-team-grid">
       <div className="card">
         <div className="section-title compact"><div><div className="eyebrow">Current month</div><h2>{selectedMonth?monthLabel(selectedMonth.month_start):'League Month'}</h2></div></div>
-        {selectedMonth?<><p className="my-team-course">⛳ <strong>{selectedMonth.course_name}</strong></p><div className="my-team-rounds">{[1,2,3,4].map(w=>{const s=monthInfo?.myScores.find(x=>x.week_number===w);return <div key={w}><small>Week {w}</small><strong>{scoreText(s?.official_total)}</strong></div>})}</div></>:<p className="muted">Monthly setup has not been entered yet.</p>}
+        {selectedMonth?<><p className="my-team-course">⛳ <strong>{selectedMonth.course_name}</strong></p><div className="my-team-rounds">{[1,2,3,4].map(w=>{const s=monthInfo?.myScores.find(x=>x.week_number===w);return <div key={w}><small>Week {w}</small><strong>{scoreText(s?.official_total==null?null:Math.min(Number(s.official_total),scoreCap))}</strong></div>})}</div></>:<p className="muted">Monthly setup has not been entered yet.</p>}
         <Link href="/results" className="my-team-link">View Monthly Standings ›</Link>
       </div>
 

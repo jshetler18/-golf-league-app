@@ -1092,3 +1092,14 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   line-height:1.4;
   font-weight:400;
 }
+
+/* v13.32 standings score cap */
+.standings-cap-admin-v1332{display:grid;gap:12px;margin-bottom:18px}
+.standings-cap-admin-v1332 h2{margin:0 0 4px}
+.standings-cap-admin-v1332 p{margin:0}
+.standings-cap-control-v1332{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.standings-cap-control-v1332 .field{max-width:220px}
+.score-cap-rule-v1332{margin-bottom:12px;border-left:4px solid #1f7a4f}
+.score-cap-rule-v1332 h2{margin:0 0 7px;color:#173759}
+.score-cap-rule-v1332 p{margin:0;line-height:1.55}
+@media(max-width:520px){.standings-cap-control-v1332{display:grid}.standings-cap-control-v1332 .field{max-width:none}}
