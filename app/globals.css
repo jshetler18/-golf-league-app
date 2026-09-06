@@ -1168,3 +1168,14 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   }
   .tee-guide-name-v1335{font-size:16px}
 }
+
+/* v13.37 larger tee guideline table text */
+.tee-speed-table-v1334 th{font-size:15px}
+.tee-speed-table-v1334 td{font-size:16px;line-height:1.45}
+.tee-speed-table-v1334 td strong{font-size:17px}
+@media(max-width:640px){
+  .tee-speed-table-v1334 td,
+  .tee-speed-table-v1334 td:first-child{font-size:15px;line-height:1.4}
+  .tee-speed-table-v1334 td::before{font-size:11px}
+  .tee-guide-name-v1335,.tee-speed-table-v1334 td strong{font-size:18px}
+}
