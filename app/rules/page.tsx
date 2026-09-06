@@ -141,11 +141,11 @@ export default function Rules(){
               <div className="table-wrap"><table className="tee-speed-table-v1334">
                 <thead><tr><th>Tee Box</th><th>Driver Ball Speed</th><th>Approx. Driver Carry</th><th>Suggested Course Yardage</th></tr></thead>
                 <tbody>
-                  <tr><td><strong>Forward – Turquoise</strong></td><td>Under 105 mph</td><td>Under ~170 yd</td><td>4,200–4,800 yd</td></tr>
-                  <tr><td><strong>Senior – Red</strong></td><td>105–119.9 mph</td><td>~170–195 yd</td><td>4,800–5,300 yd</td></tr>
-                  <tr><td><strong>Middle – Yellow</strong></td><td>120–134.9 mph</td><td>~195–220 yd</td><td>5,300–5,800 yd</td></tr>
-                  <tr><td><strong>Back – Blue</strong></td><td>135–149.9 mph</td><td>~220–245 yd</td><td>5,800–6,300 yd</td></tr>
-                  <tr><td><strong>Tips – Black</strong></td><td>150+ mph</td><td>~245+ yd</td><td>6,300–6,800+ yd</td></tr>
+                  <tr><td data-label="Tee Box"><span className="tee-guide-name-v1335"><span className="tee-guide-square-v1335 tee-guide-turquoise-v1335"/><strong>Forward</strong></span></td><td data-label="Driver Ball Speed">Under 105 mph</td><td data-label="Approx. Driver Carry">Under ~170 yd</td><td data-label="Suggested Course Yardage">4,200–4,800 yd</td></tr>
+                  <tr><td data-label="Tee Box"><span className="tee-guide-name-v1335"><span className="tee-guide-square-v1335 tee-guide-red-v1335"/><strong>Senior</strong></span></td><td data-label="Driver Ball Speed">105–119.9 mph</td><td data-label="Approx. Driver Carry">~170–195 yd</td><td data-label="Suggested Course Yardage">4,800–5,300 yd</td></tr>
+                  <tr><td data-label="Tee Box"><span className="tee-guide-name-v1335"><span className="tee-guide-square-v1335 tee-guide-yellow-v1335"/><strong>Middle</strong></span></td><td data-label="Driver Ball Speed">120–134.9 mph</td><td data-label="Approx. Driver Carry">~195–220 yd</td><td data-label="Suggested Course Yardage">5,300–5,800 yd</td></tr>
+                  <tr><td data-label="Tee Box"><span className="tee-guide-name-v1335"><span className="tee-guide-square-v1335 tee-guide-blue-v1335"/><strong>Back</strong></span></td><td data-label="Driver Ball Speed">135–149.9 mph</td><td data-label="Approx. Driver Carry">~220–245 yd</td><td data-label="Suggested Course Yardage">5,800–6,300 yd</td></tr>
+                  <tr><td data-label="Tee Box"><span className="tee-guide-name-v1335"><span className="tee-guide-square-v1335 tee-guide-black-v1335"/><strong>Tips</strong></span></td><td data-label="Driver Ball Speed">150+ mph</td><td data-label="Approx. Driver Carry">~245+ yd</td><td data-label="Suggested Course Yardage">6,300–6,800+ yd</td></tr>
                 </tbody>
               </table></div>
               <p className="tee-speed-note-v1334">Tee boxes are assigned by the league administrator for each monthly course. Assignments may be moved forward or back when a player’s typical driving distance or the course length warrants an adjustment.</p>
