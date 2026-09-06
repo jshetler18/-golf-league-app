@@ -847,78 +847,221 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .recorded-score-breakdown-v1321 strong{font-size:16px}
 }
 
-/* v13.22 Official matchup archive thumbnail */
+/* v13.23 Official matchup archive thumbnail — approved simulator design */
 .recorded-custom-matchup-thumb-v1322{
-  position:relative;display:block;width:100%;aspect-ratio:16/9;overflow:hidden;border:0;padding:0;
-  border-radius:12px;background:
-    radial-gradient(ellipse at 50% 43%,#55a64d 0 16%,#26723b 17% 31%,transparent 32%),
-    linear-gradient(180deg,#07130f 0 17%,#173e2a 18% 56%,#315c22 57% 100%);
-  color:#fff;cursor:pointer;text-align:left;isolation:isolate;
+  position:relative;
+  display:block;
+  width:100%;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  border:0;
+  padding:0;
+  border-radius:12px;
+  background-image:url('/recorded-matchup-template-v1323.png');
+  background-size:cover;
+  background-position:center;
+  color:#fff;
+  cursor:pointer;
+  text-align:left;
+  container-type:inline-size;
+  isolation:isolate;
 }
-.recorded-custom-matchup-thumb-v1322:before{
-  content:"";position:absolute;inset:17% 23% 35%;z-index:-1;
-  background:linear-gradient(180deg,#62b9e8 0 42%,#5e9f47 43% 100%);
-  border:5px solid #0a1512;box-shadow:0 0 0 2px rgba(255,255,255,.08);
-}
-.recorded-custom-sim-v1322{position:absolute;inset:0;z-index:-1;background:
-  linear-gradient(90deg,#17140f 0 7%,#06110e 7% 22%,transparent 22% 78%,#06110e 78% 93%,#17140f 93% 100%);}
-.recorded-custom-sim-v1322:before,.recorded-custom-sim-v1322:after{
-  content:"";position:absolute;bottom:17%;width:7%;height:29%;border-radius:50% 50% 18% 18%;
-  background:radial-gradient(ellipse at center,#295f2b 0 38%,#173719 39% 62%,transparent 63%);
-}
-.recorded-custom-sim-v1322:before{left:8%}.recorded-custom-sim-v1322:after{right:8%}
-.recorded-custom-sim-v1322 i:nth-child(1){position:absolute;left:23%;right:23%;top:31%;height:18%;background:
-  radial-gradient(ellipse at 18% 65%,#245d30 0 12%,transparent 13%),
-  radial-gradient(ellipse at 78% 55%,#245d30 0 14%,transparent 15%),
-  linear-gradient(165deg,transparent 0 37%,#d8d0a1 38% 41%,transparent 42%),
-  linear-gradient(180deg,#5ca1dc 0 38%,#4e9b43 39% 100%);}
+.recorded-custom-sim-v1322{display:none}
+
+/* Dark cover hides the baked example matchup title while preserving the approved room. */
 .recorded-custom-title-v1322{
-  position:absolute;top:1.5%;left:3%;right:3%;display:flex;align-items:center;justify-content:center;gap:2.1%;
-  font-size:clamp(14px,3.15vw,43px);font-weight:950;line-height:1;text-transform:uppercase;text-shadow:0 3px 5px #000;
+  position:absolute;
+  top:0;
+  left:14%;
+  right:14%;
+  height:10.8%;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:2.1%;
+  padding-top:.4%;
+  background:linear-gradient(180deg,rgba(7,9,8,.99),rgba(8,10,9,.96));
+  font-size:5.1cqw;
+  font-weight:950;
+  line-height:1;
+  text-transform:uppercase;
+  text-shadow:0 2px 4px #000;
   white-space:nowrap;
 }
-.recorded-custom-title-v1322 em{font-style:normal;color:#f6bf2b}
+.recorded-custom-title-v1322 b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.recorded-custom-title-v1322 em{
+  flex:0 0 auto;
+  font-style:normal;
+  color:#f6bd22;
+}
+
+/* Matches the approved dark-green round banner. */
 .recorded-custom-round-v1322{
-  position:absolute;top:12.4%;left:18%;right:18%;height:8.2%;display:flex;align-items:center;justify-content:center;gap:3%;
-  background:#064c35;border:2px solid #efba28;transform:skew(-7deg);font-size:clamp(8px,1.7vw,24px);font-weight:900;text-transform:uppercase;
+  position:absolute;
+  z-index:4;
+  top:11.45%;
+  left:17.7%;
+  right:17.7%;
+  height:8.7%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3.2%;
+  background:#004932;
+  border-top:2px solid #eab625;
+  border-bottom:2px solid #eab625;
+  clip-path:polygon(2.7% 0,97.3% 0,94.3% 100%,5.7% 100%);
+  font-size:3.1cqw;
+  line-height:1;
+  font-weight:950;
+  text-transform:uppercase;
+  text-shadow:0 1px 2px #000;
 }
-.recorded-custom-round-v1322>*{transform:skew(7deg)}.recorded-custom-round-v1322 i{font-style:normal}
+.recorded-custom-round-v1322 i{font-style:normal}
+
+/* Matches the approved gold season ribbon. */
 .recorded-custom-season-v1322{
-  position:absolute;top:20.3%;left:34%;right:34%;height:7%;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(#ffd75a,#efb62c);color:#10150f;font-size:clamp(7px,1.35vw,19px);font-weight:950;text-transform:uppercase;
-  clip-path:polygon(5% 0,95% 0,87% 100%,13% 100%);
+  position:absolute;
+  z-index:4;
+  top:19.85%;
+  left:31.3%;
+  right:31.3%;
+  height:6.9%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(180deg,#ffd45a,#eeb32b);
+  color:#11160f;
+  clip-path:polygon(3% 0,97% 0,90% 100%,10% 100%);
+  font-size:2.35cqw;
+  line-height:1;
+  font-weight:950;
+  text-transform:uppercase;
 }
+
+/* The approved template already contains the exact play graphic in the correct position. */
 .recorded-custom-play-v1322{
-  position:absolute;left:50%;top:43.5%;transform:translate(-50%,-50%);width:17%;aspect-ratio:1;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;padding-left:1.2%;background:#03412f;border:5px solid #efba28;
-  box-shadow:0 4px 10px #0008;color:white;font-size:clamp(28px,6vw,84px);line-height:1;
+  position:absolute;
+  z-index:5;
+  left:50%;
+  top:47.1%;
+  width:17.8%;
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  color:transparent;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  font-size:0;
 }
+
+/* Opaque score panels fully replace the baked example scores. */
 .recorded-custom-scores-v1322{
-  position:absolute;left:1.5%;right:1.5%;bottom:1.2%;display:grid;grid-template-columns:1fr 1fr;gap:15%;
+  position:absolute;
+  z-index:6;
+  left:1.35%;
+  right:1.35%;
+  bottom:1.15%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14.2%;
 }
 .recorded-custom-score-card-v1322{
-  display:block;overflow:hidden;border:2px solid #efba28;border-radius:9px;background:#fff;color:#071b13;box-shadow:0 2px 7px #0008;
+  display:block;
+  min-width:0;
+  overflow:hidden;
+  border:2px solid #eab625;
+  border-radius:10px;
+  background:#fff;
+  color:#071b13;
+  box-shadow:0 2px 7px rgba(0,0,0,.55);
 }
 .recorded-custom-score-card-v1322>b{
-  display:block;background:#034c35;color:#fff;text-align:center;padding:2.4% 2%;font-size:clamp(11px,2.35vw,32px);
-  line-height:1;font-weight:950;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:block;
+  padding:3.0% 2% 2.6%;
+  background:#004b35;
+  color:#fff;
+  text-align:center;
+  font-size:4.15cqw;
+  line-height:1;
+  font-weight:950;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 1px 2px #000;
 }
-.recorded-custom-score-grid-v1322{display:grid;grid-template-columns:repeat(3,1fr)}
-.recorded-custom-score-grid-v1322 i{font-style:normal;text-align:center;padding:3.5% 1.5% 4%;min-width:0}
-.recorded-custom-score-grid-v1322 i+i{border-left:1px solid #30483e}
-.recorded-custom-score-grid-v1322 small,.recorded-custom-raw-v1322 small{
-  display:block;color:#064c35;font-size:clamp(5px,.85vw,12px);line-height:1;font-weight:950;text-transform:uppercase;
+.recorded-custom-score-grid-v1322{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  min-height:15.7cqw;
+}
+.recorded-custom-score-grid-v1322 i{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2.6% 1%;
+  font-style:normal;
+  text-align:center;
+}
+.recorded-custom-score-grid-v1322 i+i{
+  border-left:1px solid #30483e;
+}
+.recorded-custom-score-grid-v1322 small,
+.recorded-custom-raw-v1322 small{
+  display:block;
+  color:#064b35;
+  font-size:1.55cqw;
+  line-height:1.04;
+  font-weight:950;
+  text-transform:uppercase;
+  white-space:normal;
 }
 .recorded-custom-score-grid-v1322 strong{
-  display:block;margin-top:2%;font-size:clamp(18px,4vw,55px);line-height:.98;font-weight:950;
+  display:block;
+  margin-top:4%;
+  color:#05130f;
+  font-size:6.25cqw;
+  line-height:.92;
+  font-weight:950;
 }
-.recorded-custom-raw-v1322{display:block;text-align:center;padding:3% 2% 4%}
-.recorded-custom-raw-v1322 small{font-size:clamp(7px,1.2vw,17px)}
-.recorded-custom-raw-v1322 strong{display:block;margin-top:1%;font-size:clamp(25px,5.4vw,75px);line-height:.95;font-weight:950}
+
+/* Historical matchup thumbnails: only raw score, as requested. */
+.recorded-custom-scores-v1322.is-past .recorded-custom-score-card-v1322>b{
+  padding-top:3.2%;
+  padding-bottom:3%;
+}
+.recorded-custom-raw-v1322{
+  display:flex;
+  min-height:15.7cqw;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2.6% 2% 3.2%;
+  text-align:center;
+}
+.recorded-custom-raw-v1322 small{
+  font-size:2.2cqw;
+}
+.recorded-custom-raw-v1322 strong{
+  display:block;
+  margin-top:1.5%;
+  color:#05130f;
+  font-size:8.2cqw;
+  line-height:.92;
+  font-weight:950;
+}
+
 @media(max-width:520px){
   .recorded-custom-matchup-thumb-v1322{border-radius:9px}
-  .recorded-custom-round-v1322{left:12%;right:12%}
-  .recorded-custom-season-v1322{left:30%;right:30%}
-  .recorded-custom-scores-v1322{gap:13%}
-  .recorded-custom-play-v1322{border-width:3px}
+  .recorded-custom-score-card-v1322{border-width:1px;border-radius:7px}
+  .recorded-custom-round-v1322{border-width:1px}
 }
+
