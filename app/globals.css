@@ -1476,3 +1476,30 @@ i .captain-mark-v1357{
 .handicap-ranking-detail-v1372>.muted{margin:12px 0 4px}
 .handicap-help-note-v1372{margin:12px 4px 0}
 @media(max-width:600px){.handicap-ranking-head-v1372,.handicap-ranking-row-v1372{grid-template-columns:38px minmax(100px,1fr) 68px 68px;gap:6px}.handicap-ranking-head-v1372{padding:9px 10px;font-size:9px}.handicap-ranking-row-v1372{padding:13px 10px}.handicap-ranking-row-v1372>span:nth-of-type(3),.handicap-ranking-row-v1372>span:nth-of-type(4){font-size:15px}.handicap-ranking-row-v1372>i{right:3px}.teams-tab-heading-v1372 h2{font-size:24px}}
+
+/* v13.75 compact Monthly Standings — no horizontal scrolling */
+.results-leaderboard{overflow:hidden}
+.results-grid{width:100%;grid-template-columns:50px minmax(120px,1.7fr) 52px repeat(4,minmax(48px,.62fr)) minmax(62px,.72fr)}
+.results-grid.header span,.results-grid.row>span{min-width:0}
+.results-handicap-v1375{font-weight:900}
+.results-handicap-v1375.positive{color:#287a45}
+.results-handicap-v1375.negative{color:#a33434}
+@media(max-width:620px){
+  .results-leaderboard{overflow:hidden}
+  .results-leaderboard-head{position:static;min-width:0;width:auto}
+  .results-grid{min-width:0;width:100%;grid-template-columns:30px minmax(78px,1.4fr) 34px repeat(4,minmax(34px,.55fr)) minmax(42px,.7fr)}
+  .results-grid.header{font-size:8px;letter-spacing:0}
+  .results-grid.header span,.results-grid.row>span{padding-left:2px;padding-right:2px}
+  .results-grid.row{min-height:54px;font-size:11px}
+  .results-grid.row .team-cell{font-size:11px;line-height:1.08;overflow:hidden}
+  .results-grid.row .team-cell strong{overflow-wrap:anywhere}
+  .team-cell small{font-size:8px;line-height:1.05}
+  .month-total{font-size:13px}
+  .results-grid.header>span:nth-child(1),.results-grid.row>span:nth-child(1),.results-grid.header>span:nth-child(2),.results-grid.row>span:nth-child(2){position:static;left:auto;z-index:auto;box-shadow:none}
+}
+@media(max-width:390px){
+  .results-grid{grid-template-columns:28px minmax(72px,1.35fr) 32px repeat(4,minmax(31px,.52fr)) 39px}
+  .results-grid.row{font-size:10px}
+  .results-grid.header{font-size:7px}
+  .month-total{font-size:12px}
+}
