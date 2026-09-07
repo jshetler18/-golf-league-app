@@ -29,7 +29,7 @@ type LeagueMonth={
 type TeeAssignment={player_id:string;tee_color:string;yardage:number|null}
 type CourseTeeBox={tee_level:string;course_tee_color:string;yardage:number}
 type Player={id:string;full_name:string;team_id:string|null}
-type Team={id:string;name:string}
+type Team={id:string;name:string;captain_player_id:string|null}
 
 const fallback:RulePage={
   page_title:'League Rules',
@@ -99,7 +99,7 @@ export default function Rules(){
     setScoreCap(Number(season.standings_score_cap||30))
     const [{data:monthRows},{data:teamRows},{data:playerRows}]=await Promise.all([
       supabase.from('league_months').select('id,month_start,course_name,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start'),
-      supabase.from('teams').select('id,name').eq('season_id',season.id).eq('is_active',true).order('name'),
+      supabase.from('teams').select('id,name,captain_player_id').eq('season_id',season.id).eq('is_active',true).order('name'),
       supabase.from('players').select('id,full_name,team_id').eq('season_id',season.id).eq('is_active',true).order('full_name')
     ])
     const ms=(monthRows||[]) as LeagueMonth[]
@@ -240,13 +240,13 @@ export default function Rules(){
                     const rows=selectedTees
                       .map(a=>({assignment:a,player:playerFor(a.player_id)}))
                       .filter(x=>x.player?.team_id===team.id)
-                      .sort((a,b)=>a.player!.full_name.localeCompare(b.player!.full_name))
+                      .sort((a,b)=>(a.player!.id===team.captain_player_id?-1:b.player!.id===team.captain_player_id?1:a.player!.full_name.localeCompare(b.player!.full_name)))
                     if(!rows.length)return null
                     return <section className="monthly-player-team-group-v1348" key={team.id}>
                       <h4><span>{team.name}</span><span className="monthly-team-handicap-wrap-v1351"><strong className={`monthly-team-handicap-v1349 ${handicaps[selected.id]?.[team.id]===undefined?'monthly-team-handicap-na-v1353':''}`}>{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</strong><small>Handicap</small></span></h4>
                       <div className="monthly-player-tee-list-v1329">
                         {rows.map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
-                          <div><strong>{player!.full_name}</strong></div>
+                          <div><strong>{player!.full_name}{player!.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</strong></div>
                           <div className="monthly-player-tee-value-v1329">
                             <span className={`tee-square ${teeClass(assignment.tee_color)}`} style={!teeClass(assignment.tee_color)?{background:assignment.tee_color}:undefined}/>
                             <div><strong>{teeColorLabel(assignment.tee_color)} Tees</strong><small>{typeof assignment.yardage==='number'?`${assignment.yardage.toLocaleString()} yds`:'Yardage not set'}</small></div>

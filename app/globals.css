@@ -1372,3 +1372,36 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   color:inherit;
   font:inherit;
 }
+
+
+/* v13.57 Team captain */
+.captain-mark-v1357{
+  font-size:.72em;
+  font-style:italic;
+  font-weight:650;
+  white-space:nowrap;
+}
+.admin-captain-control-v1357{
+  display:grid;
+  gap:4px;
+  margin-top:10px;
+  max-width:240px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.admin-captain-control-v1357 select{
+  width:100%;
+  min-height:38px;
+  padding:7px 9px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:var(--ink);
+  font-size:15px;
+  font-weight:700;
+  text-transform:none;
+  letter-spacing:0;
+}

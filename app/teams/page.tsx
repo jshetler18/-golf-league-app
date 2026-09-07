@@ -6,7 +6,7 @@ import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { TeamRawStats } from '@/components/TeamRawStats'
 
 type Season={id:string;name:string}
-type Team={id:string;name:string;season_id?:string}
+type Team={id:string;name:string;season_id?:string;captain_player_id:string|null}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
 type TrophyCounts={cup:number;monthly:number}
 type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
@@ -28,7 +28,7 @@ export default function Teams(){
     if(!s){setLoading(false);return}
     setSeason(s as Season)
     const [{data:t},{data:p},{data:champions},{data:closedSeasons},{data:allTeams},{data:allMonths}]=await Promise.all([
-      supabase.from('teams').select('id,name').eq('season_id',s.id).eq('is_active',true).order('name'),
+      supabase.from('teams').select('id,name,captain_player_id').eq('season_id',s.id).eq('is_active',true).order('name'),
       supabase.from('players').select('id,team_id,full_name,official_tee_color').eq('season_id',s.id).eq('is_active',true).order('full_name'),
       supabase.from('monthly_champions').select('team_id'),
       supabase.from('seasons').select('id').eq('is_closed',true),
@@ -74,7 +74,7 @@ export default function Teams(){
     setLoading(false)
   })()},[])
 
-  const rows=useMemo(()=>teams.map(team=>({team,players:players.filter(p=>p.team_id===team.id).sort((a,b)=>a.full_name.localeCompare(b.full_name))})),[teams,players])
+  const rows=useMemo(()=>teams.map(team=>({team,players:players.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name)))})),[teams,players])
 
   if(loading)return <PlayerPage title="Teams"><p>Loading…</p></PlayerPage>
 
@@ -114,7 +114,7 @@ export default function Teams(){
           </div></div>
           {roster.length?<div className="player-roster">{roster.map(player=><div className="player-name" key={player.id}>
             <span className="team-player-avatar-v1230" aria-hidden={!avatars[player.id]}>{avatars[player.id]?<img src={avatars[player.id]} alt={`${player.full_name} profile`} />:<span>👤</span>}</span>
-            <span className="team-player-copy-v1230"><strong>{player.full_name}</strong><small className="team-player-tee-v1235">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} aria-hidden="true"></span>}<span>{player.official_tee_color?(teeLabels[player.official_tee_color]||`${player.official_tee_color} Tees`):'Tee not set'}</span></small></span>
+            <span className="team-player-copy-v1230"><strong>{player.full_name}{player.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</strong><small className="team-player-tee-v1235">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} aria-hidden="true"></span>}<span>{player.official_tee_color?(teeLabels[player.official_tee_color]||`${player.official_tee_color} Tees`):'Tee not set'}</span></small></span>
           </div>)}</div>:<p className="muted">No active players are assigned to this team.</p>}
           <div className="eyebrow" style={{marginTop:16}}>Raw Score Statistics <span className="raw-score-disclaimer">(Handicaps are not factored in)</span></div>
           <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={season?.name||''}/>

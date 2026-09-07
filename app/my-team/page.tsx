@@ -8,7 +8,7 @@ import { TeamRawStats } from '@/components/TeamRawStats'
 
 type Player={id:string;full_name:string;team_id:string|null;official_tee_color:string|null;is_active:boolean}
 type PlayerAvatar={player_id:string;avatar_url:string|null}
-type Team={id:string;name:string;season_id:string}
+type Team={id:string;name:string;season_id:string;captain_player_id:string|null}
 type Month={id:string;month_start:string;course_name:string}
 type Score={league_month_id:string;team_id:string;week_number:number;official_total:number|null;status:string}
 type Handicap={league_month_id:string;team_id:string;handicap_points:number}
@@ -46,7 +46,7 @@ export default function MyTeam(){
     const {data:player}=await supabase.from('players').select('id,full_name,team_id,official_tee_color,is_active').eq('id',profile.player_id).maybeSingle()
     if(!player?.team_id){setLinkedPlayer((player||null) as Player|null);setLoading(false);return}
     setLinkedPlayer(player as Player)
-    const {data:teamData}=await supabase.from('teams').select('id,name,season_id').eq('id',player.team_id).maybeSingle()
+    const {data:teamData}=await supabase.from('teams').select('id,name,season_id,captain_player_id').eq('id',player.team_id).maybeSingle()
     if(!teamData){setLoading(false);return}
     setTeam(teamData as Team)
     const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name,standings_score_cap').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')])
@@ -56,7 +56,7 @@ export default function MyTeam(){
 
     const [{data:rosterData},{data:teamDataAll},{data:monthData}]=await Promise.all([
       supabase.from('players').select('id,full_name,team_id,official_tee_color,is_active').eq('season_id',teamData.season_id).eq('is_active',true).order('full_name'),
-      supabase.from('teams').select('id,name,season_id').eq('season_id',teamData.season_id).eq('is_active',true),
+      supabase.from('teams').select('id,name,season_id,captain_player_id').eq('season_id',teamData.season_id).eq('is_active',true),
       supabase.from('league_months').select('id,month_start,course_name').eq('season_id',teamData.season_id).order('month_start')
     ])
     setRoster((rosterData||[]) as Player[])
@@ -192,7 +192,7 @@ export default function MyTeam(){
 
     <div className="card">
       <div className="section-title compact"><div><div className="eyebrow">Roster</div><h2>{team.name} Players</h2></div></div>
-      <div className="my-team-roster">{roster.filter(p=>p.team_id===team.id).map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===linkedPlayer.id?' (You)':''}</strong><small className="my-team-tee">{p.official_tee_color&&<span className={`tee-square tee-${p.official_tee_color.toLowerCase()}`} aria-hidden="true"></span>}<span>{p.official_tee_color?(teeLabels[p.official_tee_color.toLowerCase()]||`${p.official_tee_color} Tees`):'Tee not set'}</span></small></div></div>)}</div>
+      <div className="my-team-roster">{roster.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name))).map(p=><div key={p.id} className="my-team-player"><span className="my-team-avatar">{playerAvatars[p.id]?<img src={playerAvatars[p.id]} alt={`${p.full_name} profile`}/>:<span aria-hidden="true">👤</span>}</span><div><strong>{p.full_name}{p.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}{p.id===linkedPlayer.id?' (You)':''}</strong><small className="my-team-tee">{p.official_tee_color&&<span className={`tee-square tee-${p.official_tee_color.toLowerCase()}`} aria-hidden="true"></span>}<span>{p.official_tee_color?(teeLabels[p.official_tee_color.toLowerCase()]||`${p.official_tee_color} Tees`):'Tee not set'}</span></small></div></div>)}</div>
     </div>
   </PlayerPage>
 }
