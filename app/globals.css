@@ -1359,3 +1359,16 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
     font-size:13px;
   }
 }
+
+
+/* v13.56 Monthly player tee override */
+.player-team-group-v1344 table select{
+  width:100%;
+  min-width:130px;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card);
+  color:inherit;
+  font:inherit;
+}
