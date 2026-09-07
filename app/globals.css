@@ -1457,3 +1457,22 @@ i .captain-mark-v1357{
 .handicap-admin-head-v1369{display:grid;grid-template-columns:minmax(150px,1fr) auto auto auto;gap:16px;align-items:center;margin-bottom:10px}
 .handicap-admin-head-v1369>div{display:flex;flex-direction:column}.handicap-admin-head-v1369 small{font-size:11px;color:#68736c}.handicap-admin-head-v1369>div>strong{font-size:18px}
 @media(max-width:700px){.handicap-admin-head-v1369{grid-template-columns:1fr 1fr}.handicap-admin-head-v1369>div:first-child{grid-column:1/-1}.handicap-score-chips-v1369>span{min-width:68px}}
+
+/* v13.72 Teams & Handicaps */
+.teams-handicaps-page-v1372>h1{margin:0 0 14px}
+.teams-tab-heading-v1372{margin-top:18px}
+.teams-tab-heading-v1372 h2{margin:2px 0 4px;font-size:28px}
+.handicap-rankings-v1372{margin-top:18px}
+.handicap-ranking-table-v1372{padding:0;overflow:hidden}
+.handicap-ranking-head-v1372,.handicap-ranking-row-v1372{display:grid;grid-template-columns:54px minmax(130px,1fr) 90px 90px;gap:10px;align-items:center}
+.handicap-ranking-head-v1372{padding:10px 14px;background:#f4f7f5;font-size:11px;font-weight:800;text-transform:uppercase;color:#657168}
+.handicap-ranking-entry-v1372+.handicap-ranking-entry-v1372{border-top:1px solid #e0e7e2}
+.handicap-ranking-row-v1372{position:relative;width:100%;border:0;background:#fff;padding:14px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.handicap-ranking-row-v1372>span:nth-of-type(3),.handicap-ranking-row-v1372>span:nth-of-type(4){font-weight:800;font-size:17px}
+.handicap-ranking-row-v1372>i{position:absolute;right:8px;font-style:normal;color:#6b756e}
+.handicap-rank-v1372{font-weight:800;color:#667169}
+.handicap-ranking-row-v1372 .helps-v1372{color:#287a45}.handicap-ranking-row-v1372 .hurts-v1372{color:#a33434}
+.handicap-ranking-detail-v1372{padding:0 14px 16px;background:#fbfcfb;border-top:1px solid #edf1ee}
+.handicap-ranking-detail-v1372>.muted{margin:12px 0 4px}
+.handicap-help-note-v1372{margin:12px 4px 0}
+@media(max-width:600px){.handicap-ranking-head-v1372,.handicap-ranking-row-v1372{grid-template-columns:38px minmax(100px,1fr) 68px 68px;gap:6px}.handicap-ranking-head-v1372{padding:9px 10px;font-size:9px}.handicap-ranking-row-v1372{padding:13px 10px}.handicap-ranking-row-v1372>span:nth-of-type(3),.handicap-ranking-row-v1372>span:nth-of-type(4){font-size:15px}.handicap-ranking-row-v1372>i{right:3px}.teams-tab-heading-v1372 h2{font-size:24px}}
