@@ -151,7 +151,7 @@ export default function Rules(){
             <h2>{section.heading}</h2>
             <RichTextDisplay value={section.body}/>
             {section.heading.trim().toLowerCase().includes('tee assignment')&&<div className="tee-speed-table-wrap-v1334">
-              <h3>Recommended Tee Box Guidelines</h3>
+              <h3>Tee Box Guidelines</h3>
               <p className="muted">Driver ball speed is the primary guideline. Typical driver carry and the playing length of the monthly course may also be considered when assigning tees.</p>
               <div className="table-wrap"><table className="tee-speed-table-v1334">
                 <thead><tr><th>Tee Box</th><th>Driver Ball Speed</th><th>Approx. Driver Carry</th><th>Suggested Course Yardage</th></tr></thead>
