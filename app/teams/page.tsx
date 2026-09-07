@@ -11,6 +11,9 @@ type Team={id:string;name:string;season_id?:string;captain_player_id:string|null
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
 type TrophyCounts={cup:number;monthly:number}
 type RawRow={canonical_team_name:string;season_label:string;score_month:string;round_number?:number|null;raw_score:number|string}
+type PublishedScore={score:number;season_label?:string;score_month?:string;round_number?:number|null;counted:boolean}
+type PublishedHandicap={team_id:string;team_name:string;average:number|null;recommended:number|null;handicap:number;method:string;recent:PublishedScore[]}
+type HandicapPublication={month_start:string;handicap_standard:number;published_at:string;snapshot:PublishedHandicap[]}
 
 const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tip Tees'}
 function teamKey(name:string){return name.trim().toLowerCase()}
@@ -25,11 +28,16 @@ export default function Teams(){
   const [rawRows,setRawRows]=useState<RawRow[]>([])
   const [tab,setTab]=useState<'teams'|'handicaps'>('teams')
   const [openHandicapTeam,setOpenHandicapTeam]=useState<string|null>(null)
+  const [publication,setPublication]=useState<HandicapPublication|null>(null)
+
+  useEffect(()=>{if(typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('tab')==='handicaps')setTab('handicaps')},[])
 
   useEffect(()=>{(async()=>{
     const {data:s}=await supabase.from('seasons').select('id,name,handicap_standard').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     if(!s){setLoading(false);return}
     setSeason(s as Season)
+    const {data:published}=await supabase.from('handicap_publications').select('month_start,handicap_standard,published_at,snapshot').eq('season_id',s.id).order('published_at',{ascending:false}).limit(1).maybeSingle()
+    setPublication((published||null) as HandicapPublication|null)
     const [{data:t},{data:p},{data:champions},{data:closedSeasons},{data:allTeams},{data:allMonths}]=await Promise.all([
       supabase.from('teams').select('id,name,captain_player_id').eq('season_id',s.id).eq('is_active',true).order('name'),
       supabase.from('players').select('id,team_id,full_name,official_tee_color').eq('season_id',s.id).eq('is_active',true).order('full_name'),
@@ -78,10 +86,10 @@ export default function Teams(){
   })()},[])
 
   const rows=useMemo(()=>teams.map(team=>({team,players:players.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name)))})),[teams,players])
-  const handicapRows=useMemo(()=>teams.map(team=>{
-    const calc=calculateHandicap(rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)).map(r=>({score:Number(r.raw_score),season_label:r.season_label,score_month:r.score_month,round_number:r.round_number})),Number(season?.handicap_standard||27))
-    return {team,calc}
-  }).sort((a,b)=>(b.calc.average??-Infinity)-(a.calc.average??-Infinity)||a.team.name.localeCompare(b.team.name)),[teams,rawRows,season])
+  const handicapRows=useMemo(()=>{
+    if(!publication)return []
+    return [...(publication.snapshot||[])].sort((a,b)=>(b.average??-Infinity)-(a.average??-Infinity)||a.team_name.localeCompare(b.team_name))
+  },[publication])
 
   if(loading)return <PlayerPage title="Teams & Handicaps"><p>Loading…</p></PlayerPage>
 
@@ -142,15 +150,21 @@ export default function Teams(){
       </div>
       </>}
       {tab==='handicaps'&&<div className="handicap-rankings-v1372">
-        <div className="section-title teams-tab-heading-v1372"><div><div className="eyebrow">{season?.name||'Current season'}</div><h2>Team Handicaps</h2><p className="muted">Teams are ranked by their calculated raw scoring average. Tap a team to see which recent rounds counted and which were dropped.</p></div><div className="pill">Standard Used to Calculate Handicaps: {Number(season?.handicap_standard||27)}</div></div>
+        {!publication?<div className="card"><h2>Team Handicaps</h2><p className="muted">Team handicaps have not been published yet. This page will update when the league administrator confirms and publishes the handicaps for the upcoming month.</p></div>:<>
+        <div className="section-title teams-tab-heading-v1372"><div><div className="eyebrow">{new Date(publication.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}</div><h2>Team Handicaps</h2><p className="muted">These are the latest handicaps confirmed by the league administrator. This page stays unchanged until the next handicap publication.</p></div><div className="pill">Standard Used to Calculate Handicaps: {Number(publication.handicap_standard||27)}</div></div>
         <div className="card handicap-ranking-table-v1372">
           <div className="handicap-ranking-head-v1372"><span>Rank</span><span>Team</span><span>Raw Avg.</span><span>Handicap</span></div>
-          {handicapRows.map(({team,calc},index)=>{const open=openHandicapTeam===team.id;return <div className="handicap-ranking-entry-v1372" key={team.id}>
-            <button className="handicap-ranking-row-v1372" onClick={()=>setOpenHandicapTeam(open?null:team.id)} aria-expanded={open}>
-              <span className="handicap-rank-v1372">{calc.average==null?'—':index+1}</span><strong>{team.name}</strong><span>{calc.average==null?'N/A':Math.round(calc.average)}</span><span className={(calc.recommended||0)>0?'helps-v1372':(calc.recommended||0)<0?'hurts-v1372':''}>{calc.recommended==null?'N/A':calc.recommended>0?`+${calc.recommended}`:`${calc.recommended}`}</span><i>{open?'⌃':'⌄'}</i>
+          {handicapRows.map((row,index)=>{const open=openHandicapTeam===row.team_id;return <div className="handicap-ranking-entry-v1372" key={row.team_id}>
+            <button className="handicap-ranking-row-v1372" onClick={()=>setOpenHandicapTeam(open?null:row.team_id)} aria-expanded={open}>
+              <span className="handicap-rank-v1372">{row.average==null?'—':index+1}</span><strong>{row.team_name}</strong><span>{row.average==null?'N/A':Math.round(row.average)}</span><span className={(row.handicap||0)>0?'helps-v1372':(row.handicap||0)<0?'hurts-v1372':''}>{row.handicap==null?'N/A':row.handicap>0?`+${row.handicap}`:`${row.handicap}`}</span><i>{open?'⌃':'⌄'}</i>
             </button>
-            {open&&<div className="handicap-ranking-detail-v1372"><p className="muted">{calc.method}</p><div className="handicap-average-v1369"><span>Handicap Raw Scoring Average:</span><strong>{calc.average==null?'Not Yet Available':Math.round(calc.average)}</strong></div><div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div></div>}
+            {open&&<div className="handicap-ranking-detail-v1372"><p className="muted">{row.method}</p><div className="handicap-average-v1369"><span>Handicap Raw Scoring Average:</span><strong>{row.average==null?'Not Yet Available':Math.round(row.average)}</strong></div><div className="handicap-score-chips-v1369">{(row.recent||[]).map((r,i)=><span className={!r.counted?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r as any)}</small><strong>{Number(r.score).toFixed(1)}</strong><em>{r.counted?'Counted':'Not Counted'}</em></span>)}</div></div>}
           </div>})}
+        </div>
+        <p className="muted handicap-help-note-v1372">A positive handicap adds points to a team's raw score. A negative handicap subtracts points. A 0 handicap makes no adjustment.</p>
+        <p className="muted handicap-help-note-v1372">Published {new Date(publication.published_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}.</p>
+        </>}
+      </div>})}
         </div>
         <p className="muted handicap-help-note-v1372">A positive handicap adds points to a team's raw score. A negative handicap subtracts points. A 0 handicap makes no adjustment.</p>
       </div>}

@@ -37,6 +37,8 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  const [handicapStandard,setHandicapStandard]=useState(27)
  const [standardDraft,setStandardDraft]=useState('27')
  const [rawHistory,setRawHistory]=useState<Record<string,HandicapScore[]>>({})
+ const [publishedMonthId,setPublishedMonthId]=useState('')
+ const [publishing,setPublishing]=useState(false)
 
  const activePlayers=useMemo(()=>players.filter(p=>p.team_id),[players])
  const playersByTeam=useMemo(()=>teams.map(team=>({team,players:activePlayers.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name)))})).filter(g=>g.players.length),[teams,activePlayers])
@@ -96,7 +98,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  async function loadMonth(){
    if(!seasonId)return;setMsg('')
    const {data:m}=await supabase.from('league_months').select('id,month_start,course_profile_id').eq('season_id',seasonId).eq('month_start',monthStart).maybeSingle()
-   if(!m){setMonthId('');setAssignedProfileId('');setHandicaps({});setPlayerTeeLevels({});return}
+   if(!m){setMonthId('');setAssignedProfileId('');setHandicaps({});setPlayerTeeLevels({});setPublishedMonthId('');return}
    const x=m as MonthRow;setMonthId(x.id);setAssignedProfileId(x.course_profile_id||'')
    const [{data:h},{data:ct},{data:ta}]=await Promise.all([
      supabase.from('monthly_team_handicaps').select('team_id,handicap_points').eq('league_month_id',x.id),
@@ -107,6 +109,8 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    const saved:Record<string,string>={}
    for(const a of (ta||[])){const match=(ct||[]).find(v=>v.course_tee_color.trim().toLowerCase()===String(a.tee_color||'').trim().toLowerCase()&&Number(v.yardage)===Number(a.yardage));if(match)saved[a.player_id]=match.tee_level}
    setPlayerTeeLevels(saved)
+   const {data:publication}=await supabase.from('handicap_publications').select('league_month_id').eq('league_month_id',x.id).maybeSingle()
+   setPublishedMonthId(publication?.league_month_id||'')
  }
  useEffect(()=>{if(mode==='months')loadMonth()},[mode,seasonId,monthStart])
 
@@ -142,6 +146,21 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    await supabase.from('tee_assignments').delete().eq('league_month_id',id)
    if(assignments.length){const {error}=await supabase.from('tee_assignments').insert(assignments as any);if(error){setMsg(error.message);return}}
    await loadMonth();setMsg(`${cp.course_name} is assigned to ${months.find(m=>m[0]===monthStart)?.[1]}.`)
+ }
+
+
+ async function publishHandicaps(){
+   if(!monthId){setMsg('Save the month setup before publishing handicaps.');return}
+   const missing=teams.filter(t=>(handicaps[t.id]??'NA')==='NA')
+   if(missing.length){setMsg(`Set a handicap for every active team before publishing. Missing: ${missing.map(t=>t.name).join(', ')}`);return}
+   setPublishing(true);setMsg('Confirming and publishing team handicaps…')
+   try{
+     const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.')
+     const snapshot=teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return {team_id:team.id,team_name:team.name,average:calc.average,recommended:calc.recommended,handicap:Number(handicaps[team.id]),method:calc.method,recent:calc.recent.map(r=>({...r,counted:!calc.excluded.includes(r)}))}})
+     const r=await fetch('/api/handicaps/publish',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({seasonId,monthId,monthStart,standard:handicapStandard,snapshot})})
+     const out=await r.json();if(!r.ok)throw new Error(out.error||'Unable to publish handicaps.')
+     setPublishedMonthId(monthId);setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} handicaps are now published. ${out.sent||0} player notification${out.sent===1?'':'s'} sent.`)
+   }catch(e:any){setMsg(e?.message||'Unable to publish handicaps.')}finally{setPublishing(false)}
  }
 
  const assignedProfile=profiles.find(p=>p.id===assignedProfileId)
@@ -191,7 +210,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
        <p className="muted">Recommendations use each team's recent raw scores. Review the scores below, then confirm or adjust the handicap in Team Handicaps.</p>
        <div className="handicap-standard-admin-v1369"><label className="field">Handicap Standard<input type="number" step="1" value={standardDraft} onChange={e=>setStandardDraft(e.target.value)}/></label><button className="btn" onClick={saveHandicapStandard}>Update Standard &amp; Recalculate</button></div>
        <div className="handicap-admin-team-list-v1369">{teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return <section className="handicap-admin-team-v1369" key={team.id}><div className="handicap-admin-head-v1369"><div><strong>{team.name}</strong><small>{calc.method}</small></div><div><small>Average</small><strong>{calc.average==null?'—':calc.average.toFixed(2)}</strong></div><div><small>Recommended</small><strong>{calc.recommended==null?'NA':`${calc.recommended>0?'+':''}${calc.recommended}`}</strong></div>{calc.recommended!=null&&<button className="btn" onClick={()=>setHandicaps(v=>({...v,[team.id]:String(calc.recommended)}))}>Use {calc.recommended>0?'+':''}{calc.recommended}</button>}</div><div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${team.id}-${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div></section>})}</div>
-       <h3>Team Handicaps</h3><p className="muted">Review the recommendation above, then confirm it here or choose a different whole-number handicap. Handicaps remain locked for the selected month.</p><div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:21},(_,i)=>i-10).map(n=><option key={n} value={String(n)}>{n>0?`+${n}`:n}</option>)}</select></label>)}</div>
+       <h3>Team Handicaps</h3><p className="muted">Review the recommendation above, then confirm it here or choose a different whole-number handicap. Changes here do not update the player Handicap page until you publish them below.</p><div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:21},(_,i)=>i-10).map(n=><option key={n} value={String(n)}>{n>0?`+${n}`:n}</option>)}</select></label>)}</div><div className="card" style={{marginTop:16}}><strong>{publishedMonthId===monthId?'Published Handicaps':'Publish New Handicaps'}</strong><p className="muted">The player Team Handicaps page stays frozen until you publish. You can adjust handicaps above at any time; players will not see those changes until you publish again.</p><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Publishing…':publishedMonthId===monthId?'Update Published Handicaps & Notify Players':'Confirm Handicaps & Notify Players'}</button></div>
        <h3>Course Tee Box Key &amp; Yardages</h3><p className="muted">These are the tee boxes and yardages configured for the selected course.</p>
        {assignedProfileId?<div className="course-tee-key-admin-v1367">{teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage).map(l=>{const tee=monthTees[l.key];return <div className="course-tee-key-row-admin-v1367" key={l.key}><span className="course-tee-key-level-admin-v1367">{l.label}</span><span className="course-tee-key-color-admin-v1367"><span className="course-tee-key-square-admin-v1367" style={{background:tee.color}}/>{tee.color}</span><strong>{Number(tee.yardage).toLocaleString()} yd</strong></div>})}</div>:<p className="muted">Select a course above to view its tee boxes and yardages.</p>}
        <h3>Player Tee Box Assignments</h3><p className="muted">Players default to their Official Tee Box. Override a player here only for this selected month.</p>
