@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 
 type Team={id:string;name:string;captain_player_id:string|null}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
-type Month={id:string;month_start:string;course_name:string;bonus_hole_1:number|null;bonus_hole_2:number|null;bonus_birdie_value:number;elevation_ft:number;stimp_options:number[];gimmie_feet:number;wind:string;greens:string;fairways:string;mulligans:boolean;pins_week_1:string|null;pins_week_2:string|null;pins_week_3:string|null;pins_week_4:string|null}
+type Month={id:string;month_start:string;course_name:string;course_location:string|null;bonus_hole_1:number|null;bonus_hole_2:number|null;bonus_birdie_value:number;elevation_ft:number;stimp_options:number[];gimmie_feet:number;wind:string;greens:string;fairways:string;mulligans:boolean;pins_week_1:string|null;pins_week_2:string|null;pins_week_3:string|null;pins_week_4:string|null}
 type CourseTee={color:string;yardage:string}
 const months=[['2026-11-01','November'],['2026-12-01','December'],['2027-01-01','January'],['2027-02-01','February'],['2027-03-01','March'],['2027-04-01','April']]
 const teeLevels=[
