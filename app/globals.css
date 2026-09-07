@@ -1296,3 +1296,53 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
     gap:7px;
   }
 }
+
+
+/* v13.49 Monthly handicap display */
+.monthly-player-team-group-v1348 h4{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.monthly-team-handicap-v1349{
+  flex:0 0 auto;
+  text-align:right;
+  font-size:15px;
+  font-weight:800;
+  color:#173759;
+}
+@media(max-width:420px){
+  .monthly-team-handicap-v1349{font-size:13px}
+}
+
+
+/* v13.51 Team header handicap positioning */
+.monthly-player-team-group-v1348 h4{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.monthly-team-handicap-wrap-v1351{
+  margin-left:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:flex-start;
+  text-align:right;
+  line-height:1.05;
+}
+.monthly-team-handicap-wrap-v1351 .monthly-team-handicap-v1349{
+  display:block;
+  font-size:17px;
+  line-height:1.05;
+}
+.monthly-team-handicap-wrap-v1351 small{
+  display:block;
+  margin-top:3px;
+  font-size:10px;
+  line-height:1;
+  font-weight:600;
+  color:var(--muted);
+}

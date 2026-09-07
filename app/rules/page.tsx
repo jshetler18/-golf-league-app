@@ -236,7 +236,7 @@ export default function Rules(){
                       .sort((a,b)=>a.player!.full_name.localeCompare(b.player!.full_name))
                     if(!rows.length)return null
                     return <section className="monthly-player-team-group-v1348" key={team.id}>
-                      <h4><span>{team.name}</span><span className="monthly-team-handicap-v1349">{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</span></h4>
+                      <h4><span>{team.name}</span><span className="monthly-team-handicap-wrap-v1351"><strong className="monthly-team-handicap-v1349">{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</strong><small>Handicap</small></span></h4>
                       <div className="monthly-player-tee-list-v1329">
                         {rows.map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
                           <div><strong>{player!.full_name}</strong></div>
