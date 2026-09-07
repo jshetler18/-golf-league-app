@@ -1179,3 +1179,6 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .tee-speed-table-v1334 td::before{font-size:11px}
   .tee-guide-name-v1335,.tee-speed-table-v1334 td strong{font-size:18px}
 }
+
+/* v13.41 TV leaderboard: shift Monthly Standings title left so it is fully visible */
+.tv-approved-titles h1{position:relative;left:-1.1vw}
