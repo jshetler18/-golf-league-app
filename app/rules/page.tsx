@@ -135,8 +135,9 @@ export default function Rules(){
   const selectedCourseTees=selected?courseTeeBoxes[selected.id]||[]:[]
   const teeLegend=useMemo(()=>{
     const order=['turquoise','red','yellow','blue','black']
+    const usedCourseTees=new Set(selectedTees.map(t=>(t.tee_color||'').trim().toLowerCase()).filter(Boolean))
     return selectedCourseTees
-      .filter(t=>t.course_tee_color&&typeof t.yardage==='number')
+      .filter(t=>t.course_tee_color&&typeof t.yardage==='number'&&usedCourseTees.has(t.course_tee_color.trim().toLowerCase()))
       .sort((a,b)=>order.indexOf(a.tee_level)-order.indexOf(b.tee_level))
       .map(t=>({
         level:t.tee_level,
@@ -144,7 +145,7 @@ export default function Rules(){
         actualColor:t.course_tee_color,
         yardage:t.yardage
       }))
-  },[selectedCourseTees])
+  },[selectedCourseTees,selectedTees])
   const teamName=(teamId:string|null)=>teams.find(t=>t.id===teamId)?.name||'—'
   const playerFor=(playerId:string)=>players.find(p=>p.id===playerId)
 
