@@ -63,6 +63,7 @@ export default function Rules(){
   const [tees,setTees]=useState<Record<string,TeeAssignment[]>>({})
   const [players,setPlayers]=useState<Player[]>([])
   const [teams,setTeams]=useState<Team[]>([])
+  const [handicaps,setHandicaps]=useState<Record<string,Record<string,number>>>({})
   const [settingsLoading,setSettingsLoading]=useState(true)
 
   const loadRules=useCallback(async()=>{
@@ -109,6 +110,11 @@ export default function Rules(){
         return [m.id,(data||[]) as TeeAssignment[]] as const
       }))
       setTees(Object.fromEntries(assignmentResults))
+      const handicapResults=await Promise.all(ms.map(async m=>{
+        const {data}=await supabase.from('monthly_team_handicaps').select('team_id,handicap_points').eq('league_month_id',m.id)
+        return [m.id,Object.fromEntries((data||[]).map(h=>[h.team_id,Number(h.handicap_points)]))] as const
+      }))
+      setHandicaps(Object.fromEntries(handicapResults))
       const now=new Date()
       const currentKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
       const current=ms.find(m=>m.month_start.startsWith(currentKey))
@@ -220,7 +226,7 @@ export default function Rules(){
               </section>
 
               <section className="card monthly-player-tees-v1329">
-                <h3>Player Tee Assignments</h3>
+                <h3>Player Tee Box Assignments</h3>
                 <p className="muted">This is the tee box each player is assigned to use for {monthLabel(selected.month_start)}.</p>
                 <div className="monthly-player-team-groups-v1348">
                   {selectedTees.length?teams.map(team=>{
@@ -230,7 +236,7 @@ export default function Rules(){
                       .sort((a,b)=>a.player!.full_name.localeCompare(b.player!.full_name))
                     if(!rows.length)return null
                     return <section className="monthly-player-team-group-v1348" key={team.id}>
-                      <h4>{team.name}</h4>
+                      <h4><span>{team.name}</span><span className="monthly-team-handicap-v1349">{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</span></h4>
                       <div className="monthly-player-tee-list-v1329">
                         {rows.map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
                           <div><strong>{player!.full_name}</strong></div>
