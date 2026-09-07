@@ -40,13 +40,25 @@ export default function ScoreSubmissions(){
 
  useEffect(()=>{if(guard.admin)load()},[guard.admin])
  useEffect(()=>{if(!guard.admin)return;(async()=>{
-   const [{data:t,error:te},{data:m,error:me}]=await Promise.all([
-     supabase.from('teams').select('id,name').order('name'),
-     supabase.from('league_months').select('id,month_start,course_name,seasons(name)').order('month_start',{ascending:false})
-   ])
-   if(te||me){setMsg(te?.message||me?.message||'Unable to load past scorecard options.');return}
-   setArchiveTeams(t||[]);setArchiveMonths(m||[])
+   const {data:m,error:me}=await supabase.from('league_months').select('id,season_id,month_start,course_name,seasons(name)').order('month_start',{ascending:false})
+   if(me){setMsg(me.message||'Unable to load past scorecard options.');return}
+   setArchiveMonths(m||[])
  })()},[guard.admin])
+
+ useEffect(()=>{
+   if(!guard.admin||!archiveMonthId){setArchiveTeams([]);setArchiveTeamId('');return}
+   const selectedMonth=archiveMonths.find(m=>m.id===archiveMonthId)
+   if(!selectedMonth?.season_id){setArchiveTeams([]);setArchiveTeamId('');return}
+   let cancelled=false
+   ;(async()=>{
+     const {data:t,error:te}=await supabase.from('teams').select('id,name').eq('season_id',selectedMonth.season_id).order('name')
+     if(cancelled)return
+     if(te){setMsg(te.message||'Unable to load teams for the selected season.');return}
+     setArchiveTeams(t||[])
+     setArchiveTeamId(current=>(t||[]).some(team=>team.id===current)?current:'')
+   })()
+   return()=>{cancelled=true}
+ },[guard.admin,archiveMonthId,archiveMonths])
 
  function chooseArchiveFile(f:File){
    setArchiveFile(f)
@@ -168,10 +180,10 @@ export default function ScoreSubmissions(){
  return <><section className="hero"><div className="eyebrow">Administration</div><h1>Score Submissions</h1><p>Review the player's scorecard image and submitted total. Nothing is posted until you approve it.</p></section>
  {msg&&<p className="message">{msg}</p>}
  <section className="card archive-scorecard-upload-v1297">
-   <div className="section-title compact"><div><div className="eyebrow">Recorded Rounds Archive</div><h2>Upload a Past Scorecard</h2><p className="muted">Choose the team, month, and week that match the recorded video. The image will appear under that video's information on the Recorded Rounds page.</p></div></div>
+   <div className="section-title compact"><div><div className="eyebrow">Recorded Rounds Archive</div><h2>Upload a Past Scorecard</h2><p className="muted">Choose the league month first, then the team and week that match the recorded video. The Team list only shows teams from the selected season. The image will appear under that video's information on the Recorded Rounds page.</p></div></div>
    <div className="archive-scorecard-grid-v1297">
-     <label className="field">Team<select value={archiveTeamId} onChange={e=>setArchiveTeamId(e.target.value)}><option value="">Select team…</option>{archiveTeams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
-     <label className="field">League Month<select value={archiveMonthId} onChange={e=>setArchiveMonthId(e.target.value)}><option value="">Select month…</option>{archiveMonths.map(m=><option key={m.id} value={m.id}>{new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}{m.seasons?.name?` — ${m.seasons.name}`:''}</option>)}</select></label>
+     <label className="field">League Month<select value={archiveMonthId} onChange={e=>{setArchiveMonthId(e.target.value);setArchiveTeamId('')}}><option value="">Select month…</option>{archiveMonths.map(m=><option key={m.id} value={m.id}>{new Date(m.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}{m.seasons?.name?` — ${m.seasons.name}`:''}</option>)}</select></label>
+     <label className="field">Team<select value={archiveTeamId} disabled={!archiveMonthId} onChange={e=>setArchiveTeamId(e.target.value)}><option value="">{archiveMonthId?'Select team…':'Select month first…'}</option>{archiveTeams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
      <label className="field">Week<select value={archiveWeek} onChange={e=>setArchiveWeek(e.target.value)}><option value="">Select week…</option>{[1,2,3,4].map(w=><option key={w} value={String(w)}>Week {w}</option>)}</select></label>
    </div>
    <label className="btn secondary archive-scorecard-file-v1297">Choose Scorecard Image<input hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={e=>e.target.files?.[0]&&chooseArchiveFile(e.target.files[0])}/></label>
