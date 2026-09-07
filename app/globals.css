@@ -1533,3 +1533,26 @@ i .captain-mark-v1357{
   .results-handicap-v1375{font-size:11px}
   .month-total{font-size:12px}
 }
+
+/* v13.77 — one more step up in Monthly Standings font size */
+.results-grid.header{font-size:14px}
+.results-grid.row{font-size:17px}
+.results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:17px}
+.results-handicap-v1375{font-size:17px}
+.month-total{font-size:20px}
+@media(max-width:620px){
+  .results-grid{grid-template-columns:28px minmax(84px,1.65fr) 33px repeat(4,minmax(28px,.39fr)) 42px}
+  .results-grid.header{font-size:10px}
+  .results-grid.row{font-size:14px}
+  .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:14px}
+  .results-handicap-v1375{font-size:14px}
+  .month-total{font-size:15px}
+}
+@media(max-width:390px){
+  .results-grid{grid-template-columns:26px minmax(78px,1.58fr) 31px repeat(4,minmax(27px,.37fr)) 39px}
+  .results-grid.header{font-size:9px}
+  .results-grid.row{font-size:13px}
+  .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:13px}
+  .results-handicap-v1375{font-size:13px}
+  .month-total{font-size:14px}
+}
