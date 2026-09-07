@@ -1433,3 +1433,12 @@ i .captain-mark-v1357{
 .course-assignment-summary-v1366 strong{font-size:18px}
 .course-assignment-summary-v1366 small{font-size:13px;color:#66736b}
 .course-assignment-summary-v1366 span{font-size:13px;color:#66736b;margin-top:4px}
+
+/* v13.67 assigned-course tee box key */
+.course-tee-key-admin-v1367{display:grid;gap:8px;margin:10px 0 24px;max-width:760px}
+.course-tee-key-row-admin-v1367{display:grid;grid-template-columns:minmax(110px,1fr) minmax(120px,1fr) minmax(90px,.7fr);align-items:center;gap:14px;padding:10px 12px;border:1px solid #dde5df;border-radius:10px}
+.course-tee-key-level-admin-v1367{font-weight:800}
+.course-tee-key-color-admin-v1367{display:flex;align-items:center;gap:8px}
+.course-tee-key-square-admin-v1367{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.22);display:inline-block;flex:0 0 auto}
+.course-tee-key-row-admin-v1367 strong{text-align:right}
+@media(max-width:560px){.course-tee-key-row-admin-v1367{grid-template-columns:1fr auto}.course-tee-key-color-admin-v1367{grid-column:1}.course-tee-key-row-admin-v1367 strong{grid-column:2;grid-row:1/3}}
