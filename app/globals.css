@@ -1182,3 +1182,13 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 
 /* v13.41 TV leaderboard: shift Monthly Standings title left so it is fully visible */
 .tv-approved-titles h1{position:relative;left:-1.1vw}
+
+/* v13.42 TV leaderboard: keep full MONTHLY STANDINGS inside top header */
+.tv-approved:not(.tv-week4) .tv-approved-header{
+  grid-template-columns:minmax(145px,17.5vw) minmax(0,1fr) 2px minmax(140px,17.5vw);
+}
+.tv-approved:not(.tv-week4) .tv-approved-titles h1{
+  left:0;
+  font-size:clamp(40px,4.15vw,80px);
+  letter-spacing:0;
+}
