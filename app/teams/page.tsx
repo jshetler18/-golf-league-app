@@ -121,7 +121,7 @@ export default function Teams(){
             <div className="eyebrow">Handicap Performance</div>
             <h3>{calc.available>=12?'Best 10 of Last 12 Raw Scores':'Recent Raw Scores'}</h3>
             <p className="muted">{calc.method}</p>
-            <div className="handicap-average-v1369"><span>Handicap Average</span><strong>{calc.average==null?'Not Yet Available':calc.average.toFixed(2)}</strong></div>
+            <div className="handicap-average-v1369"><span>Handicap Raw Scoring Average:</span><strong>{calc.average==null?'Not Yet Available':calc.average.toFixed(2)}</strong></div>
             <div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div>
           </div>})()}
           <div className="eyebrow" style={{marginTop:16}}>Raw Score Statistics <span className="raw-score-disclaimer">(Handicaps are not factored in)</span></div>
