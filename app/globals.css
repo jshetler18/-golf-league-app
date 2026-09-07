@@ -1556,3 +1556,15 @@ i .captain-mark-v1357{
   .results-handicap-v1375{font-size:13px}
   .month-total{font-size:14px}
 }
+
+/* v13.79 — Monthly Standings: keep full RANK and TOTAL visible */
+@media(max-width:620px){
+  .results-grid{grid-template-columns:36px minmax(72px,1.42fr) 31px repeat(4,minmax(26px,.35fr)) 48px}
+  .results-grid.header>span:first-child,.results-grid.row>span:first-child{overflow:visible;white-space:nowrap}
+  .results-grid.header>span:last-child,.results-grid.row>span:last-child{overflow:visible;white-space:nowrap}
+  .results-grid.header span{padding-left:1px;padding-right:1px}
+}
+@media(max-width:390px){
+  .results-grid{grid-template-columns:35px minmax(68px,1.36fr) 30px repeat(4,minmax(25px,.34fr)) 47px}
+  .results-grid.header{font-size:9px}
+}
