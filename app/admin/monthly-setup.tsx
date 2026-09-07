@@ -100,7 +100,15 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    return data||[]
  }
  async function saveMonth(){
-   if(!assignedProfileId){setMsg('Choose a course for this month.');return}
+   if(!assignedProfileId){
+     if(!monthId){setMsg('This month does not currently have a course assigned.');return}
+     setMsg('Removing course from month…')
+     const {error}=await supabase.from('league_months').delete().eq('id',monthId)
+     if(error){setMsg(`Course assignment was not removed: ${error.message}`);return}
+     setMonthId('');setAssignedProfileId('');setHandicaps({});setPlayerTeeLevels({});setMonthTees({})
+     setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} is now unassigned. It will no longer appear in Monthly Settings until a course is assigned.`)
+     return
+   }
    const cp=profiles.find(p=>p.id===assignedProfileId);if(!cp){setMsg('Course setup could not be found.');return}
    setMsg('Assigning course to month…')
    const payload={season_id:seasonId,month_start:monthStart,course_profile_id:cp.id,course_name:cp.course_name,course_location:cp.course_location,bonus_hole_1:cp.bonus_hole_1,bonus_hole_2:cp.bonus_hole_2,bonus_birdie_value:cp.bonus_birdie_value,elevation_ft:cp.elevation_ft,stimp_options:cp.stimp_options,gimmie_feet:cp.gimmie_feet,wind:cp.wind,greens:cp.greens,fairways:cp.fairways,mulligans:cp.mulligans,pins_week_1:cp.pins_week_1,pins_week_2:cp.pins_week_2,pins_week_3:cp.pins_week_3,pins_week_4:cp.pins_week_4,round_pin_days:[cp.pins_week_1,cp.pins_week_2,cp.pins_week_3,cp.pins_week_4]}
@@ -169,7 +177,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
        {assignedProfileId?<div className="course-tee-key-admin-v1367">{teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage).map(l=>{const tee=monthTees[l.key];return <div className="course-tee-key-row-admin-v1367" key={l.key}><span className="course-tee-key-level-admin-v1367">{l.label}</span><span className="course-tee-key-color-admin-v1367"><span className="course-tee-key-square-admin-v1367" style={{background:tee.color}}/>{tee.color}</span><strong>{Number(tee.yardage).toLocaleString()} yd</strong></div>})}</div>:<p className="muted">Select a course above to view its tee boxes and yardages.</p>}
        <h3>Player Tee Box Assignments</h3><p className="muted">Players default to their Official Tee Box. Override a player here only for this selected month.</p>
        <div className="player-team-groups-v1344">{playersByTeam.map(({team,players:roster})=><section className="player-team-group-v1344" key={team.id}><h4>{team.name}</h4><div className="table-wrap"><table><thead><tr><th>Player</th><th>Monthly Tee Box</th><th>Course Tee</th><th>Yardage</th></tr></thead><tbody>{roster.map(p=>{const level=selectedTeeLevel(p);const tee=monthTees[level];const available=teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage);return <tr key={p.id}><td>{p.full_name}{p.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</td><td><select value={level||''} onChange={e=>setPlayerTeeLevels(v=>({...v,[p.id]:e.target.value}))}><option value="">Not set</option>{available.map(l=><option key={l.key} value={l.key}>{l.label}</option>)}</select></td><td>{tee?.color||'—'}</td><td>{tee?.yardage?`${Number(tee.yardage).toLocaleString()} yd`:'—'}</td></tr>})}</tbody></table></div></section>)}</div>
-       <p><button className="btn" onClick={saveMonth}>Save Month Assignment</button></p>
+       <p><button className="btn" onClick={saveMonth}>{!assignedProfileId&&monthId?'Remove Month Assignment':'Save Month Assignment'}</button></p>
      </>}
      {msg&&<p className="message">{msg}</p>}
    </div>
