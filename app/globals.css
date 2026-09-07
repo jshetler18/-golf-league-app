@@ -1192,3 +1192,31 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   font-size:clamp(40px,4.15vw,80px);
   letter-spacing:0;
 }
+
+/* v13.43 Monthly Settings readability */
+.month-picker-v1329{gap:5px}
+.month-picker-v1329 button{min-width:0;padding:11px 2px 10px;border-radius:11px}
+.month-picker-v1329 button strong{font-size:15px;line-height:1.05}
+.month-picker-v1329 button small{font-size:11px;line-height:1.05}
+.settings-summary-grid-v1329 small{font-size:10px}
+.settings-summary-grid-v1329 strong{font-size:16px}
+.weekly-pins-grid-v1329 small{font-size:10px}
+.weekly-pins-grid-v1329 strong{font-size:15px}
+.tee-yardage-key-v1329 strong{font-size:15px}
+.tee-yardage-key-v1329 small{font-size:13px}
+.monthly-player-tee-row-v1329>div:first-child strong{font-size:15px}
+.monthly-player-tee-row-v1329>div:first-child small{font-size:12px}
+.monthly-player-tee-value-v1329{font-size:14px}
+@media(max-width:640px){
+  .month-picker-v1329{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+  .month-picker-v1329 button{padding:10px 0 9px;border-radius:8px}
+  .month-picker-v1329 button strong{font-size:13px;letter-spacing:-.02em}
+  .month-picker-v1329 button small{font-size:10px}
+  .settings-summary-grid-v1329 small{font-size:9px}
+  .settings-summary-grid-v1329 strong{font-size:14px}
+  .weekly-pins-grid-v1329 strong{font-size:14px}
+  .tee-yardage-key-v1329 strong{font-size:14px}
+  .tee-yardage-key-v1329 small{font-size:12px}
+  .monthly-player-tee-row-v1329>div:first-child strong{font-size:14px}
+  .monthly-player-tee-value-v1329{font-size:13px}
+}
