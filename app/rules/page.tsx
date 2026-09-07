@@ -27,6 +27,7 @@ type LeagueMonth={
   pins_week_4:string|null
 }
 type TeeAssignment={player_id:string;tee_color:string;yardage:number|null}
+type CourseTeeBox={tee_level:string;course_tee_color:string;yardage:number}
 type Player={id:string;full_name:string;team_id:string|null}
 type Team={id:string;name:string}
 
@@ -61,6 +62,7 @@ export default function Rules(){
   const [months,setMonths]=useState<LeagueMonth[]>([])
   const [selectedMonthId,setSelectedMonthId]=useState('')
   const [tees,setTees]=useState<Record<string,TeeAssignment[]>>({})
+  const [courseTeeBoxes,setCourseTeeBoxes]=useState<Record<string,CourseTeeBox[]>>({})
   const [players,setPlayers]=useState<Player[]>([])
   const [teams,setTeams]=useState<Team[]>([])
   const [handicaps,setHandicaps]=useState<Record<string,Record<string,number>>>({})
@@ -110,6 +112,11 @@ export default function Rules(){
         return [m.id,(data||[]) as TeeAssignment[]] as const
       }))
       setTees(Object.fromEntries(assignmentResults))
+      const courseTeeResults=await Promise.all(ms.map(async m=>{
+        const {data}=await supabase.from('course_tee_boxes').select('tee_level,course_tee_color,yardage').eq('league_month_id',m.id)
+        return [m.id,(data||[]) as CourseTeeBox[]] as const
+      }))
+      setCourseTeeBoxes(Object.fromEntries(courseTeeResults))
       const handicapResults=await Promise.all(ms.map(async m=>{
         const {data}=await supabase.from('monthly_team_handicaps').select('team_id,handicap_points').eq('league_month_id',m.id)
         return [m.id,Object.fromEntries((data||[]).map(h=>[h.team_id,Number(h.handicap_points)]))] as const
@@ -125,20 +132,19 @@ export default function Rules(){
 
   const selected=months.find(m=>m.id===selectedMonthId)||months[0]||null
   const selectedTees=selected?tees[selected.id]||[]:[]
+  const selectedCourseTees=selected?courseTeeBoxes[selected.id]||[]:[]
   const teeLegend=useMemo(()=>{
-    const map=new Map<string,{color:string;yardages:Set<number>}>()
-    for(const t of selectedTees){
-      const key=(t.tee_color||'').toLowerCase()
-      if(!key)continue
-      if(!map.has(key))map.set(key,{color:key,yardages:new Set<number>()})
-      if(typeof t.yardage==='number')map.get(key)!.yardages.add(t.yardage)
-    }
     const order=['turquoise','red','yellow','blue','black']
-    return [...map.values()].sort((a,b)=>{
-      const ai=order.indexOf(a.color),bi=order.indexOf(b.color)
-      return (ai<0?99:ai)-(bi<0?99:bi)
-    })
-  },[selectedTees])
+    return selectedCourseTees
+      .filter(t=>t.course_tee_color&&typeof t.yardage==='number')
+      .sort((a,b)=>order.indexOf(a.tee_level)-order.indexOf(b.tee_level))
+      .map(t=>({
+        level:t.tee_level,
+        label:teeNames[t.tee_level]||teeColorLabel(t.tee_level),
+        actualColor:t.course_tee_color,
+        yardage:t.yardage
+      }))
+  },[selectedCourseTees])
   const teamName=(teamId:string|null)=>teams.find(t=>t.id===teamId)?.name||'—'
   const playerFor=(playerId:string)=>players.find(p=>p.id===playerId)
 
@@ -221,7 +227,7 @@ export default function Rules(){
               <section className="card tee-setup-card-v1329">
                 <h3>Tee Boxes &amp; Yardages</h3>
                 {teeLegend.length?<div className="tee-yardage-key-v1329">
-                  {teeLegend.map(t=><div className="tee-yardage-key-row-v1348" key={t.color}><span className={`tee-square ${teeClass(t.color)}`} style={!teeClass(t.color)?{background:t.color}:undefined}/><div><strong>{teeColorLabel(t.color)} Tees</strong><small>{t.yardages.size?[...t.yardages].sort((a,b)=>a-b).map(v=>`${v.toLocaleString()} yds`).join(' / '):'Yardage not set'}</small></div></div>)}
+                  {teeLegend.map(t=><div className="tee-yardage-key-row-v1348" key={t.level}><span className={`tee-square ${teeClass(t.level)}`}/><div><strong>{t.label} Tees</strong><small>{t.yardage.toLocaleString()} yds</small></div></div>)}
                 </div>:<p className="muted">Tee box yardages have not been set for this month.</p>}
               </section>
 
