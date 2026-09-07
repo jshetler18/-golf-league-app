@@ -50,6 +50,7 @@ const teeNames:Record<string,string>={
   gray:'Gray'
 }
 const teeClass=(color:string)=>['turquoise','red','yellow','blue','black'].includes(color.toLowerCase())?`tee-${color.toLowerCase()}`:''
+const teeColorLabel=(color:string)=>color?color.trim().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Not set'
 const monthLabel=(value:string)=>new Date(`${value.slice(0,10)}T12:00:00`).toLocaleDateString('en-US',{month:'long',year:'numeric'})
 
 export default function Rules(){
@@ -214,25 +215,33 @@ export default function Rules(){
               <section className="card tee-setup-card-v1329">
                 <h3>Tee Boxes &amp; Yardages</h3>
                 {teeLegend.length?<div className="tee-yardage-key-v1329">
-                  {teeLegend.map(t=><div key={t.color}><span className={`tee-square ${teeClass(t.color)}`} style={!teeClass(t.color)?{background:t.color}:undefined}/><div><strong>{teeNames[t.color]||t.color} Tees</strong><small>{t.yardages.size?[...t.yardages].sort((a,b)=>a-b).map(v=>`${v.toLocaleString()} yds`).join(' / '):'Yardage not set'}</small></div></div>)}
+                  {teeLegend.map(t=><div className="tee-yardage-key-row-v1348" key={t.color}><span className={`tee-square ${teeClass(t.color)}`} style={!teeClass(t.color)?{background:t.color}:undefined}/><div><strong>{teeColorLabel(t.color)} Tees</strong><small>{t.yardages.size?[...t.yardages].sort((a,b)=>a-b).map(v=>`${v.toLocaleString()} yds`).join(' / '):'Yardage not set'}</small></div></div>)}
                 </div>:<p className="muted">Tee box yardages have not been set for this month.</p>}
               </section>
 
               <section className="card monthly-player-tees-v1329">
                 <h3>Player Tee Assignments</h3>
                 <p className="muted">This is the tee box each player is assigned to use for {monthLabel(selected.month_start)}.</p>
-                <div className="monthly-player-tee-list-v1329">
-                  {selectedTees.length?selectedTees
-                    .map(t=>({assignment:t,player:playerFor(t.player_id)}))
-                    .filter(x=>x.player)
-                    .sort((a,b)=>teamName(a.player!.team_id).localeCompare(teamName(b.player!.team_id))||a.player!.full_name.localeCompare(b.player!.full_name))
-                    .map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
-                      <div><strong>{player!.full_name}</strong><small>{teamName(player!.team_id)}</small></div>
-                      <div className="monthly-player-tee-value-v1329">
-                        <span className={`tee-square ${teeClass(assignment.tee_color)}`} style={!teeClass(assignment.tee_color)?{background:assignment.tee_color}:undefined}/>
-                        <div><strong>{teeNames[assignment.tee_color?.toLowerCase()]||assignment.tee_color} Tees</strong><small>{typeof assignment.yardage==='number'?`${assignment.yardage.toLocaleString()} yds`:'Yardage not set'}</small></div>
+                <div className="monthly-player-team-groups-v1348">
+                  {selectedTees.length?teams.map(team=>{
+                    const rows=selectedTees
+                      .map(a=>({assignment:a,player:playerFor(a.player_id)}))
+                      .filter(x=>x.player?.team_id===team.id)
+                      .sort((a,b)=>a.player!.full_name.localeCompare(b.player!.full_name))
+                    if(!rows.length)return null
+                    return <section className="monthly-player-team-group-v1348" key={team.id}>
+                      <h4>{team.name}</h4>
+                      <div className="monthly-player-tee-list-v1329">
+                        {rows.map(({assignment,player})=><div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
+                          <div><strong>{player!.full_name}</strong></div>
+                          <div className="monthly-player-tee-value-v1329">
+                            <span className={`tee-square ${teeClass(assignment.tee_color)}`} style={!teeClass(assignment.tee_color)?{background:assignment.tee_color}:undefined}/>
+                            <div><strong>{teeColorLabel(assignment.tee_color)} Tees</strong><small>{typeof assignment.yardage==='number'?`${assignment.yardage.toLocaleString()} yds`:'Yardage not set'}</small></div>
+                          </div>
+                        </div>)}
                       </div>
-                    </div>):<p className="muted">Player tee assignments have not been set for this month.</p>}
+                    </section>
+                  }):<p className="muted">Player tee assignments have not been set for this month.</p>}
                 </div>
               </section>
             </div>}

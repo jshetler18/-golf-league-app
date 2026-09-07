@@ -1230,3 +1230,69 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 .player-team-group-v1344 h4{margin:0;padding:10px 12px;background:#f4f7f5;color:#173759;font-size:16px;border-bottom:1px solid var(--line)}
 .player-team-group-v1344 .table-wrap{margin:0;border:0;border-radius:0}
 @media(max-width:700px){.course-tee-row-v1344{grid-template-columns:1fr 1fr}.course-tee-row-v1344>strong{grid-column:1/-1}.player-team-group-v1344 table{min-width:540px}}
+
+
+/* v13.48 Monthly Settings: capitalized course tees, team grouping, aligned tee columns */
+.tee-yardage-key-v1329 .tee-yardage-key-row-v1348{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+}
+.tee-yardage-key-v1329 .tee-yardage-key-row-v1348 .tee-square{
+  width:16px;
+  height:16px;
+  flex-basis:16px;
+  justify-self:center;
+}
+.monthly-player-team-groups-v1348{
+  display:grid;
+  gap:16px;
+  margin-top:12px;
+}
+.monthly-player-team-group-v1348{
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+  background:#fff;
+}
+.monthly-player-team-group-v1348 h4{
+  margin:0;
+  padding:10px 12px;
+  background:#f4f7f5;
+  color:#173759;
+  font-size:16px;
+  border-bottom:1px solid var(--line);
+}
+.monthly-player-team-group-v1348 .monthly-player-tee-list-v1329{
+  border-top:0;
+}
+.monthly-player-team-group-v1348 .monthly-player-tee-row-v1329{
+  padding-left:12px;
+  padding-right:12px;
+  grid-template-columns:minmax(0,1fr) 190px;
+}
+.monthly-player-team-group-v1348 .monthly-player-tee-value-v1329{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  justify-content:stretch;
+  text-align:left;
+  gap:10px;
+}
+.monthly-player-team-group-v1348 .monthly-player-tee-value-v1329 .tee-square{
+  width:16px;
+  height:16px;
+  flex-basis:16px;
+  justify-self:center;
+  align-self:center;
+}
+@media(max-width:520px){
+  .monthly-player-team-group-v1348 .monthly-player-tee-row-v1329{
+    grid-template-columns:minmax(0,1fr) 150px;
+    gap:8px;
+  }
+  .monthly-player-team-group-v1348 .monthly-player-tee-value-v1329{
+    grid-template-columns:16px minmax(0,1fr);
+    gap:7px;
+  }
+}
