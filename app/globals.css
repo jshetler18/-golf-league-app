@@ -1377,7 +1377,7 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
 /* v13.57 Team captain */
 .captain-mark-v1357{
   font-size:.72em;
-  font-style:italic;
+  font-style:normal !important;
   font-weight:650;
   white-space:nowrap;
 }
@@ -1404,4 +1404,12 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   font-weight:700;
   text-transform:none;
   letter-spacing:0;
+}
+
+/* v13.59 Force captain marker upright even inside inherited/italic text */
+.captain-mark-v1357,
+strong .captain-mark-v1357,
+em .captain-mark-v1357,
+i .captain-mark-v1357{
+  font-style:normal !important;
 }
