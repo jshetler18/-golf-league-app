@@ -1220,3 +1220,13 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   .monthly-player-tee-row-v1329>div:first-child strong{font-size:14px}
   .monthly-player-tee-value-v1329{font-size:13px}
 }
+
+/* v13.44 Monthly course tee mapping + team-grouped player assignments */
+.course-tee-grid-v1344{display:grid;gap:9px;margin:10px 0 20px}
+.course-tee-row-v1344{display:grid;grid-template-columns:minmax(90px,.55fr) minmax(180px,1.2fr) minmax(130px,.8fr);gap:10px;align-items:end;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#f9fbfa}
+.course-tee-row-v1344>strong{align-self:center;color:#173759;font-size:15px}
+.player-team-groups-v1344{display:grid;gap:14px;margin-top:10px}
+.player-team-group-v1344{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff}
+.player-team-group-v1344 h4{margin:0;padding:10px 12px;background:#f4f7f5;color:#173759;font-size:16px;border-bottom:1px solid var(--line)}
+.player-team-group-v1344 .table-wrap{margin:0;border:0;border-radius:0}
+@media(max-width:700px){.course-tee-row-v1344{grid-template-columns:1fr 1fr}.course-tee-row-v1344>strong{grid-column:1/-1}.player-team-group-v1344 table{min-width:540px}}
