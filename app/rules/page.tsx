@@ -148,7 +148,7 @@ export default function Rules(){
       .sort((a,b)=>order.indexOf(a.tee_level)-order.indexOf(b.tee_level))
       .map(t=>({
         level:t.tee_level,
-        label:teeNames[t.tee_level]||teeColorLabel(t.tee_level),
+        label:teeColorLabel(t.course_tee_color),
         actualColor:t.course_tee_color,
         yardage:t.yardage
       }))
@@ -235,7 +235,7 @@ export default function Rules(){
               <section className="card tee-setup-card-v1329">
                 <h3>Tee Boxes &amp; Yardages</h3>
                 {teeLegend.length?<div className="tee-yardage-key-v1329">
-                  {teeLegend.map(t=><div className="tee-yardage-key-row-v1348" key={t.level}><span className={`tee-square ${teeClass(t.level)}`}/><div><strong>{t.label} Tees</strong><small>{t.yardage.toLocaleString()} yds</small></div></div>)}
+                  {teeLegend.map(t=><div className="tee-yardage-key-row-v1348" key={t.level}><span className={`tee-square ${teeClass(t.actualColor)}`} style={!teeClass(t.actualColor)?{background:t.actualColor}:undefined}/><div><strong>{t.label} Tees</strong><small>{t.yardage.toLocaleString()} yds</small></div></div>)}
                 </div>:<p className="muted">Tee box yardages have not been set for this month.</p>}
               </section>
 
