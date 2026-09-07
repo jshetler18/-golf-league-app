@@ -1346,3 +1346,16 @@ body:has(.mobile-home){overflow:hidden;overscroll-behavior:none}
   font-weight:600;
   color:var(--muted);
 }
+
+
+/* v13.53 Keep the Not Yet Available handicap state visually balanced */
+.monthly-team-handicap-wrap-v1351 .monthly-team-handicap-na-v1353{
+  font-size:14px;
+  line-height:1.1;
+  font-weight:750;
+}
+@media(max-width:420px){
+  .monthly-team-handicap-wrap-v1351 .monthly-team-handicap-na-v1353{
+    font-size:13px;
+  }
+}
