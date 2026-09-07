@@ -1503,3 +1503,33 @@ i .captain-mark-v1357{
   .results-grid.header{font-size:7px}
   .month-total{font-size:12px}
 }
+
+/* v13.76 — larger compact Monthly Standings typography + tighter week spacing */
+.results-grid{grid-template-columns:50px minmax(120px,1.9fr) 50px repeat(4,minmax(43px,.48fr)) minmax(62px,.68fr)}
+.results-grid.header{font-size:13px}
+.results-grid.row{font-size:15px}
+.results-grid.row .team-cell{font-size:15px}
+.results-grid.row .team-cell strong{font-size:15px}
+.results-grid.row>span:nth-child(n+4):nth-child(-n+7),
+.results-grid.header>span:nth-child(n+4):nth-child(-n+7){padding-left:3px;padding-right:3px}
+.results-handicap-v1375{font-size:15px;font-weight:850}
+.month-total{font-size:18px}
+@media(max-width:620px){
+  .results-grid{grid-template-columns:29px minmax(82px,1.55fr) 34px repeat(4,minmax(30px,.43fr)) 42px}
+  .results-grid.header{font-size:9px}
+  .results-grid.row{font-size:12px}
+  .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:12px}
+  .results-grid.header span,.results-grid.row>span{padding-left:2px;padding-right:2px}
+  .results-grid.row>span:nth-child(n+4):nth-child(-n+7),
+  .results-grid.header>span:nth-child(n+4):nth-child(-n+7){padding-left:1px;padding-right:1px}
+  .results-handicap-v1375{font-size:12px}
+  .month-total{font-size:13px}
+}
+@media(max-width:390px){
+  .results-grid{grid-template-columns:27px minmax(76px,1.5fr) 32px repeat(4,minmax(28px,.4fr)) 39px}
+  .results-grid.row{font-size:11px}
+  .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:11px}
+  .results-grid.header{font-size:8px}
+  .results-handicap-v1375{font-size:11px}
+  .month-total{font-size:12px}
+}
