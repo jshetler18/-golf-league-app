@@ -142,7 +142,7 @@ export default function Teams(){
       </div>
       </>}
       {tab==='handicaps'&&<div className="handicap-rankings-v1372">
-        <div className="section-title teams-tab-heading-v1372"><div><div className="eyebrow">{season?.name||'Current season'}</div><h2>Handicap Rankings</h2><p className="muted">Teams are ranked by their calculated raw scoring average. Tap a team to see which recent rounds counted and which were dropped.</p></div><div className="pill">Standard {Number(season?.handicap_standard||27)}</div></div>
+        <div className="section-title teams-tab-heading-v1372"><div><div className="eyebrow">{season?.name||'Current season'}</div><h2>Team Handicaps</h2><p className="muted">Teams are ranked by their calculated raw scoring average. Tap a team to see which recent rounds counted and which were dropped.</p></div><div className="pill">Standard Used to Calculate Handicaps: {Number(season?.handicap_standard||27)}</div></div>
         <div className="card handicap-ranking-table-v1372">
           <div className="handicap-ranking-head-v1372"><span>Rank</span><span>Team</span><span>Raw Avg.</span><span>Handicap</span></div>
           {handicapRows.map(({team,calc},index)=>{const open=openHandicapTeam===team.id;return <div className="handicap-ranking-entry-v1372" key={team.id}>
