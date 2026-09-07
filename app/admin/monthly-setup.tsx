@@ -1,6 +1,7 @@
 'use client'
 import { useEffect,useMemo,useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import {calculateHandicap,scoreLabel,type HandicapScore} from '@/lib/handicap'
 
 type Team={id:string;name:string;captain_player_id:string|null}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
@@ -33,6 +34,9 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  const [monthStart,setMonthStart]=useState(months[0][0]);const [monthId,setMonthId]=useState('');const [assignedProfileId,setAssignedProfileId]=useState('')
  const [handicaps,setHandicaps]=useState<Record<string,string>>({});const [playerTeeLevels,setPlayerTeeLevels]=useState<Record<string,string>>({})
  const [msg,setMsg]=useState('')
+ const [handicapStandard,setHandicapStandard]=useState(27)
+ const [standardDraft,setStandardDraft]=useState('27')
+ const [rawHistory,setRawHistory]=useState<Record<string,HandicapScore[]>>({})
 
  const activePlayers=useMemo(()=>players.filter(p=>p.team_id),[players])
  const playersByTeam=useMemo(()=>teams.map(team=>({team,players:activePlayers.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name)))})).filter(g=>g.players.length),[teams,activePlayers])
@@ -44,6 +48,17 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    if(selectId!==undefined)setProfileId(selectId)
  }
  useEffect(()=>{loadProfiles()},[])
+ useEffect(()=>{if(!seasonId)return;(async()=>{
+   const [{data:s},{data:r}]=await Promise.all([
+     supabase.from('seasons').select('handicap_standard').eq('id',seasonId).single(),
+     supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,round_number,raw_score').order('score_month',{ascending:false}).order('round_number',{ascending:false})
+   ])
+   const std=Number(s?.handicap_standard||27);setHandicapStandard(std);setStandardDraft(String(std))
+   const by:Record<string,HandicapScore[]>={}
+   ;(r||[]).forEach((x:any)=>{const k=String(x.canonical_team_name||'').trim().toLowerCase();(by[k]??=[]).push({score:Number(x.raw_score),season_label:x.season_label,score_month:x.score_month,round_number:x.round_number})})
+   setRawHistory(by)
+ })()},[seasonId])
+ async function saveHandicapStandard(){const n=Number(standardDraft);if(!Number.isFinite(n)||n<=0){setMsg('Enter a valid handicap standard.');return};const {error}=await supabase.from('seasons').update({handicap_standard:n}).eq('id',seasonId);if(error){setMsg(error.message);return};setHandicapStandard(n);setMsg(`Handicap standard updated to ${n}. All recommendations have been recalculated.`)}
 
  function resetCourse(){
    setProfileId('');setCourse('');setCourseLocation('');setB1(11);setB2(12);setBonus(.1);setPins({...defaultPins});setElevation(2000);setGimmie(5);setWind('None');setGreens('Normal');setFairways('Normal');setMulligans(false);setCourseTees({});setMsg('')
@@ -172,7 +187,11 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
          <label className="field">Course<select value={assignedProfileId} onChange={e=>{setAssignedProfileId(e.target.value);setPlayerTeeLevels({})}}><option value="">Select course</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.course_name}{p.course_location?` — ${p.course_location}`:''}</option>)}</select></label>
        </div>
        {assignedProfile&&<div className="course-assignment-summary-v1366"><strong>{assignedProfile.course_name}</strong>{assignedProfile.course_location&&<small>{assignedProfile.course_location}</small>}<span>Course settings are ready to apply to {months.find(m=>m[0]===monthStart)?.[1]}.</span></div>}
-       <h3>Team Handicaps</h3><p className="muted">Handicaps remain month-specific.</p><div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:11},(_,n)=><option key={n} value={String(n)}>{n}</option>)}</select></label>)}</div>
+       <h3>Monthly Handicap Recommendations</h3>
+       <p className="muted">Recommendations use each team's recent raw scores. Review the scores below, then confirm or adjust the handicap in Team Handicaps.</p>
+       <div className="handicap-standard-admin-v1369"><label className="field">Handicap Standard<input type="number" step="1" value={standardDraft} onChange={e=>setStandardDraft(e.target.value)}/></label><button className="btn" onClick={saveHandicapStandard}>Update Standard &amp; Recalculate</button></div>
+       <div className="handicap-admin-team-list-v1369">{teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return <section className="handicap-admin-team-v1369" key={team.id}><div className="handicap-admin-head-v1369"><div><strong>{team.name}</strong><small>{calc.method}</small></div><div><small>Average</small><strong>{calc.average==null?'—':calc.average.toFixed(2)}</strong></div><div><small>Recommended</small><strong>{calc.recommended==null?'NA':`+${calc.recommended}`}</strong></div>{calc.recommended!=null&&<button className="btn" onClick={()=>setHandicaps(v=>({...v,[team.id]:String(calc.recommended)}))}>Use +{calc.recommended}</button>}</div><div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${team.id}-${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div></section>})}</div>
+       <h3>Team Handicaps</h3><p className="muted">Review the recommendation above, then confirm it here or choose a different whole-number handicap. Handicaps remain locked for the selected month.</p><div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:11},(_,n)=><option key={n} value={String(n)}>{n}</option>)}</select></label>)}</div>
        <h3>Course Tee Box Key &amp; Yardages</h3><p className="muted">These are the tee boxes and yardages configured for the selected course.</p>
        {assignedProfileId?<div className="course-tee-key-admin-v1367">{teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage).map(l=>{const tee=monthTees[l.key];return <div className="course-tee-key-row-admin-v1367" key={l.key}><span className="course-tee-key-level-admin-v1367">{l.label}</span><span className="course-tee-key-color-admin-v1367"><span className="course-tee-key-square-admin-v1367" style={{background:tee.color}}/>{tee.color}</span><strong>{Number(tee.yardage).toLocaleString()} yd</strong></div>})}</div>:<p className="muted">Select a course above to view its tee boxes and yardages.</p>}
        <h3>Player Tee Box Assignments</h3><p className="muted">Players default to their Official Tee Box. Override a player here only for this selected month.</p>

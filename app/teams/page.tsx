@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { TeamRawStats } from '@/components/TeamRawStats'
+import {calculateHandicap,scoreLabel} from '@/lib/handicap'
 
-type Season={id:string;name:string}
+type Season={id:string;name:string;handicap_standard:number}
 type Team={id:string;name:string;season_id?:string;captain_player_id:string|null}
 type Player={id:string;team_id:string|null;full_name:string;official_tee_color:string|null}
 type TrophyCounts={cup:number;monthly:number}
-type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
+type RawRow={canonical_team_name:string;season_label:string;score_month:string;round_number?:number|null;raw_score:number|string}
 
 const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tip Tees'}
 function teamKey(name:string){return name.trim().toLowerCase()}
@@ -24,7 +25,7 @@ export default function Teams(){
   const [rawRows,setRawRows]=useState<RawRow[]>([])
 
   useEffect(()=>{(async()=>{
-    const {data:s}=await supabase.from('seasons').select('id,name').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
+    const {data:s}=await supabase.from('seasons').select('id,name,handicap_standard').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     if(!s){setLoading(false);return}
     setSeason(s as Season)
     const [{data:t},{data:p},{data:champions},{data:closedSeasons},{data:allTeams},{data:allMonths}]=await Promise.all([
@@ -37,7 +38,7 @@ export default function Teams(){
     ])
     setTeams((t||[]) as Team[])
     setPlayers((p||[]) as Player[])
-    const {data:rawData}=await supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')
+    const {data:rawData}=await supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,round_number,raw_score')
     setRawRows((rawData||[]) as RawRow[])
     const {data:avatarRows}=await supabase.rpc('get_league_player_avatars')
     const avatarMap:Record<string,string>={}
@@ -116,6 +117,13 @@ export default function Teams(){
             <span className="team-player-avatar-v1230" aria-hidden={!avatars[player.id]}>{avatars[player.id]?<img src={avatars[player.id]} alt={`${player.full_name} profile`} />:<span>👤</span>}</span>
             <span className="team-player-copy-v1230"><strong>{player.full_name}{player.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</strong><small className="team-player-tee-v1235">{player.official_tee_color&&<span className={`tee-square tee-${player.official_tee_color}`} aria-hidden="true"></span>}<span>{player.official_tee_color?(teeLabels[player.official_tee_color]||`${player.official_tee_color} Tees`):'Tee not set'}</span></small></span>
           </div>)}</div>:<p className="muted">No active players are assigned to this team.</p>}
+          {(()=>{const calc=calculateHandicap(rawRows.filter(r=>teamKey(r.canonical_team_name)===teamKey(team.name)).map(r=>({score:Number(r.raw_score),season_label:r.season_label,score_month:r.score_month,round_number:r.round_number})),Number(season?.handicap_standard||27));return <div className="handicap-history-v1369">
+            <div className="eyebrow">Handicap Performance</div>
+            <h3>{calc.available>=12?'Best 10 of Last 12 Raw Scores':'Recent Raw Scores'}</h3>
+            <p className="muted">{calc.method}</p>
+            <div className="handicap-average-v1369"><span>Handicap Average</span><strong>{calc.average==null?'Not Yet Available':calc.average.toFixed(2)}</strong></div>
+            <div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div>
+          </div>})()}
           <div className="eyebrow" style={{marginTop:16}}>Raw Score Statistics <span className="raw-score-disclaimer">(Handicaps are not factored in)</span></div>
           <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={season?.name||''}/>
         </section>)}
