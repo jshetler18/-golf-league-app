@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PlayerPage } from '@/components/PlayerMobileChrome'
 import { TeamRawStats } from '@/components/TeamRawStats'
+import {calculateHandicap,scoreLabel} from '@/lib/handicap'
 
 type Player={id:string;full_name:string;team_id:string|null;official_tee_color:string|null;is_active:boolean}
 type PlayerAvatar={player_id:string;avatar_url:string|null}
@@ -15,7 +16,7 @@ type Handicap={league_month_id:string;team_id:string;handicap_points:number}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Matchup={league_month_id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null;high_points_awarded:number|null;low_points_awarded:number|null}
 type TrophyCounts={cup:number;monthly:number}
-type RawRow={canonical_team_name:string;season_label:string;score_month:string;raw_score:number|string}
+type RawRow={canonical_team_name:string;season_label:string;score_month:string;round_number?:number|null;raw_score:number|string}
 
 function monthLabel(date:string){return new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'})}
 function scoreText(v:number|null|undefined){return v==null?'—':Number(v).toFixed(1)}
@@ -37,6 +38,7 @@ export default function MyTeam(){
   const [rawRows,setRawRows]=useState<RawRow[]>([])
   const [seasonName,setSeasonName]=useState('')
   const [scoreCap,setScoreCap]=useState(30)
+  const [handicapStandard,setHandicapStandard]=useState(27)
 
   useEffect(()=>{(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -49,9 +51,10 @@ export default function MyTeam(){
     const {data:teamData}=await supabase.from('teams').select('id,name,season_id,captain_player_id').eq('id',player.team_id).maybeSingle()
     if(!teamData){setLoading(false);return}
     setTeam(teamData as Team)
-    const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name,standings_score_cap').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,raw_score')])
+    const [{data:seasonRow},{data:rawData}]=await Promise.all([supabase.from('seasons').select('name,standings_score_cap,handicap_standard').eq('id',teamData.season_id).maybeSingle(),supabase.from('team_raw_score_history').select('canonical_team_name,season_label,score_month,round_number,raw_score')])
     setSeasonName(seasonRow?.name||'')
     setScoreCap(Number(seasonRow?.standings_score_cap||30))
+    setHandicapStandard(Number(seasonRow?.handicap_standard||27))
     setRawRows((rawData||[]) as RawRow[])
 
     const [{data:rosterData},{data:teamDataAll},{data:monthData}]=await Promise.all([
@@ -159,7 +162,7 @@ export default function MyTeam(){
     <div className="my-team-stats">
       <div className="card my-team-stat"><small>Monthly Position</small><strong>{monthInfo?`#${monthInfo.myMonthlyRank}`:'—'}</strong><span>{selectedMonth?monthLabel(selectedMonth.month_start):'No month set'}</span></div>
       <div className="card my-team-stat"><small>Cup Position</small><strong>{cupInfo.rank?`#${cupInfo.rank}`:'—'}</strong><span>{cupInfo.total} Cup points</span></div>
-      <div className="card my-team-stat"><small>Monthly Handicap</small><strong>{monthInfo?.monthHandicap==null?'—':`${monthInfo.monthHandicap>=0?'+':''}${monthInfo.monthHandicap.toFixed(1)}`}</strong><span>Added to each round</span></div>
+      <div className="card my-team-stat"><small>Monthly Handicap</small><strong>{monthInfo?.monthHandicap==null?'—':`${monthInfo.monthHandicap>=0?'+':''}${monthInfo.monthHandicap.toFixed(1)}`}</strong><span>Applied to each round</span></div>
       <div className="card my-team-stat"><small>Latest Round</small><strong>{scoreText(monthInfo?.latest?.official_total==null?null:Math.min(Number(monthInfo.latest.official_total),scoreCap))}</strong><span>{monthInfo?.latest?`Week ${monthInfo.latest.week_number}`:'No score yet'}</span></div>
     </div>
 
@@ -186,6 +189,13 @@ export default function MyTeam(){
     </div>
 
     <div className="card my-team-raw-score-card">
+      {(()=>{const calc=calculateHandicap(rawRows.filter(r=>r.canonical_team_name.trim().toLowerCase()===team.name.trim().toLowerCase()).map(r=>({score:Number(r.raw_score),season_label:r.season_label,score_month:r.score_month,round_number:r.round_number})),handicapStandard);return <div className="handicap-history-v1369 my-team-handicap-performance-v1370">
+        <div className="eyebrow">Handicap Performance</div>
+        <h3>{calc.available>=12?'Best 10 of Last 12 Raw Scores':'Recent Raw Scores'}</h3>
+        <p className="muted">{calc.method}</p>
+        <div className="handicap-average-v1369"><span>Handicap Average</span><strong>{calc.average==null?'Not Yet Available':calc.average.toFixed(2)}</strong></div>
+        <div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div>
+      </div>})()}
       <div className="section-title compact"><div><div className="eyebrow">Raw Score Statistics <span className="raw-score-disclaimer">(Handicaps are not factored in)</span></div><h2>{team.name} Scoring History</h2></div></div>
       <TeamRawStats rows={rawRows} teamName={team.name} currentSeason={seasonName}/>
     </div>

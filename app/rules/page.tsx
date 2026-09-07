@@ -38,7 +38,7 @@ const fallback:RulePage={
     {heading:'Monthly Format',body:'Each team plays one round per week for four rounds each month. The first 10 holes use Stableford scoring, with two designated bonus par-3 holes from the back nine.'},
     {heading:'Stableford Points',body:'Albatross 5 · Eagle 4 · Birdie 3 · Par 2 · Bogey 1 · Double bogey or worse 0.'},
     {heading:'Week 4 Match Play & Cup Points',body:'Seeds 1–2 award 1,000/800; 3–4 award 700/600; 5–6 award 500/400; 7–8 award 300/200; 9–10 award 100/0. Ties are resolved by the league administrator.'},
-    {heading:'Official Weekly Score',body:'Raw Stableford + bonus points + monthly team handicap.'}
+    {heading:'Official Weekly Score',body:'Raw Stableford + bonus points, with the monthly team handicap applied. A handicap may add or subtract points.'}
   ]
 }
 
@@ -250,7 +250,7 @@ export default function Rules(){
                       .sort((a,b)=>(a.player!.id===team.captain_player_id?-1:b.player!.id===team.captain_player_id?1:a.player!.full_name.localeCompare(b.player!.full_name)))
                     if(!rows.length)return null
                     return <section className="monthly-player-team-group-v1348" key={team.id}>
-                      <h4><span>{team.name}</span><span className="monthly-team-handicap-wrap-v1351"><strong className={`monthly-team-handicap-v1349 ${handicaps[selected.id]?.[team.id]===undefined?'monthly-team-handicap-na-v1353':''}`}>{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</strong><small>Handicap</small></span></h4>
+                      <h4><span>{team.name}</span><span className="monthly-team-handicap-wrap-v1351"><strong className={`monthly-team-handicap-v1349 ${handicaps[selected.id]?.[team.id]===undefined?'monthly-team-handicap-na-v1353':''}`}>{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`${handicaps[selected.id][team.id]>0?'+':''}${handicaps[selected.id][team.id]}`}</strong><small>Handicap</small></span></h4>
                       <div className="monthly-player-tee-list-v1329">
                         {rows.map(({assignment,player})=>{const boxes=courseTeeBoxes[selected.id]||[];const courseTee=assignmentCourseTee(assignment,boxes);const level=courseTee?.tee_level||'';const levelLabel=teeNames[level]||'Tee Box';const actualColor=courseTee?.course_tee_color||assignment.tee_color;return <div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
                           <div><strong>{player!.full_name}{player!.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</strong></div>

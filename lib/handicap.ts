@@ -24,7 +24,7 @@ export function calculateHandicap(rows:HandicapScore[],standard:number):Handicap
    average=counted.reduce((s,r)=>s+r.score,0)/counted.length
    method=n>=8?'Last 8–11; lowest 2 dropped.':n>=5?'Last 5–7; lowest 1 dropped.':'Last 3–4; all rounds counted.'
  }
- const recommended=Math.max(0,Math.round(standard-average))
+ const recommended=Math.round(standard-average)
  return{available:n,recent,counted,excluded,average,recommended,method}
 }
 export function scoreLabel(r:HandicapScore){
