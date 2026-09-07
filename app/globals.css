@@ -1425,3 +1425,11 @@ i .captain-mark-v1357{
   font-weight:750;
   letter-spacing:.02em;
 }
+
+
+/* v13.66 reusable course setup */
+.admin-course-tabs-v1366{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+.course-assignment-summary-v1366{display:flex;flex-direction:column;gap:3px;margin:14px 0 22px;padding:14px 16px;border:1px solid #d9e3dc;border-radius:12px}
+.course-assignment-summary-v1366 strong{font-size:18px}
+.course-assignment-summary-v1366 small{font-size:13px;color:#66736b}
+.course-assignment-summary-v1366 span{font-size:13px;color:#66736b;margin-top:4px}
