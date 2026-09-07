@@ -54,12 +54,12 @@ const teeNames:Record<string,string>={
 const teeClass=(color:string)=>['turquoise','red','yellow','blue','black'].includes(color.toLowerCase())?`tee-${color.toLowerCase()}`:''
 const teeColorLabel=(color:string)=>color?color.trim().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Not set'
 const monthLabel=(value:string)=>new Date(`${value.slice(0,10)}T12:00:00`).toLocaleDateString('en-US',{month:'long',year:'numeric'})
-const assignmentTeeLevel=(assignment:TeeAssignment,boxes:CourseTeeBox[])=>{
+const assignmentCourseTee=(assignment:TeeAssignment,boxes:CourseTeeBox[])=>{
   const color=(assignment.tee_color||'').trim().toLowerCase()
-  const match=boxes.find(box=>box.course_tee_color.trim().toLowerCase()===color&&Number(box.yardage)===Number(assignment.yardage))
+  return boxes.find(box=>box.course_tee_color.trim().toLowerCase()===color&&Number(box.yardage)===Number(assignment.yardage))
     || boxes.find(box=>box.course_tee_color.trim().toLowerCase()===color)
-  return match?.tee_level||''
 }
+const assignmentTeeLevel=(assignment:TeeAssignment,boxes:CourseTeeBox[])=>assignmentCourseTee(assignment,boxes)?.tee_level||''
 
 export default function Rules(){
   const [rules,setRules]=useState<RulePage>(fallback)
@@ -148,7 +148,7 @@ export default function Rules(){
       .sort((a,b)=>order.indexOf(a.tee_level)-order.indexOf(b.tee_level))
       .map(t=>({
         level:t.tee_level,
-        label:teeColorLabel(t.course_tee_color),
+        label:teeNames[t.tee_level]||teeColorLabel(t.tee_level),
         actualColor:t.course_tee_color,
         yardage:t.yardage
       }))
@@ -252,10 +252,10 @@ export default function Rules(){
                     return <section className="monthly-player-team-group-v1348" key={team.id}>
                       <h4><span>{team.name}</span><span className="monthly-team-handicap-wrap-v1351"><strong className={`monthly-team-handicap-v1349 ${handicaps[selected.id]?.[team.id]===undefined?'monthly-team-handicap-na-v1353':''}`}>{handicaps[selected.id]?.[team.id]===undefined?'Not Yet Available':`+${handicaps[selected.id][team.id]}`}</strong><small>Handicap</small></span></h4>
                       <div className="monthly-player-tee-list-v1329">
-                        {rows.map(({assignment,player})=>{const level=assignmentTeeLevel(assignment,courseTeeBoxes[selected.id]||[]);const levelLabel=teeNames[level]||'Tee Box';return <div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
+                        {rows.map(({assignment,player})=>{const boxes=courseTeeBoxes[selected.id]||[];const courseTee=assignmentCourseTee(assignment,boxes);const level=courseTee?.tee_level||'';const levelLabel=teeNames[level]||'Tee Box';const actualColor=courseTee?.course_tee_color||assignment.tee_color;return <div className="monthly-player-tee-row-v1329" key={assignment.player_id}>
                           <div><strong>{player!.full_name}{player!.id===team.captain_player_id&&<span className="captain-mark-v1357"> (C)</span>}</strong></div>
                           <div className="monthly-player-tee-value-v1329">
-                            <span className={`tee-square ${teeClass(level)}`}/>
+                            <span className={`tee-square ${teeClass(actualColor)}`} style={!teeClass(actualColor)?{background:actualColor}:undefined}/>
                             <div><strong>{levelLabel} Tees</strong><small>{typeof assignment.yardage==='number'?`${assignment.yardage.toLocaleString()} yds`:'Yardage not set'}</small></div>
                           </div>
                         </div>})}
