@@ -164,9 +164,6 @@ export default function Teams(){
         <p className="muted handicap-help-note-v1372">A positive handicap adds points to a team's raw score. A negative handicap subtracts points. A 0 handicap makes no adjustment.</p>
         <p className="muted handicap-help-note-v1372">Published {new Date(publication.published_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}.</p>
         </>}
-      </div>})}
-        </div>
-        <p className="muted handicap-help-note-v1372">A positive handicap adds points to a team's raw score. A negative handicap subtracts points. A 0 handicap makes no adjustment.</p>
       </div>}
       </>}
     </div>
