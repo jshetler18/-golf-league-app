@@ -1578,3 +1578,8 @@ i .captain-mark-v1357{
 .rsvp-choice-v1393{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .rsvp-declined-v1393{background:#b42318!important;color:#fff!important;border-color:#b42318!important}
 @media(max-width:600px){.rsvp-player-v1393{align-items:flex-start;flex-direction:column}.rsvp-choice-v1393{width:100%}.rsvp-choice-v1393 button{flex:1}}
+
+/* v13.98 RSVP live roster + spacing */
+.rsvp-player-v1393{padding:12px 16px}
+.rsvp-player-name-v1398{display:block;padding-right:10px;font-weight:700}
+@media(max-width:600px){.rsvp-player-v1393{padding:12px 16px}.rsvp-player-name-v1398{padding-right:0}}
