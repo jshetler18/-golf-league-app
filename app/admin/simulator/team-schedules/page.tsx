@@ -81,25 +81,65 @@ export default function Page(){
  function generateScheduleImage(){
   setGenerating(true)
   try{
-   const W=1800,H=1140,left=205,top=78,headerH=74,rowH=66,colW=(W-left)/5
+   const W=1800,headerH=74,rowH=66,left=205,top=0,H=headerH+(16*rowH),colW=(W-left)/5
    const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H
    const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not create the schedule image.')
    const teamColors=['#67b7f0','#c78af2','#39ced1','#82df8d','#ff8f7d','#80aaf0','#ff7fba','#ffe43d','#ffb06f','#8ed8e8','#b8e986','#e7a5d8']
    const colorByTeam=new Map(teams.map((t,i)=>[t.id,teamColors[i%teamColors.length]]))
    const fmt=(hr:number)=>{const h=((hr+11)%12)+1;return `${h}:00 ${hr<12?'AM':'PM'}`}
-   const drawText=(text:string,x:number,y:number,size:number,bold=false)=>{ctx.fillStyle='#111';ctx.font=`${bold?'700':'500'} ${size}px Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y)}
+   const drawText=(text:string,x:number,y:number,size:number,bold=false,color='#111')=>{ctx.fillStyle=color;ctx.font=`${bold?'700':'500'} ${size}px Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y)}
+
+   // Base calendar: no decorative strip above the weekday header.
    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H)
-   ctx.fillStyle='#064b36';ctx.fillRect(0,0,W,top+headerH)
-   ctx.fillStyle='#fff';ctx.font='700 42px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Time',left/2,top+headerH/2)
-   ;['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach((d,i)=>ctx.fillText(d,left+colW*(i+.5),top+headerH/2))
-   for(let hr=6;hr<=21;hr++){const y=top+headerH+(hr-6)*rowH;ctx.fillStyle='#f7f7f7';ctx.fillRect(0,y,left,rowH);drawText(fmt(hr),left/2,y+rowH/2,29,true)}
-   const blocks=[...slots.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:teams.find(t=>t.id===s.team_id)?.name||'Team',fill:colorByTeam.get(s.team_id)||'#9fd3ff'})),...makeups.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:'League Make-Ups',fill:'#c9c9c9'}))]
-   blocks.filter(b=>b.weekday>=1&&b.weekday<=5).forEach(b=>{const x=left+(b.weekday-1)*colW,y=top+headerH+(b.start-6)*rowH,hgt=b.dur*rowH;ctx.fillStyle=b.fill;ctx.fillRect(x,y,colW,hgt);drawText(b.label,x+colW/2,y+hgt/2-18,31,true);drawText(`${fmt(b.start)} – ${fmt(b.start+b.dur)}`,x+colW/2,y+hgt/2+28,25,false)})
+   ctx.fillStyle='#064b36';ctx.fillRect(0,top,W,headerH)
+   drawText('Time',left/2,top+headerH/2,42,true,'#fff')
+   ;['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach((d,i)=>drawText(d,left+colW*(i+.5),top+headerH/2,42,true,'#fff'))
+
+   // Time labels and base grid are drawn BEFORE schedule blocks so hourly lines
+   // never run through a colored team or League Make-Up block.
+   for(let hr=6;hr<=21;hr++){
+    const y=top+headerH+(hr-6)*rowH
+    ctx.fillStyle='#f7f7f7';ctx.fillRect(0,y,left,rowH)
+    drawText(fmt(hr),left/2,y+rowH/2,29,true)
+   }
    ctx.strokeStyle='#222';ctx.lineWidth=2
-   for(let i=0;i<=5;i++){const x=i===0?left:left+i*colW;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,H);ctx.stroke()}
-   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.stroke();ctx.beginPath();ctx.moveTo(0,top+headerH);ctx.lineTo(W,top+headerH);ctx.stroke()
-   for(let hr=6;hr<=22;hr++){const y=top+headerH+(hr-6)*rowH;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(0,H);ctx.stroke();ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,H);ctx.stroke();ctx.beginPath();ctx.moveTo(W-1,top);ctx.lineTo(W-1,H);ctx.stroke()
+   for(let i=0;i<=5;i++){
+    const x=i===0?left:left+i*colW
+    ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,H);ctx.stroke()
+   }
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.stroke()
+   ctx.beginPath();ctx.moveTo(0,top+headerH);ctx.lineTo(W,top+headerH);ctx.stroke()
+   for(let hr=6;hr<=22;hr++){
+    const y=top+headerH+(hr-6)*rowH
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()
+   }
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(0,H);ctx.stroke()
+   ctx.beginPath();ctx.moveTo(W-1,top);ctx.lineTo(W-1,H);ctx.stroke()
+
+   const blocks=[
+    ...slots.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:teams.find(t=>t.id===s.team_id)?.name||'Team',fill:colorByTeam.get(s.team_id)||'#9fd3ff'})),
+    ...makeups.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:'League Make-Ups',fill:'#c9c9c9'}))
+   ]
+   blocks.filter(b=>b.weekday>=1&&b.weekday<=5).forEach(b=>{
+    const x=left+(b.weekday-1)*colW,y=top+headerH+(b.start-6)*rowH,hgt=b.dur*rowH
+    ctx.fillStyle=b.fill;ctx.fillRect(x+1,y+1,colW-2,hgt-2)
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.strokeRect(x,y,colW,hgt)
+    drawText(b.label,x+colW/2,y+hgt/2-18,31,true)
+    drawText(`${fmt(b.start)} – ${fmt(b.start+b.dur)}`,x+colW/2,y+hgt/2+28,25,false)
+   })
+
+   // Restore only the major day-column boundaries and header border after blocks.
+   // Hourly row lines intentionally stay hidden inside schedule blocks.
+   ctx.strokeStyle='#222';ctx.lineWidth=2
+   for(let i=0;i<=5;i++){
+    const x=i===0?left:left+i*colW
+    ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,H);ctx.stroke()
+   }
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.stroke()
+   ctx.beginPath();ctx.moveTo(0,top+headerH);ctx.lineTo(W,top+headerH);ctx.stroke()
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(0,H);ctx.stroke()
+   ctx.beginPath();ctx.moveTo(W-1,top);ctx.lineTo(W-1,H);ctx.stroke()
+
    const a=document.createElement('a');a.download=`league-team-schedule-${new Date().toISOString().slice(0,10)}.png`;a.href=canvas.toDataURL('image/png');a.click();setMsg('Schedule image generated from the current Team & League Schedules setup.')
   }catch(err:any){setMsg(err?.message||'Could not generate schedule image.')}
   finally{setGenerating(false)}
