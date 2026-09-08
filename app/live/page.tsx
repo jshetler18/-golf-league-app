@@ -42,7 +42,7 @@ export default function LivePage(){
     try{const res=await fetch('/api/youtube/live',{cache:'no-store'});setStatus(await res.json())}
     catch{setStatus({configured:true,isLive:false,error:'Unable to check the livestream right now.'})}
   },[])
-  const loadScorecards=useCallback(async()=>{try{const {data:{session}}=await (await import('@/lib/supabase')).supabase.auth.getSession();if(!session?.access_token)return;const res=await fetch('/api/round-scorecards/approved',{headers:{Authorization:`Bearer ${session.access_token}`},cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
+  const loadScorecards=useCallback(async()=>{try{const res=await fetch('/api/round-scorecards/approved',{cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
   const loadArchive=useCallback(async()=>{
     setArchiveLoading(true);setArchiveProgress(8)
     const timer=window.setInterval(()=>setArchiveProgress(p=>Math.min(88,p+(p<45?9:p<70?5:2))),220)
