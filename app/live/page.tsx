@@ -6,7 +6,7 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
 type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;handicap?:number;adjustedScore?:number;showAdjustedScore?:boolean;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
-type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;imageUrl:string}
+type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
 
 function orderedMatchupScores(video:Recording){
   const scores=video.matchupScores||[]
@@ -80,6 +80,9 @@ export default function LivePage(){
     })
   },[filtered])
   const cardsForVideo=(video:Recording)=>scorecards.filter(c=>{
+    // Past scorecards uploaded in v13.87+ are linked directly to the selected YouTube recording.
+    // This avoids relying on historical title/date/team parsing for old Week 4 matchups.
+    if(c.archiveVideoId)return c.archiveVideoId===video.videoId
     const d=new Date(c.monthStart+'T12:00:00'),m=d.toLocaleString('en-US',{month:'long'}),y=d.getFullYear()
     if(video.month!==m||video.year!==y||Number(video.roundNumber)!==Number(c.weekNumber))return false
 

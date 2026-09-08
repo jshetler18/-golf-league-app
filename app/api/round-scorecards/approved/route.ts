@@ -9,12 +9,12 @@ export async function GET(req:NextRequest){
   const auth=createClient(url,pub,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}})
   const {data:{user}}=await auth.auth.getUser(token); if(!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
   const admin=createClient(url,secret,{auth:{persistSession:false}})
-  const {data:rows,error}=await admin.from('round_score_submissions').select('id,team_id,week_number,official_total,image_path,approved_at,teams(name),league_months(month_start)').eq('status','approved').order('approved_at',{ascending:false})
+  const {data:rows,error}=await admin.from('round_score_submissions').select('id,team_id,week_number,official_total,image_path,approved_at,archive_video_id,teams(name),league_months(month_start)').eq('status','approved').order('approved_at',{ascending:false})
   if(error)throw error
   const items=[] as any[]
   for(const r of rows||[]){
     let imageUrl=''; if((r as any).image_path){const {data}=await admin.storage.from('round-scorecards').createSignedUrl((r as any).image_path,3600); imageUrl=data?.signedUrl||''}
-    items.push({id:r.id,team:(r as any).teams?.name||'',weekNumber:r.week_number,score:Number(r.official_total),monthStart:(r as any).league_months?.month_start||'',imageUrl})
+    items.push({id:r.id,team:(r as any).teams?.name||'',weekNumber:r.week_number,score:Number(r.official_total),monthStart:(r as any).league_months?.month_start||'',archiveVideoId:(r as any).archive_video_id||'',imageUrl})
   }
   return NextResponse.json({items})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to load scorecards.'},{status:500})}
