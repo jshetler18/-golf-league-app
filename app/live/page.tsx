@@ -84,16 +84,30 @@ export default function LivePage(){
     if(video.month!==m||video.year!==y||Number(video.roundNumber)!==Number(c.weekNumber))return false
 
     const norm=(value:string)=>String(value||'').trim().toLowerCase()
+    // Older archive labels are not perfectly consistent. Some recordings use labels such
+    // as "Team Mocks" / "Team Hutzel's" while the database team is "Team Mock" /
+    // "Team Hutzel". Compare a forgiving team key instead of requiring exact label text.
+    const teamKey=(value:string)=>norm(value)
+      .replace(/['’]s\b/g,'')
+      .replace(/^team\s+/,'')
+      .replace(/[^a-z0-9]+/g,' ')
+      .trim()
+      .replace(/s$/,'')
     const cardTeam=norm(c.team)
-    const identifiedTeams=[video.team,...(video.matchupTeams||[]),...(video.matchupScores||[]).map(x=>x.team)].filter(Boolean).map(x=>norm(String(x)))
-    if(identifiedTeams.includes(cardTeam))return true
+    const cardKey=teamKey(c.team)
+    const identifiedTeams=[video.team,...(video.matchupTeams||[]),...(video.matchupScores||[]).map(x=>x.team)].filter(Boolean).map(x=>teamKey(String(x)))
+    if(cardKey&&identifiedTeams.includes(cardKey))return true
 
     // Historical Week 4 videos did not always have structured matchup-team metadata.
-    // Fall back to the recording title/round text so an already-uploaded team scorecard
-    // can still attach to the correct archived matchup without attaching to every Week 4 video.
+    // Fall back to title/round text and accept the old plural/possessive team labels too.
     const searchable=norm(`${video.title||''} ${video.roundText||''}`)
+      .replace(/['’]s\b/g,'')
+      .replace(/[^a-z0-9]+/g,' ')
     const shortTeam=cardTeam.replace(/^team\s+/, '').trim()
-    return searchable.includes(cardTeam)||(shortTeam.length>=3&&searchable.includes(shortTeam))
+    const pluralShort=shortTeam.endsWith('s')?shortTeam:`${shortTeam}s`
+    return searchable.includes(cardTeam)||
+      (shortTeam.length>=3&&searchable.includes(shortTeam))||
+      (pluralShort.length>=4&&searchable.includes(pluralShort))
   })
   useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
