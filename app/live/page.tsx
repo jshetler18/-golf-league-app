@@ -82,7 +82,11 @@ export default function LivePage(){
   const cardsForVideo=(video:Recording)=>scorecards.filter(c=>{
     // Past scorecards uploaded in v13.87+ are linked directly to the selected YouTube recording.
     // This avoids relying on historical title/date/team parsing for old Week 4 matchups.
-    if(c.archiveVideoId)return c.archiveVideoId===video.videoId
+    // Prefer the explicit recording link. If it does not match this card, do not stop
+    // here: older/historical uploads can still be recovered by month/week/team metadata.
+    // This prevents one stale or incorrectly selected archive video id from hiding the
+    // scorecard everywhere in Recorded Rounds.
+    if(c.archiveVideoId&&c.archiveVideoId===video.videoId)return true
     const d=new Date(c.monthStart+'T12:00:00'),m=d.toLocaleString('en-US',{month:'long'}),y=d.getFullYear()
     if(video.month!==m||video.year!==y||Number(video.roundNumber)!==Number(c.weekNumber))return false
 
