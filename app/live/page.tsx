@@ -81,8 +81,19 @@ export default function LivePage(){
   },[filtered])
   const cardsForVideo=(video:Recording)=>scorecards.filter(c=>{
     const d=new Date(c.monthStart+'T12:00:00'),m=d.toLocaleString('en-US',{month:'long'}),y=d.getFullYear()
-    const teams=[video.team,...(video.matchupTeams||[])].filter(Boolean).map(x=>String(x).trim().toLowerCase())
-    return teams.includes(c.team.trim().toLowerCase())&&video.month===m&&video.year===y&&Number(video.roundNumber)===Number(c.weekNumber)
+    if(video.month!==m||video.year!==y||Number(video.roundNumber)!==Number(c.weekNumber))return false
+
+    const norm=(value:string)=>String(value||'').trim().toLowerCase()
+    const cardTeam=norm(c.team)
+    const identifiedTeams=[video.team,...(video.matchupTeams||[]),...(video.matchupScores||[]).map(x=>x.team)].filter(Boolean).map(x=>norm(String(x)))
+    if(identifiedTeams.includes(cardTeam))return true
+
+    // Historical Week 4 videos did not always have structured matchup-team metadata.
+    // Fall back to the recording title/round text so an already-uploaded team scorecard
+    // can still attach to the correct archived matchup without attaching to every Week 4 video.
+    const searchable=norm(`${video.title||''} ${video.roundText||''}`)
+    const shortTeam=cardTeam.replace(/^team\s+/, '').trim()
+    return searchable.includes(cardTeam)||(shortTeam.length>=3&&searchable.includes(shortTeam))
   })
   useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
