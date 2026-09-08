@@ -34,28 +34,55 @@ export default function SubmitScore(){
  const [progress,setProgress]=useState(0)
  const [successOpen,setSuccessOpen]=useState(false)
  const [resubmitActive,setResubmitActive]=useState(false)
+ const [initializing,setInitializing]=useState(true)
 
- useEffect(()=>{(async()=>{
-   const {data:{user}}=await supabase.auth.getUser()
-   if(!user)return
-   const {data:p}=await supabase.from('profiles').select('player_id,full_name').eq('id',user.id).single()
-   if(!p?.player_id){setMsg('Your account must be linked to a league player before submitting a score.');return}
-   const {data:pl}=await supabase.from('players').select('team_id,teams(name)').eq('id',p.player_id).single()
-   const ownTeamId=(pl as any)?.team_id
-   if(!ownTeamId)return
-   const {data:season}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).maybeSingle()
-   if(!season){setMsg('There is no active league season.');return}
-   const [{data:months},{data:teams}]=await Promise.all([
-     supabase.from('league_months').select('id,month_start,course_name').eq('season_id',season.id).order('month_start'),
-     supabase.from('teams').select('id,name').eq('season_id',season.id).eq('is_active',true).order('name')
-   ])
-   const ms=(months||[]) as Month[],ts=(teams||[]) as Team[]
-   const now=new Date(),key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
-   const current=ms.find(m=>String(m.month_start).startsWith(key))||ms[0]
-   if(!current){setMsg('No league months have been configured yet.');return}
-   setCtx({userId:user.id,submitterName:p?.full_name||'Player',ownTeamId,months:ms,teams:ts})
-   setTeamId(ownTeamId);setMonthId(current.id);setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)
- })()},[])
+ useEffect(()=>{let cancelled=false;(async()=>{
+   setInitializing(true);setMsg('')
+   try{
+     // getSession is immediate from local auth storage and avoids leaving the page in a silent loading state.
+     const {data:{session},error:sessionError}=await supabase.auth.getSession()
+     if(sessionError)throw sessionError
+     let user=session?.user||null
+     if(!user){
+       const {data:{user:freshUser},error:userError}=await supabase.auth.getUser()
+       if(userError)throw userError
+       user=freshUser
+     }
+     if(!user){setMsg('Your login session could not be found. Please sign in again and reopen Submit Score.');return}
+
+     const {data:p,error:profileError}=await supabase.from('profiles').select('player_id,full_name').eq('id',user.id).maybeSingle()
+     if(profileError)throw profileError
+     if(!p?.player_id){setMsg('Your account must be linked to a league player before submitting a score.');return}
+
+     const {data:pl,error:playerError}=await supabase.from('players').select('team_id').eq('id',p.player_id).maybeSingle()
+     if(playerError)throw playerError
+     const ownTeamId=(pl as any)?.team_id
+     if(!ownTeamId){setMsg('Your league player is not assigned to a team. Please contact the league administrator.');return}
+
+     const {data:season,error:seasonError}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).maybeSingle()
+     if(seasonError)throw seasonError
+     if(!season){setMsg('There is no active league season.');return}
+
+     const [{data:months,error:monthsError},{data:teams,error:teamsError}]=await Promise.all([
+       supabase.from('league_months').select('id,month_start,course_name').eq('season_id',season.id).order('month_start'),
+       supabase.from('teams').select('id,name').eq('season_id',season.id).eq('is_active',true).order('name')
+     ])
+     if(monthsError)throw monthsError
+     if(teamsError)throw teamsError
+     const ms=(months||[]) as Month[],ts=(teams||[]) as Team[]
+     const ownTeam=ts.find(t=>t.id===ownTeamId)
+     if(!ownTeam){setMsg('Your assigned team is not active in the current league season. Please contact the league administrator.');return}
+     const now=new Date(),key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+     const current=ms.find(m=>String(m.month_start).startsWith(key))||ms[0]
+     if(!current){setMsg('No league months have been configured yet.');return}
+     if(cancelled)return
+     setCtx({userId:user.id,submitterName:p?.full_name||'Player',ownTeamId,months:ms,teams:ts})
+     setTeamId(ownTeamId);setMonthId(current.id);setWeek(String(current.month_start).startsWith(key)?defaultWeek(now):1)
+   }catch(e:any){
+     console.error('Unable to initialize Submit Score',e)
+     if(!cancelled)setMsg(`Submit Score could not load your league round${e?.message?`: ${e.message}`:'. Please try again.'}`)
+   }finally{if(!cancelled)setInitializing(false)}
+ })();return()=>{cancelled=true}},[])
 
  async function loadSubmissionAlerts(){
    if(!ctx)return
@@ -118,7 +145,7 @@ export default function SubmitScore(){
    setExisting({...row,id:saved?.id,status:'pending'});setRejectedRounds(prev=>prev.filter(r=>r.id!==existing?.id));setResubmitTarget('');await loadSubmissionAlerts();setProgress(100);await new Promise(resolve=>setTimeout(resolve,250));setProgressOpen(false);setSuccessOpen(true);setSaving(false)
  }
 
- if(!ctx||!selectedMonth||!selectedTeam)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||'Loading your round…'}</p></div></PlayerPage>
+ if(!ctx||!selectedMonth||!selectedTeam)return <PlayerPage title="Submit Score"><div className="simple-mobile-page"><h1>Submit Score</h1><p>{msg||(initializing?'Loading your round…':'Submit Score could not finish loading. Please refresh the page and try again.')}</p></div></PlayerPage>
 
  return <PlayerPage title="Submit Score"><div className="simple-mobile-page submit-score-page">
    <h1>Submit Score</h1>
