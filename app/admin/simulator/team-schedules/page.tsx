@@ -33,6 +33,7 @@ export default function Page(){
  const [end,setEnd]=useState('')
  const [msg,setMsg]=useState('')
  const [saving,setSaving]=useState(false)
+ const [generating,setGenerating]=useState(false)
 
  async function load(){
   const {data:s}=await supabase.from('seasons').select('id,name,start_date,end_date').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
@@ -77,6 +78,32 @@ export default function Page(){
  async function clearMakeup(s:MakeupSlot){if(!confirm('Remove this recurring League Make-Up Time block and all of its future occurrences?'))return;const {error}=await supabase.rpc('clear_league_makeup_slot',{p_slot_id:s.id});setMsg(error?error.message:'Future League Make-Up Time blocks removed.');if(!error){if(editingMakeupId===s.id)setEditingMakeupId(null);load()}}
  function editMakeup(s:MakeupSlot){setSelection(MAKEUP);setEditingMakeupId(s.id);setDay(s.weekday);setH(slotHour(s.start_time));setDur(s.duration_hours||3);setStart(s.start_date);setEnd(s.end_date);window.scrollTo({top:0,behavior:'smooth'})}
  function newMakeup(){if(!season)return;setSelection(MAKEUP);setEditingMakeupId(null);setDay(1);setH(12);setDur(3);setStart(practiceStart(season.start_date));setEnd(season.end_date);window.scrollTo({top:0,behavior:'smooth'})}
+ function generateScheduleImage(){
+  setGenerating(true)
+  try{
+   const W=1800,H=1140,left=205,top=78,headerH=74,rowH=66,colW=(W-left)/5
+   const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H
+   const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not create the schedule image.')
+   const teamColors=['#67b7f0','#c78af2','#39ced1','#82df8d','#ff8f7d','#80aaf0','#ff7fba','#ffe43d','#ffb06f','#8ed8e8','#b8e986','#e7a5d8']
+   const colorByTeam=new Map(teams.map((t,i)=>[t.id,teamColors[i%teamColors.length]]))
+   const fmt=(hr:number)=>{const h=((hr+11)%12)+1;return `${h}:00 ${hr<12?'AM':'PM'}`}
+   const drawText=(text:string,x:number,y:number,size:number,bold=false)=>{ctx.fillStyle='#111';ctx.font=`${bold?'700':'500'} ${size}px Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y)}
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H)
+   ctx.fillStyle='#064b36';ctx.fillRect(0,0,W,top+headerH)
+   ctx.fillStyle='#fff';ctx.font='700 42px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Time',left/2,top+headerH/2)
+   ;['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach((d,i)=>ctx.fillText(d,left+colW*(i+.5),top+headerH/2))
+   for(let hr=6;hr<=21;hr++){const y=top+headerH+(hr-6)*rowH;ctx.fillStyle='#f7f7f7';ctx.fillRect(0,y,left,rowH);drawText(fmt(hr),left/2,y+rowH/2,29,true)}
+   const blocks=[...slots.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:teams.find(t=>t.id===s.team_id)?.name||'Team',fill:colorByTeam.get(s.team_id)||'#9fd3ff'})),...makeups.map(s=>({weekday:s.weekday,start:slotHour(s.start_time),dur:s.duration_hours||3,label:'League Make-Ups',fill:'#c9c9c9'}))]
+   blocks.filter(b=>b.weekday>=1&&b.weekday<=5).forEach(b=>{const x=left+(b.weekday-1)*colW,y=top+headerH+(b.start-6)*rowH,hgt=b.dur*rowH;ctx.fillStyle=b.fill;ctx.fillRect(x,y,colW,hgt);drawText(b.label,x+colW/2,y+hgt/2-18,31,true);drawText(`${fmt(b.start)} – ${fmt(b.start+b.dur)}`,x+colW/2,y+hgt/2+28,25,false)})
+   ctx.strokeStyle='#222';ctx.lineWidth=2
+   for(let i=0;i<=5;i++){const x=i===0?left:left+i*colW;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,H);ctx.stroke()}
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.stroke();ctx.beginPath();ctx.moveTo(0,top+headerH);ctx.lineTo(W,top+headerH);ctx.stroke()
+   for(let hr=6;hr<=22;hr++){const y=top+headerH+(hr-6)*rowH;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+   ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(0,H);ctx.stroke();ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,H);ctx.stroke();ctx.beginPath();ctx.moveTo(W-1,top);ctx.lineTo(W-1,H);ctx.stroke()
+   const a=document.createElement('a');a.download=`league-team-schedule-${new Date().toISOString().slice(0,10)}.png`;a.href=canvas.toDataURL('image/png');a.click();setMsg('Schedule image generated from the current Team & League Schedules setup.')
+  }catch(err:any){setMsg(err?.message||'Could not generate schedule image.')}
+  finally{setGenerating(false)}
+ }
 
  if(!g.ready||!g.admin)return <AdminDenied {...g}/>
  const current=selection!==MAKEUP?slots.find(x=>x.team_id===selection):null
@@ -96,6 +123,13 @@ export default function Page(){
    </form>
    <p className="muted">Choose any hourly starting time from 6 AM through 9 PM and the number of hours you want the simulator reserved. There is no 3-hour restriction for Admin recurring schedules. If a block starts before the player reservation calendar begins, the overlapping visible hours will still show as unavailable. Schedules may begin in October for practice. Changing a schedule rebuilds future bookings only; past bookings stay unchanged, and conflicts are reported rather than overwritten.</p>
   </div>
+  <section>
+   <div className="section-title"><h2>Schedule Image</h2></div>
+   <div className="card">
+    <p className="muted">Generate a clean Monday–Friday calendar image from the schedules currently saved below. Every team uses a different color and every League Make-Up block is gray.</p>
+    <div className="actions"><button type="button" className="btn" onClick={generateScheduleImage} disabled={generating}>{generating?'Generating…':'Generate Schedule Image'}</button></div>
+   </div>
+  </section>
   <section>
    <div className="section-title"><h2>Team Schedule Overview</h2><span>{slots.length} of {teams.length} set up</span></div>
    <div className="card team-sim-team-list-v1241">{teams.map(t=>{const s=slots.find(x=>x.team_id===t.id);return <div className={`team-sim-team-row-v1241 ${s?'configured':'missing'}`} key={t.id}><div className="team-sim-status-dot-v1241">{s?'✓':'!'}</div><div className="team-sim-team-copy-v1241"><strong>{t.name}</strong>{s?<span>{days[s.weekday]}s • {hour(slotHour(s.start_time))}–{hour(slotHour(s.start_time)+(s.duration_hours||3))} • {dateFmt(s.start_date)}–{dateFmt(s.end_date)}</span>:<span>Not set up yet</span>}</div><span className={`team-sim-status-pill-v1241 ${s?'configured':'missing'}`}>{s?'Set Up':'Not Set Up'}</span><div className="actions"><button className="btn secondary small" onClick={()=>{setSelection(t.id);setEditingMakeupId(null);window.scrollTo({top:0,behavior:'smooth'})}}>{s?'Edit':'Set Up'}</button>{s&&<button className="btn danger small" onClick={()=>clearTeam(t)}>Clear</button>}</div></div>})}</div>
