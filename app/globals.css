@@ -1583,3 +1583,8 @@ i .captain-mark-v1357{
 .rsvp-player-v1393{padding:12px 16px}
 .rsvp-player-name-v1398{display:block;padding-right:10px;font-weight:700}
 @media(max-width:600px){.rsvp-player-v1393{padding:12px 16px}.rsvp-player-name-v1398{padding-right:0}}
+
+/* v13.101: Public meeting RSVP is intentionally standalone. */
+.rsvp-standalone-page-v13101 {
+  padding-top: 24px;
+}

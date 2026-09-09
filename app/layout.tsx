@@ -1,5 +1,5 @@
 import './globals.css'
-import AuthNav from '@/components/AuthNav'
+import AppChrome from '@/components/AppChrome'
 
 export const metadata = {
   title: 'Tom Krise 19th Hole Golf League',
@@ -23,14 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <header className="topbar">
-          <div>
-            <div className="eyebrow">Tom Krise 19th Hole</div>
-            <strong>Golf League</strong>
-          </div>
-          <AuthNav />
-        </header>
-        <main className="page">{children}</main>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   )
