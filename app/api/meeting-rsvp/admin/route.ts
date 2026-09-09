@@ -8,14 +8,24 @@ async function syncOpenMeetingRoster(admin:any,meeting:{id:string,season_id:stri
  const [{data:players,error:pErr},{data:teams,error:tErr},{data:existing}]=await Promise.all([
   admin.from('players').select('id,team_id,full_name').eq('season_id',meeting.season_id).eq('is_active',true),
   admin.from('teams').select('id,name').eq('season_id',meeting.season_id).eq('is_active',true),
-  admin.from('league_meeting_invitees').select('player_id').eq('meeting_id',meeting.id)
+  admin.from('league_meeting_invitees').select('player_id,team_id,player_name,team_name').eq('meeting_id',meeting.id)
  ]);
  if(pErr||tErr)return;
  const teamNames=new Map((teams||[]).map((t:any)=>[t.id,t.name]));
  const activeTeamIds=new Set((teams||[]).map((t:any)=>t.id));
- const have=new Set((existing||[]).map((x:any)=>x.player_id).filter(Boolean));
- const rows=(players||[]).filter((p:any)=>activeTeamIds.has(p.team_id)&&!have.has(p.id)).map((p:any)=>({meeting_id:meeting.id,player_id:p.id,team_id:p.team_id,player_name:p.full_name,team_name:teamNames.get(p.team_id)||'Team'}));
- if(rows.length)await admin.from('league_meeting_invitees').insert(rows)
+ const existingByPlayer=new Map((existing||[]).filter((x:any)=>x.player_id).map((x:any)=>[x.player_id,x]));
+ const activePlayers=(players||[]).filter((p:any)=>activeTeamIds.has(p.team_id));
+ const rows=activePlayers.filter((p:any)=>!existingByPlayer.has(p.id)).map((p:any)=>({meeting_id:meeting.id,player_id:p.id,team_id:p.team_id,player_name:p.full_name,team_name:teamNames.get(p.team_id)||'Team'}));
+ if(rows.length)await admin.from('league_meeting_invitees').insert(rows);
+ // Keep open-meeting roster snapshots aligned with roster edits (renames/team moves) without touching RSVP status.
+ for(const p of activePlayers){
+  const old=existingByPlayer.get(p.id) as any;
+  if(!old)continue;
+  const teamName=teamNames.get(p.team_id)||'Team';
+  if(old.player_name!==p.full_name||old.team_id!==p.team_id||old.team_name!==teamName){
+   await admin.from('league_meeting_invitees').update({team_id:p.team_id,player_name:p.full_name,team_name:teamName}).eq('meeting_id',meeting.id).eq('player_id',p.id);
+  }
+ }
 }
 async function authorize(req:NextRequest){const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');if(!token)return null;const {auth,admin}=clients(token);const {data:{user}}=await auth.auth.getUser(token);if(!user)return null;const {data:p}=await admin.from('profiles').select('role,status').eq('id',user.id).maybeSingle();if(!p||p.role!=='admin'||p.status!=='approved')return null;return {admin,user}}
 export async function GET(req:NextRequest){const access=await authorize(req);if(!access)return NextResponse.json({error:'Admin access required.'},{status:403});const {admin}=access;const {data:openMeetings}=await admin.from('league_meetings').select('id,season_id,is_open').eq('is_open',true);for(const meeting of openMeetings||[])await syncOpenMeetingRoster(admin,meeting);const {data,error}=await admin.from('league_meetings').select('id,title,meeting_at,location,message,public_token,is_open,created_at,league_meeting_invitees(id,player_name,team_name,is_coming,response_status,responded_at)').order('meeting_at',{ascending:false});if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({meetings:data||[]})}
