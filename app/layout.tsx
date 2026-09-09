@@ -15,7 +15,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '19th Hole'
+    title: 'Golf Sim'
   }
 }
 
