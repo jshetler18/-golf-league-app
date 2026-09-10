@@ -12,7 +12,7 @@ type Player={id:string;team_id:string|null;full_name:string;official_tee_color:s
 type TrophyCounts={cup:number;monthly:number}
 type RawRow={canonical_team_name:string;season_label:string;score_month:string;round_number?:number|null;raw_score:number|string}
 type PublishedScore={score:number;season_label?:string;score_month?:string;round_number?:number|null;counted:boolean}
-type PublishedHandicap={team_id:string;team_name:string;average:number|null;recommended:number|null;handicap:number;method:string;recent:PublishedScore[]}
+type PublishedHandicap={team_id:string;team_name:string;average:number|null;recommended:number|null;handicap:number|null;method:string;recent:PublishedScore[]}
 type HandicapPublication={month_start:string;handicap_standard:number;published_at:string;snapshot:PublishedHandicap[]}
 
 const teeLabels:Record<string,string>={turquoise:'Forward Tees',red:'Senior Tees',yellow:'Middle Tees',blue:'Back Tees',black:'Tip Tees'}

@@ -183,16 +183,15 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
 
  async function publishHandicaps(){
    if(!monthId){setMsg('Save the month assignment before publishing handicaps.');return}
-   const missing=teams.filter(t=>(handicaps[t.id]??'NA')==='NA')
-   if(missing.length){setMsg(`Set a handicap for every active team before publishing. Missing: ${missing.map(t=>t.name).join(', ')}`);return}
+   const unavailable=teams.filter(t=>(handicaps[t.id]??'NA')==='NA')
    setPublishing(true);setMsg('Saving final handicaps and publishing them to players…')
    try{
      const saved=await saveHandicapDraft();if(!saved)return
      const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.')
-     const snapshot=teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return {team_id:team.id,team_name:team.name,average:calc.average,recommended:calc.recommended,handicap:Number(handicaps[team.id]),method:calc.method,recent:calc.recent.map(r=>({...r,counted:!calc.excluded.includes(r)}))}})
+     const snapshot=teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);const selected=handicaps[team.id]??'NA';return {team_id:team.id,team_name:team.name,average:calc.average,recommended:calc.recommended,handicap:selected==='NA'?null:Number(selected),method:calc.method,recent:calc.recent.map(r=>({...r,counted:!calc.excluded.includes(r)}))}})
      const r=await fetch('/api/handicaps/publish',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({seasonId,monthId,monthStart,standard:handicapStandard,snapshot})})
      const out=await r.json();if(!r.ok)throw new Error(out.error||'Unable to publish handicaps.')
-     setPublishedMonthId(monthId);setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} handicaps are now published on the Team Handicaps page. ${out.sent||0} player notification${out.sent===1?'':'s'} sent.`)
+     setPublishedMonthId(monthId);const naNote=unavailable.length?` ${unavailable.map(t=>t.name).join(', ')} ${unavailable.length===1?'is':'are'} published as Not Yet Available.`:'';setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} handicaps are now published on the Team Handicaps page.${naNote} ${out.sent||0} player notification${out.sent===1?'':'s'} sent.`)
    }catch(e:any){setMsg(e?.message||'Unable to publish handicaps.')}finally{setPublishing(false)}
  }
 

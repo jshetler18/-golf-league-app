@@ -22,10 +22,8 @@ export async function POST(req:NextRequest){
   const {data:activeTeams}=await admin.from('teams').select('id,name').eq('season_id',seasonId).eq('is_active',true)
   const {data:confirmed}=await admin.from('monthly_team_handicaps').select('team_id,handicap_points').eq('league_month_id',monthId)
   const confirmedMap=new Map((confirmed||[]).map((x:any)=>[x.team_id,Number(x.handicap_points)]))
-  const missing=(activeTeams||[]).filter((t:any)=>!confirmedMap.has(t.id))
-  if(missing.length)return NextResponse.json({error:`Set a handicap for every active team before publishing. Missing: ${missing.map((t:any)=>t.name).join(', ')}`},{status:400})
   const allowed=new Map((activeTeams||[]).map((t:any)=>[t.id,t.name]))
-  const snapshot=body.snapshot.filter((x:any)=>allowed.has(x.team_id)).map((x:any)=>({...x,team_name:allowed.get(x.team_id),handicap:confirmedMap.get(x.team_id)}))
+  const snapshot=body.snapshot.filter((x:any)=>allowed.has(x.team_id)).map((x:any)=>({...x,team_name:allowed.get(x.team_id),handicap:confirmedMap.has(x.team_id)?confirmedMap.get(x.team_id):null}))
   if(snapshot.length!==(activeTeams||[]).length)return NextResponse.json({error:'The handicap snapshot does not include every active team.'},{status:400})
   const {data:prior}=await admin.from('handicap_publications').select('id').eq('league_month_id',monthId).maybeSingle()
   const payload={season_id:seasonId,league_month_id:monthId,month_start:monthStart,handicap_standard:Number(body.standard||27),snapshot,published_at:new Date().toISOString(),published_by:user.id}
