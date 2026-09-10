@@ -181,6 +181,27 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    setMsg('All available recommended handicaps have been loaded. Review them, then save the draft or publish when ready.')
  }
 
+ async function resetMonthHandicaps(){
+   if(!monthId){setMsg('Save the month assignment before resetting handicaps.');return}
+   const label=months.find(m=>m[0]===monthStart)?.[1]||'selected month'
+   const wasPublished=publishedMonthId===monthId
+   const warning=wasPublished
+     ? `Reset published ${label} handicaps? This will remove the published handicap snapshot from the player Team Handicaps page and clear the saved ${label} handicap selections. Historical scores and calculations will not be changed.`
+     : `Reset ${label} handicap draft? This will clear the saved ${label} handicap selections and reload the current calculated recommendations. Historical scores and calculations will not be changed.`
+   if(!window.confirm(warning))return
+   setPublishing(true);setMsg(`Resetting ${label} handicaps…`)
+   try{
+     const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.')
+     const r=await fetch('/api/handicaps/reset',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({seasonId,monthId})})
+     const out=await r.json();if(!r.ok)throw new Error(out.error||'Unable to reset handicaps.')
+     setPublishedMonthId('')
+     const recommended:Record<string,string>={}
+     for(const team of teams){const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);if(calc.recommended!=null)recommended[team.id]=String(calc.recommended)}
+     setHandicaps(recommended)
+     setMsg(`${label} handicaps have been reset. Current recommendations are loaded again. Historical scoring data was not changed.`)
+   }catch(e:any){setMsg(e?.message||'Unable to reset handicaps.')}finally{setPublishing(false)}
+ }
+
  async function publishHandicaps(){
    if(!monthId){setMsg('Save the month assignment before publishing handicaps.');return}
    const unavailable=teams.filter(t=>(handicaps[t.id]??'NA')==='NA')
@@ -248,7 +269,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
        <div className="card" style={{marginTop:16}}>
          <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><strong>{months.find(m=>m[0]===monthStart)?.[1]} Handicap Status</strong><span className={`badge ${publishedMonthId===monthId?'success':''}`}>{publishedMonthId===monthId?'Published':'Draft'}</span></div>
          <p className="muted">Save Draft as often as needed while you review the month. The player Team Handicaps page remains unchanged until you publish.</p>
-         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn" disabled={publishing||!monthId} onClick={saveHandicapDraft}>Save Draft</button><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Publishing…':publishedMonthId===monthId?`Update & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Confirm & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button></div>
+         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn" disabled={publishing||!monthId} onClick={saveHandicapDraft}>Save Draft</button><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Working…':publishedMonthId===monthId?`Update & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Confirm & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button><button className="btn" disabled={publishing||!monthId} onClick={resetMonthHandicaps}>{publishedMonthId===monthId?`Reset Published ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Reset ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button></div>
          <p className="muted" style={{marginTop:10}}>Publishing saves all team handicaps, updates the player Handicap page immediately, and sends the handicap notification to players.</p>
        </div>
        <h3>Course Tee Box Key &amp; Yardages</h3><p className="muted">These are the tee boxes and yardages configured for the selected course.</p>
