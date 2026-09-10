@@ -100,16 +100,30 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    const {data:m}=await supabase.from('league_months').select('id,month_start,course_profile_id').eq('season_id',seasonId).eq('month_start',monthStart).maybeSingle()
    if(!m){setMonthId('');setAssignedProfileId('');setHandicaps({});setPlayerTeeLevels({});setPublishedMonthId('');return}
    const x=m as MonthRow;setMonthId(x.id);setAssignedProfileId(x.course_profile_id||'')
-   const [{data:h},{data:ct},{data:ta}]=await Promise.all([
+   const [{data:h},{data:ct},{data:ta},{data:publication}]=await Promise.all([
      supabase.from('monthly_team_handicaps').select('team_id,handicap_points').eq('league_month_id',x.id),
      supabase.from('course_tee_boxes').select('tee_level,course_tee_color,yardage').eq('league_month_id',x.id),
-     supabase.from('tee_assignments').select('player_id,tee_color,yardage').eq('league_month_id',x.id)
+     supabase.from('tee_assignments').select('player_id,tee_color,yardage').eq('league_month_id',x.id),
+     supabase.from('handicap_publications').select('league_month_id').eq('league_month_id',x.id).maybeSingle()
    ])
-   setHandicaps(Object.fromEntries((h||[]).map(v=>[v.team_id,String(v.handicap_points)])))
+   const savedHandicaps=Object.fromEntries((h||[]).map(v=>[v.team_id,String(v.handicap_points)]))
+   const isPublished=Boolean(publication?.league_month_id)
+   // For an unpublished month, stale/partial handicap rows should not override the current
+   // calculated recommendations. A complete saved draft is preserved; otherwise every
+   // eligible team starts with its current recommendation and ineligible teams remain NA.
+   if(isPublished || (h||[]).length===teams.length){
+     setHandicaps(savedHandicaps)
+   }else{
+     const recommended:Record<string,string>={}
+     for(const team of teams){
+       const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard)
+       if(calc.recommended!=null)recommended[team.id]=String(calc.recommended)
+     }
+     setHandicaps(recommended)
+   }
    const saved:Record<string,string>={}
    for(const a of (ta||[])){const match=(ct||[]).find(v=>v.course_tee_color.trim().toLowerCase()===String(a.tee_color||'').trim().toLowerCase()&&Number(v.yardage)===Number(a.yardage));if(match)saved[a.player_id]=match.tee_level}
    setPlayerTeeLevels(saved)
-   const {data:publication}=await supabase.from('handicap_publications').select('league_month_id').eq('league_month_id',x.id).maybeSingle()
    setPublishedMonthId(publication?.league_month_id||'')
  }
  useEffect(()=>{if(mode==='months')loadMonth()},[mode,seasonId,monthStart])
