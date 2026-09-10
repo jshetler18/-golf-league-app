@@ -149,17 +149,36 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  }
 
 
+ async function saveHandicapDraft(){
+   if(!monthId){setMsg('Save the month assignment before saving handicap drafts.');return false}
+   const rows=teams.filter(t=>(handicaps[t.id]??'NA')!=='NA').map(t=>({league_month_id:monthId,team_id:t.id,handicap_points:Number(handicaps[t.id])}))
+   const na=teams.filter(t=>(handicaps[t.id]??'NA')==='NA').map(t=>t.id)
+   if(na.length){const {error}=await supabase.from('monthly_team_handicaps').delete().eq('league_month_id',monthId).in('team_id',na);if(error){setMsg(error.message);return false}}
+   if(rows.length){const {error}=await supabase.from('monthly_team_handicaps').upsert(rows,{onConflict:'league_month_id,team_id'});if(error){setMsg(error.message);return false}}
+   const label=months.find(m=>m[0]===monthStart)?.[1]||'Selected month'
+   setMsg(`${label} handicap draft saved. Players will not see these changes until you confirm and publish them.`)
+   return true
+ }
+
+ async function useAllRecommendations(){
+   const next={...handicaps}
+   for(const team of teams){const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);if(calc.recommended!=null)next[team.id]=String(calc.recommended)}
+   setHandicaps(next)
+   setMsg('All available recommended handicaps have been loaded. Review them, then save the draft or publish when ready.')
+ }
+
  async function publishHandicaps(){
-   if(!monthId){setMsg('Save the month setup before publishing handicaps.');return}
+   if(!monthId){setMsg('Save the month assignment before publishing handicaps.');return}
    const missing=teams.filter(t=>(handicaps[t.id]??'NA')==='NA')
    if(missing.length){setMsg(`Set a handicap for every active team before publishing. Missing: ${missing.map(t=>t.name).join(', ')}`);return}
-   setPublishing(true);setMsg('Confirming and publishing team handicaps…')
+   setPublishing(true);setMsg('Saving final handicaps and publishing them to players…')
    try{
+     const saved=await saveHandicapDraft();if(!saved)return
      const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.')
      const snapshot=teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return {team_id:team.id,team_name:team.name,average:calc.average,recommended:calc.recommended,handicap:Number(handicaps[team.id]),method:calc.method,recent:calc.recent.map(r=>({...r,counted:!calc.excluded.includes(r)}))}})
      const r=await fetch('/api/handicaps/publish',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({seasonId,monthId,monthStart,standard:handicapStandard,snapshot})})
      const out=await r.json();if(!r.ok)throw new Error(out.error||'Unable to publish handicaps.')
-     setPublishedMonthId(monthId);setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} handicaps are now published. ${out.sent||0} player notification${out.sent===1?'':'s'} sent.`)
+     setPublishedMonthId(monthId);setMsg(`${months.find(m=>m[0]===monthStart)?.[1]} handicaps are now published on the Team Handicaps page. ${out.sent||0} player notification${out.sent===1?'':'s'} sent.`)
    }catch(e:any){setMsg(e?.message||'Unable to publish handicaps.')}finally{setPublishing(false)}
  }
 
@@ -210,7 +229,15 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
        <p className="muted">Recommendations use each team's recent raw scores. Review the scores below, then confirm or adjust the handicap in Team Handicaps.</p>
        <div className="handicap-standard-admin-v1369"><label className="field">Handicap Standard<input type="number" step="1" value={standardDraft} onChange={e=>setStandardDraft(e.target.value)}/></label><button className="btn" onClick={saveHandicapStandard}>Update Standard &amp; Recalculate</button></div>
        <div className="handicap-admin-team-list-v1369">{teams.map(team=>{const calc=calculateHandicap(rawHistory[team.name.trim().toLowerCase()]||[],handicapStandard);return <section className="handicap-admin-team-v1369" key={team.id}><div className="handicap-admin-head-v1369"><div><strong>{team.name}</strong><small>{calc.method}</small></div><div><small>Average</small><strong>{calc.average==null?'—':calc.average.toFixed(2)}</strong></div><div><small>Recommended</small><strong>{calc.recommended==null?'NA':`${calc.recommended>0?'+':''}${calc.recommended}`}</strong></div>{calc.recommended!=null&&<button className="btn" onClick={()=>setHandicaps(v=>({...v,[team.id]:String(calc.recommended)}))}>Use {calc.recommended>0?'+':''}{calc.recommended}</button>}</div><div className="handicap-score-chips-v1369">{calc.recent.map((r,i)=>{const out=calc.excluded.includes(r);return <span className={out?'not-counted':''} key={`${team.id}-${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r)}</small><strong>{r.score.toFixed(1)}</strong><em>{out?'Not Counted':'Counted'}</em></span>})}</div></section>})}</div>
-       <h3>Team Handicaps</h3><p className="muted">Review the recommendation above, then confirm it here or choose a different whole-number handicap. Changes here do not update the player Handicap page until you publish them below.</p><div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:21},(_,i)=>i-10).map(n=><option key={n} value={String(n)}>{n>0?`+${n}`:n}</option>)}</select></label>)}</div><div className="card" style={{marginTop:16}}><strong>{publishedMonthId===monthId?'Published Handicaps':'Publish New Handicaps'}</strong><p className="muted">The player Team Handicaps page stays frozen until you publish. You can adjust handicaps above at any time; players will not see those changes until you publish again.</p><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Publishing…':publishedMonthId===monthId?'Update Published Handicaps & Notify Players':'Confirm Handicaps & Notify Players'}</button></div>
+       <h3>Team Handicaps</h3><p className="muted">Review the recommendations above, then confirm or adjust each whole-number handicap. Save Draft keeps your work private. Confirm &amp; Publish is the only action that updates the player Team Handicaps page.</p>
+       <p><button className="btn" onClick={useAllRecommendations}>Use All Available Recommendations</button></p>
+       <div className="form-grid">{teams.map(t=><label className="field" key={t.id}>{t.name}<select value={handicaps[t.id]??'NA'} onChange={e=>setHandicaps(v=>({...v,[t.id]:e.target.value}))}><option value="NA">NA</option>{Array.from({length:21},(_,i)=>i-10).map(n=><option key={n} value={String(n)}>{n>0?`+${n}`:n}</option>)}</select></label>)}</div>
+       <div className="card" style={{marginTop:16}}>
+         <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><strong>{months.find(m=>m[0]===monthStart)?.[1]} Handicap Status</strong><span className={`badge ${publishedMonthId===monthId?'success':''}`}>{publishedMonthId===monthId?'Published':'Draft'}</span></div>
+         <p className="muted">Save Draft as often as needed while you review the month. The player Team Handicaps page remains unchanged until you publish.</p>
+         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn" disabled={publishing||!monthId} onClick={saveHandicapDraft}>Save Draft</button><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Publishing…':publishedMonthId===monthId?`Update & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Confirm & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button></div>
+         <p className="muted" style={{marginTop:10}}>Publishing saves all team handicaps, updates the player Handicap page immediately, and sends the handicap notification to players.</p>
+       </div>
        <h3>Course Tee Box Key &amp; Yardages</h3><p className="muted">These are the tee boxes and yardages configured for the selected course.</p>
        {assignedProfileId?<div className="course-tee-key-admin-v1367">{teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage).map(l=>{const tee=monthTees[l.key];return <div className="course-tee-key-row-admin-v1367" key={l.key}><span className="course-tee-key-level-admin-v1367">{l.label}</span><span className="course-tee-key-color-admin-v1367"><span className="course-tee-key-square-admin-v1367" style={{background:tee.color}}/>{tee.color}</span><strong>{Number(tee.yardage).toLocaleString()} yd</strong></div>})}</div>:<p className="muted">Select a course above to view its tee boxes and yardages.</p>}
        <h3>Player Tee Box Assignments</h3><p className="muted">Players default to their Official Tee Box. Override a player here only for this selected month.</p>
