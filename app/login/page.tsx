@@ -23,6 +23,10 @@ export default function LoginPage(){
     setUserEmail(data.user.email || '')
     const { data:p } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',data.user.id).maybeSingle()
     setProfile(p as Profile|null)
+    if(p?.role==='admin' && p?.status==='approved'){
+      window.location.replace('/admin')
+      return
+    }
   }
   useEffect(()=>{refresh()},[])
 
@@ -44,6 +48,11 @@ export default function LoginPage(){
         await supabase.auth.signOut()
         setMessage('This account does not have approved administrator access.')
       }else{
+        const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
+        if(p?.role==='admin' && p?.status==='approved'){
+          window.location.replace('/admin')
+          return
+        }
         setMessage('Signed in successfully.')
         await refresh()
       }
