@@ -1588,3 +1588,61 @@ i .captain-mark-v1357{
 .rsvp-standalone-page-v13101 {
   padding-top: 24px;
 }
+
+/* v13.111 — responsive desktop presentation.
+   Phones/tablets keep the established app experience; wide screens use the same
+   Golf Sim visual language with a purpose-built desktop dashboard layout. */
+@media (min-width:1181px){
+  body{background:linear-gradient(180deg,#f3f6f4 0,#f8faf9 340px,#f5f7f6 100%)}
+  .page{max-width:1380px;padding:30px 34px 54px}
+  .topbar{position:sticky;top:0;z-index:60;padding:15px 34px;background:rgba(16,41,30,.98);box-shadow:0 2px 14px rgba(8,29,20,.16)}
+  .topbar>div:first-child strong{font-size:21px}.topbar .eyebrow{font-size:11px}
+  .topbar nav{gap:7px}.topbar nav a{padding:9px 12px;border-radius:9px;transition:background .15s ease,transform .15s ease}.topbar nav a:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+  .hero{padding:30px 32px;border-radius:20px;box-shadow:0 10px 28px rgba(23,65,45,.12)}
+  .card{border-radius:16px;padding:21px;box-shadow:0 4px 16px rgba(20,55,39,.055)}
+  .grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .section-title{margin-top:28px}.table-wrap{border-radius:14px;border:1px solid var(--line);background:#fff}th,td{padding:13px 12px}
+
+  /* Home becomes a wide dashboard while keeping the same mobile-style cards/icons. */
+  body:has(.mobile-home){overflow:auto;background:#f3f6f4}
+  body:has(.mobile-home)>.page{max-width:none;padding:0;background:transparent}
+  .mobile-home{height:auto;min-height:100vh;max-width:1440px;margin:0 auto;padding:24px 32px 118px;background:transparent;overflow:visible;box-shadow:none}
+  .mobile-brand{position:relative;top:auto;min-height:208px;margin:0 0 22px;padding:26px 32px;border:1px solid #dde5e0;border-radius:22px;background:#fff;box-shadow:0 10px 28px rgba(18,55,37,.07)}
+  .mobile-brand>img{width:min(340px,30vw)}
+  .mobile-brand .profile-wrap{align-self:center}
+  .profile-button img,.profile-button>span{width:74px;height:74px;font-size:37px}.profile-button b{font-size:24px}.profile-menu{top:88px;width:235px}
+  .profile-menu a,.profile-menu button{font-size:18px;padding:16px 20px}
+  .mobile-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .mobile-menu-row{min-height:118px;padding:20px 23px;gap:20px;border:1px solid #dfe7e2;border-radius:18px;background:#fff;box-shadow:0 5px 18px rgba(20,55,39,.055);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .mobile-menu-row:hover{transform:translateY(-2px);border-color:#a9c9b8;box-shadow:0 10px 24px rgba(20,55,39,.09)}
+  .menu-icon{width:72px;height:72px}.menu-copy{gap:4px}.menu-title,.menu-copy strong{font-size:24px}.menu-copy small{font-size:15px}.menu-arrow{font-size:40px}
+  .home-scorecard-official-v1300,.home-live-alert-v1263{margin:0 0 16px;border-radius:17px}
+  .mobile-bottom{left:50%;right:auto;bottom:18px;width:min(760px,calc(100vw - 64px));height:76px;transform:translateX(-50%);border:1px solid #d7e0da;border-radius:20px;background:rgba(255,255,255,.96);box-shadow:0 12px 30px rgba(11,39,25,.16);overflow:hidden;padding-bottom:0}
+  .mobile-bottom a{transition:background .15s ease}.mobile-bottom a:hover{background:#f2f8f4}.mobile-bottom a>span svg{width:27px;height:27px}.mobile-bottom a>b{font-size:13px}
+
+  /* Inner player pages: same cards and content, expanded for desktop readability. */
+  .player-page{background:transparent}.player-page-content{max-width:1280px;margin:0 auto;padding:4px 0 32px}
+  .player-page-content>.hero:first-child,.player-page-content>.section-title:first-child{margin-top:0}
+  .player-page-content .hero{border-radius:20px}
+  .player-page-content .card{border-radius:16px}
+  .player-page-content .team-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .player-page-content .team-card{min-height:0}
+  .player-page-content .results-summary{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .player-page-content .results-filters{max-width:780px}
+  .player-page-content .booking-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .player-page-content .booking-row{height:100%}
+  .simple-mobile-page{max-width:1180px;padding:8px 0 42px}
+  .message-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .message-card{height:100%}
+  .profile-editor{max-width:760px;grid-template-columns:170px minmax(0,1fr);align-items:start}.profile-editor .avatar-preview{grid-row:1/6}.profile-editor>.btn{grid-column:2}
+
+  /* Admin and setup screens also benefit from the wider canvas. */
+  .admin-team-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .admin-team-card{height:100%}.admin-roster-head,.admin-roster-row{grid-template-columns:minmax(150px,1.1fr) minmax(150px,.9fr) minmax(170px,.9fr)}
+  .admin-add-player{grid-template-columns:1fr}.admin-add-player .add-player{width:100%}
+}
+
+@media (min-width:1500px){
+  .mobile-home{max-width:1540px}.mobile-menu{grid-template-columns:repeat(3,minmax(0,1fr))}.mobile-menu-row{min-height:126px}
+  .page{max-width:1460px}
+}
