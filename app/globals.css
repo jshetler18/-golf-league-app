@@ -2053,3 +2053,82 @@ i .captain-mark-v1357{
   body:has(.admin-hero-v1236)>.page>.admin-hero-v1236,
   body:has(.admin-hero-v1236)>.page>.admin-page-grid-v1237{display:none}
 }
+
+
+/* v13.122 — admin desktop header alignment + three-column admin home */
+@media (min-width:1181px){
+  /* Keep the profile control pinned to the far right on every admin subpage. */
+  .desktop-home-header-v13113 .desktop-home-mainrow-v13121{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    width:100%;
+  }
+  .desktop-home-header-v13113 .desktop-home-profile-v13113{
+    margin-left:auto;
+  }
+
+  /* Admin home: three clearly labeled management groups inside the shared header. */
+  .admin-home-unified-v13121 .admin-header-content-v13121{
+    margin-top:14px;
+    padding-top:16px;
+    border-top:1px solid #e1e7e3;
+  }
+  .admin-header-columns-v13122{
+    display:grid;
+    grid-template-columns:minmax(190px,.8fr) minmax(190px,.8fr) minmax(520px,2.4fr);
+    gap:18px;
+    align-items:start;
+  }
+  .admin-header-column-v13122{
+    min-width:0;
+    padding:14px;
+    border:1px solid #dce5df;
+    border-radius:14px;
+    background:#fbfdfb;
+  }
+  .admin-header-column-v13122 h2{
+    margin:0 0 10px;
+    font-size:1rem;
+    line-height:1.2;
+    color:#0b2d52;
+  }
+  .admin-header-links-v13122{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+  .admin-header-column-v13122:last-child .admin-header-links-v13122{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .admin-header-links-v13122 a{
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 16px;
+    border:1px solid #cfdad3;
+    border-radius:9px;
+    background:#f8fbf8;
+    color:#092f26;
+    font-weight:800;
+    text-decoration:none;
+    text-align:center;
+    line-height:1.15;
+    box-shadow:0 2px 6px rgba(18,55,37,.04);
+  }
+  .admin-header-links-v13122 a:hover{background:#eef7ed;border-color:#aac8ae}
+
+  /* Retire the previous flat button grid from v13.121 on desktop. */
+  .admin-home-unified-v13121 .admin-header-links-v13121{display:none!important}
+}
+
+@media (min-width:1181px) and (max-width:1360px){
+  .admin-header-columns-v13122{
+    grid-template-columns:minmax(175px,.75fr) minmax(175px,.75fr) minmax(460px,2.2fr);
+    gap:12px;
+  }
+  .admin-header-column-v13122{padding:12px}
+  .admin-header-links-v13122 a{padding:9px 10px;font-size:.92rem}
+}

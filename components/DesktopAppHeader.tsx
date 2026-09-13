@@ -5,15 +5,26 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-const adminLinks=[
-  {href:'/admin/accounts',title:'Accounts'},
-  {href:'/admin/messages',title:'Messages'},
-  {href:'/admin/meeting-rsvp',title:'League Meeting RSVP'},
-  {href:'/admin/rules',title:'Rules'},
-  {href:'/admin/teams',title:'Players & Teams'},
-  {href:'/admin/league',title:'League Setup & Scoring'},
-  {href:'/admin/score-submissions',title:'Score Submissions'},
-  {href:'/admin/simulator',title:'Simulator'}
+const adminColumns=[
+  {
+    title:'Simulator Management',
+    links:[{href:'/admin/simulator',title:'Simulator Bookings'}]
+  },
+  {
+    title:'Account Management',
+    links:[{href:'/admin/accounts',title:'Accounts'}]
+  },
+  {
+    title:'League Management',
+    links:[
+      {href:'/admin/teams',title:'Players & Teams'},
+      {href:'/admin/league',title:'League Setup & Scoring'},
+      {href:'/admin/score-submissions',title:'Score Submissions'},
+      {href:'/admin/rules',title:'Rules'},
+      {href:'/admin/messages',title:'Messages'},
+      {href:'/admin/meeting-rsvp',title:'RSVP'}
+    ]
+  }
 ]
 
 export default function DesktopAppHeader(){
@@ -70,9 +81,14 @@ export default function DesktopAppHeader(){
       <div className="eyebrow">Administration</div>
       <h1>League Admin</h1>
       <p>Choose the area you want to manage.</p>
-      <nav className="admin-header-links-v13121" aria-label="League administration">
-        {adminLinks.map(item=><Link href={item.href} key={item.href}>{item.title}</Link>)}
-      </nav>
+      <div className="admin-header-columns-v13122" aria-label="League administration">
+        {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
+          <h2>{column.title}</h2>
+          <nav className="admin-header-links-v13122">
+            {column.links.map(item=><Link href={item.href} key={item.href}>{item.title}</Link>)}
+          </nav>
+        </section>)}
+      </div>
     </div>}
   </header>
 }
