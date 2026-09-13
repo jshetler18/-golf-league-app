@@ -1852,3 +1852,52 @@ i .captain-mark-v1357{
   .recorded-grid-v1265{grid-template-columns:repeat(4,minmax(0,1fr))}
   .admin-page-grid-v1237{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+
+/* v13.113 — make every desktop page use the same header treatment as Home.
+   The legacy green navigation remains available for tablet/phone routes that use it,
+   while wide screens use the white logo/profile header everywhere. */
+.desktop-home-header-v13113{display:none}
+@media (min-width:1181px){
+  body>.topbar{display:none!important}
+  .desktop-home-header-v13113{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    width:min(1376px,calc(100vw - 64px));
+    min-height:208px;
+    margin:24px auto 0;
+    padding:26px 32px;
+    border:1px solid #dde5e0;
+    border-radius:22px;
+    background:#fff;
+    box-shadow:0 10px 28px rgba(18,55,37,.07);
+    position:relative;
+    z-index:70;
+  }
+  .desktop-home-logo-v13113{display:block;line-height:0}
+  .desktop-home-logo-v13113 img{display:block;width:min(340px,30vw);height:auto}
+  .desktop-home-profile-v13113{align-self:center}
+  .desktop-home-profile-v13113 .profile-button img,
+  .desktop-home-profile-v13113 .profile-button>span{width:74px;height:74px;font-size:37px}
+  .desktop-home-profile-v13113 .profile-button b{font-size:24px}
+  .desktop-home-profile-v13113 .profile-menu{top:88px;width:235px}
+  .desktop-home-profile-v13113 .profile-menu a,
+  .desktop-home-profile-v13113 .profile-menu button{font-size:18px;padding:16px 20px}
+
+  /* Player pages use the shared desktop header above, not the inner mobile header. */
+  .player-mobile-header{display:none!important}
+  body:has(.player-page)>.page{padding-top:0}
+  .player-page-content{padding-top:22px}
+
+  /* Admin/general screens align directly under the same header card. */
+  body:not(:has(.player-page)):not(:has(.mobile-home)):not(:has(.rsvp-standalone-page-v13101))>.page{
+    padding-top:22px;
+  }
+
+  /* Pages with their own dedicated auth/TV chrome keep that presentation. */
+  body:has(.auth-app-shell-v1230)>.desktop-home-header-v13113,
+  body:has(.tv-approved)>.desktop-home-header-v13113{display:none!important}
+  body:has(.auth-app-shell-v1230)>.topbar,
+  body:has(.tv-approved)>.topbar{display:none!important}
+}
