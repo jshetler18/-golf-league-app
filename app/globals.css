@@ -1994,34 +1994,3 @@ i .captain-mark-v1357{
     align-self:auto!important;
   }
 }
-
-
-/* v13.118 — desktop League Admin home: compact brand + all admin navigation in header */
-@media (min-width:1181px){
-  body:has(.admin-hero-v1236)>.desktop-home-header-v13113.admin-home-header-v13118{
-    min-height:0;
-    padding:16px 26px 22px;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:start;
-    row-gap:8px;
-  }
-  body:has(.admin-hero-v1236)>.desktop-home-header-v13113.admin-home-header-v13118 .desktop-home-logo-v13113 img{
-    width:min(185px,15vw);
-    max-height:78px;
-    object-fit:contain;
-  }
-  body:has(.admin-hero-v1236)>.desktop-home-header-v13113.admin-home-header-v13118 .desktop-home-profile-v13113 .profile-button img,
-  body:has(.admin-hero-v1236)>.desktop-home-header-v13113.admin-home-header-v13118 .desktop-home-profile-v13113 .profile-button>span{width:58px;height:58px;font-size:29px}
-  .admin-home-header-content-v13118{grid-column:1/-1;padding-top:2px}
-  .admin-home-header-content-v13118 .eyebrow{margin-bottom:4px}
-  .admin-home-header-content-v13118 h1{margin:0;font-size:2rem;color:#0a294d}
-  .admin-home-header-content-v13118 p{margin:5px 0 16px;color:#5b6570;font-size:1rem}
-  .admin-home-header-tabs-v13118{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
-  .admin-home-header-tabs-v13118 a{display:flex;align-items:center;justify-content:center;min-height:54px;padding:11px 14px;border:1px solid #d9e2dc;border-radius:12px;background:#f7faf8;color:#123a28;text-decoration:none;text-align:center;font-weight:800;line-height:1.2;box-shadow:0 1px 2px #0000000a}
-  .admin-home-header-tabs-v13118 a:hover{background:#edf6ef;border-color:#b8cfbd;transform:translateY(-1px)}
-  body:has(.admin-hero-v1236)>.page>.admin-hero-v1236,
-  body:has(.admin-hero-v1236)>.page>.admin-page-grid-v1237{display:none}
-}
-@media (min-width:1500px){
-  .admin-home-header-tabs-v13118{grid-template-columns:repeat(8,minmax(0,1fr))}
-}

@@ -2,23 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-const adminHomeTabs=[
-  {href:'/admin/accounts',title:'Accounts'},
-  {href:'/admin/messages',title:'Messages'},
-  {href:'/admin/meeting-rsvp',title:'League Meeting RSVP'},
-  {href:'/admin/rules',title:'Rules'},
-  {href:'/admin/teams',title:'Players & Teams'},
-  {href:'/admin/league',title:'League Setup & Scoring'},
-  {href:'/admin/score-submissions',title:'Score Submissions'},
-  {href:'/admin/simulator',title:'Simulator'}
-]
-
 export default function DesktopAppHeader(){
-  const pathname=usePathname() || ''
-  const isAdminHome=pathname==='/admin'
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
   const wrap=useRef<HTMLDivElement>(null)
@@ -47,7 +33,7 @@ export default function DesktopAppHeader(){
     location.href='/login'
   }
 
-  return <header className={`desktop-home-header-v13113 ${isAdminHome?'admin-home-header-v13118':''}`}>
+  return <header className="desktop-home-header-v13113">
     <Link href="/" className="desktop-home-logo-v13113" aria-label="Golf Sim home">
       <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/>
     </Link>
@@ -64,13 +50,5 @@ export default function DesktopAppHeader(){
         <button onClick={logout}>Log Out ↪</button>
       </div>}
     </div>
-    {isAdminHome&&<div className="admin-home-header-content-v13118">
-      <div className="eyebrow">Administration</div>
-      <h1>League Admin</h1>
-      <p>Choose the area you want to manage.</p>
-      <nav className="admin-home-header-tabs-v13118" aria-label="League administration">
-        {adminHomeTabs.map(tab=><Link href={tab.href} key={tab.href}>{tab.title}</Link>)}
-      </nav>
-    </div>}
   </header>
 }
