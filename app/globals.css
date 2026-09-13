@@ -1901,3 +1901,39 @@ i .captain-mark-v1357{
   body:has(.auth-app-shell-v1230)>.topbar,
   body:has(.tv-approved)>.topbar{display:none!important}
 }
+
+/* v13.114 — compact admin desktop chrome + roomier admin tabs */
+@media (min-width:1181px){
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113{
+    min-height:118px;
+    padding:14px 24px;
+  }
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-logo-v13113 img{
+    width:min(205px,18vw);
+    max-height:86px;
+    object-fit:contain;
+  }
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-profile-v13113 .profile-button img,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-profile-v13113 .profile-button>span{
+    width:58px;height:58px;font-size:29px;
+  }
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-profile-v13113 .profile-button b{font-size:20px}
+
+  .league-admin-tabs-v1238{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    grid-template-columns:none;
+    padding-bottom:3px;
+  }
+  .league-admin-tabs-v1238 button{
+    flex:1 0 245px;
+    min-width:245px;
+    padding:15px 17px;
+    column-gap:12px;
+  }
+  .league-admin-tabs-v1238 button>strong{font-size:1rem;white-space:nowrap}
+  .league-admin-tabs-v1238 button>small{font-size:.78rem;white-space:nowrap}
+  .admin-course-tabs-v1366{gap:12px}
+  .admin-course-tabs-v1366 button{min-width:180px;padding-left:18px;padding-right:18px;white-space:nowrap}
+}
