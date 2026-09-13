@@ -1962,3 +1962,35 @@ i .captain-mark-v1357{
     width:100%;
   }
 }
+
+/* v13.117 — true full-viewport desktop login centering.
+   This intentionally overrides the generic desktop admin/general page width rules. */
+@media (min-width:1181px){
+  body:has(.auth-app-shell-v1230)>.page{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  body:has(.auth-app-shell-v1230){
+    background:#fff;
+  }
+  .auth-app-shell-v1230{
+    width:100%!important;
+    max-width:none!important;
+    min-height:100vh;
+    margin:0!important;
+    padding:0!important;
+  }
+  .auth-app-brand-v1230{
+    width:100%!important;
+    margin:0!important;
+  }
+  .auth-app-content-v1230{
+    width:min(560px,calc(100vw - 64px))!important;
+    max-width:560px!important;
+    margin:0 auto!important;
+    padding:34px 20px 50px!important;
+    align-self:auto!important;
+  }
+}
