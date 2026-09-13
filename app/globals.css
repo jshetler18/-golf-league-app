@@ -1937,3 +1937,28 @@ i .captain-mark-v1357{
   .admin-course-tabs-v1366{gap:12px}
   .admin-course-tabs-v1366 button{min-width:180px;padding-left:18px;padding-right:18px;white-space:nowrap}
 }
+
+/* v13.116 — center the complete login experience on desktop */
+@media (min-width:1181px){
+  .auth-app-shell-v1230{
+    width:100%;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .auth-app-brand-v1230{
+    width:100%;
+  }
+  .auth-app-content-v1230{
+    width:min(560px,calc(100vw - 64px));
+    margin-left:auto!important;
+    margin-right:auto!important;
+    align-self:center;
+  }
+  .auth-app-heading-v1230,
+  .auth-app-card-v1230,
+  .auth-message-v1230{
+    width:100%;
+  }
+}
