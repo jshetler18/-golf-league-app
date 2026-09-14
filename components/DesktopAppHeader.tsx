@@ -20,7 +20,7 @@ const adminColumns=[
   {
     title:'League Management',
     links:[
-      {href:'/admin/teams',title:'Players & Teams',icon:'⛳'},
+      {href:'/admin/teams',title:'Players & Teams',icon:'👥'},
       {href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},
       {href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},
       {href:'/admin/rules',title:'Rules',icon:'📋'},
