@@ -1,5 +1,4 @@
 'use client'
-import Link from 'next/link'
 import {ReactNode,useEffect,useState} from 'react'
 import {supabase} from '@/lib/supabase'
 
@@ -10,7 +9,7 @@ export function useAdminGuard(){
 }
 
 export function AdminFrame({title,description,children}:{title:string;description:string;children:ReactNode}){
-  return <><div className="admin-page-top-v1237"><Link href="/admin" className="admin-back-v1237">← Admin Home</Link><div className="eyebrow">Administration</div><h1>{title}</h1><p>{description}</p></div>{children}</>
+  return <><div className="admin-page-top-v1237"><h1>{title}</h1><p>{description}</p></div>{children}</>
 }
 
 export function AdminDenied({ready,admin}:{ready:boolean;admin:boolean}){

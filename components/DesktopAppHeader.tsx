@@ -77,7 +77,7 @@ export default function DesktopAppHeader(){
 
   return <header className={`desktop-home-header-v13113${isAdminRoute?' admin-home-unified-v13121 admin-static-nav-v13134':''}`}>
     <div className="desktop-home-mainrow-v13121">
-      <Link href="/" className="desktop-home-logo-v13113" aria-label="Golf Sim home">
+      <Link href={isAdminRoute?'/admin':'/'} className="desktop-home-logo-v13113" aria-label={isAdminRoute?'League Admin home':'Golf Sim home'}>
         <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/>
       </Link>
       <div className="profile-wrap desktop-home-profile-v13113" ref={wrap}>
@@ -100,7 +100,6 @@ export default function DesktopAppHeader(){
       </div>
     </div>
     {isAdminRoute&&<div className="admin-header-content-v13121">
-      <div className="eyebrow">Administration</div>
       <h1>League Admin</h1>
       <p>Choose the area you want to manage.</p>
       <div className="admin-header-columns-v13122" aria-label="League administration">

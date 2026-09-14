@@ -2318,3 +2318,7 @@ i .captain-mark-v1357{
   .admin-embedded-panel-v13126,
   .admin-mobile-home-v13126{display:none!important}
 }
+
+
+/* v13.135 — admin navigation cleanup */
+.admin-back-v1237{display:none!important}
