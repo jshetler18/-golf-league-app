@@ -2214,3 +2214,57 @@ i .captain-mark-v1357{
 .admin-profile-login-v13127{margin-top:26px;max-width:620px}
 .admin-profile-login-v13127 .section-title{margin-bottom:14px}
 .admin-profile-login-v13127 .form-grid{max-width:540px}
+
+/* v13.129 — lock the admin desktop header layout after inline-workspace navigation */
+@media (min-width:1181px){
+  /* Every full admin page: logo stays at the top-left and profile stays at the top-right. */
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113{
+    position:relative;
+    width:min(1376px,calc(100vw - 64px));
+    margin:24px auto 0;
+  }
+
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113>.desktop-home-mainrow-v13121,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113>.desktop-home-mainrow-v13121{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:flex-start!important;
+    justify-content:space-between!important;
+    width:100%!important;
+    min-width:0;
+    gap:24px;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113 .desktop-home-logo-v13113,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-logo-v13113{
+    display:block;
+    flex:0 0 auto;
+    align-self:flex-start!important;
+    margin:0!important;
+  }
+
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113 .desktop-home-profile-v13113,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-profile-v13113{
+    position:relative;
+    flex:0 0 auto;
+    align-self:flex-start!important;
+    margin:0 0 0 auto!important;
+    justify-self:end;
+  }
+
+  /* Admin Home keeps its management content below the logo/profile row, never beside it. */
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113.admin-home-unified-v13121{
+    display:block!important;
+  }
+  body:has(.admin-dashboard-workspace-v13126)>.desktop-home-header-v13113.admin-home-unified-v13121>.admin-header-content-v13121{
+    display:block;
+    width:100%;
+    clear:both;
+    margin-top:14px;
+    padding-top:16px;
+    border-top:1px solid #e1e7e3;
+  }
+}
