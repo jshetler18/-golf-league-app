@@ -2397,21 +2397,82 @@ i .captain-mark-v1357{
   }
 }
 
-/* v13.137 — lock League Admin title to the true horizontal center of admin header */
-@media (min-width: 900px){
-  .admin-static-nav-v13134 .desktop-home-top-v13113{
+/* v13.140 — definitive admin top-row layout: logo | centered title | profile */
+@media (min-width:1181px){
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140{
+    display:grid!important;
+    grid-template-columns:max-content minmax(0,1fr) max-content!important;
+    grid-template-rows:1fr!important;
+    align-items:center!important;
+    width:100%!important;
+    min-height:103px!important;
+    gap:24px!important;
+    margin:0!important;
+    padding:0!important;
     position:relative!important;
   }
-  .admin-static-nav-v13134 .admin-header-title-v13136{
-    position:absolute!important;
-    left:50%!important;
-    top:50%!important;
-    transform:translate(-50%,-50%)!important;
-    width:max-content!important;
-    max-width:calc(100% - 520px)!important;
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .desktop-home-logo-v13113{
+    grid-column:1!important;
+    grid-row:1!important;
+    position:static!important;
+    justify-self:start!important;
+    align-self:center!important;
     margin:0!important;
-    z-index:2!important;
+  }
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .admin-header-title-v13136{
+    grid-column:2!important;
+    grid-row:1!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    justify-self:stretch!important;
+    align-self:center!important;
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
     text-align:center!important;
-    pointer-events:none!important;
+    white-space:nowrap!important;
+    color:#0b2d52!important;
+    font-size:2rem!important;
+    line-height:1.1!important;
+    font-weight:900!important;
+    letter-spacing:-.02em!important;
+    z-index:auto!important;
+  }
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .desktop-home-profile-v13113{
+    grid-column:3!important;
+    grid-row:1!important;
+    position:relative!important;
+    justify-self:end!important;
+    align-self:center!important;
+    margin:0!important;
   }
 }
+
+
+/* v13.141 — remove League Admin title from desktop admin header */
+@media (min-width: 900px){
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140{
+    grid-template-columns: auto 1fr auto !important;
+  }
+}
+
+/* v13.142 — hard-remove legacy League Admin header title */
+@media (min-width: 900px){
+  .admin-header-title-v13136,
+  .desktop-home-header-v13113 .admin-header-title-v13136,
+  .admin-static-nav-v13134 .admin-header-title-v13136,
+  .admin-top-row-v13140 .admin-header-title-v13136{
+    display:none !important;
+    visibility:hidden !important;
+    width:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+}
+
+/* v13.143 — final removal of obsolete League Admin header title */
+.admin-header-title-v13136 { display:none !important; }
