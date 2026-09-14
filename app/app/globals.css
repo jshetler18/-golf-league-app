@@ -2449,3 +2449,11 @@ i .captain-mark-v1357{
     margin:0!important;
   }
 }
+
+
+/* v13.141 — remove League Admin title from desktop admin header */
+@media (min-width: 900px){
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140{
+    grid-template-columns: auto 1fr auto !important;
+  }
+}
