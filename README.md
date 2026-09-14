@@ -1,9 +1,5 @@
-Golf League App v13.127 Update Only
+# v13.128
 
-Changes:
-- Simplifies the administrator profile menu to My Profile and Log Out only.
-- Adds administrator username/login email editing under My Profile.
-- Adds administrator password changing under My Profile.
-- Admin credential changes are restricted to an authenticated, approved administrator changing their own account.
-
-No database migration required.
+- Fixes desktop Admin Home inline workspace navigation.
+- Admin dashboard buttons now perform a reliable same-page reload with the selected panel query, allowing the selected admin page to render below the navigation.
+- Keeps v13.127 admin profile/login changes.

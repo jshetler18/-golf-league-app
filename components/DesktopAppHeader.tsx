@@ -106,7 +106,7 @@ export default function DesktopAppHeader(){
         {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
           <h2>{column.title}</h2>
           <nav className="admin-header-links-v13122">
-            {column.links.map(item=><Link className="admin-home-link-v13123" href={`/admin?panel=${encodeURIComponent(item.href.replace('/admin/',''))}`} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>)}
+            {column.links.map(item=><a className="admin-home-link-v13123" href={`/admin?panel=${encodeURIComponent(item.href.replace('/admin/',''))}`} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</a>)}
           </nav>
         </section>)}
       </div>
