@@ -80,12 +80,12 @@ export default function AdminPage(){
 
     measure()
     const observer=new ResizeObserver(measure)
-    observer.observe(body)
-    observer.observe(root)
+    observer.observe(doc.body)
+    observer.observe(doc.documentElement)
     resizeObserverRef.current=observer
 
     const mutation=new MutationObserver(()=>requestAnimationFrame(measure))
-    mutation.observe(body,{subtree:true,childList:true,attributes:true,characterData:true})
+    mutation.observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true})
     ;(frame as any).__adminMutationObserver?.disconnect?.()
     ;(frame as any).__adminMutationObserver=mutation
 

@@ -1,8 +1,5 @@
-# v13.131 Update Only
+# v13.132 Update Only
 
-Fixes the Admin Home inline workspace on desktop:
-- removes the duplicate "Admin Home" back button from embedded admin pages;
-- removes the nested embedded-page scrollbar so the main browser page is the only vertical scroller;
-- keeps iframe height synchronized when admin content loads or changes asynchronously.
+Fixes the TypeScript build errors in `src/app/admin/page.tsx` from v13.131 while retaining the embedded admin single-scroll behavior and hidden embedded Admin Home back button.
 
-Replace the included files in the matching paths of your current app.
+No database migration required.
