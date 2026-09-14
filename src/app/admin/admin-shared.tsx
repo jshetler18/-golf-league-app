@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import {ReactNode,useEffect,useState} from 'react'
+import {ReactNode,useEffect,useLayoutEffect,useState} from 'react'
 import {supabase} from '@/lib/supabase'
 
 export function useAdminGuard(){
@@ -11,7 +11,7 @@ export function useAdminGuard(){
 
 export function AdminFrame({title,description,children}:{title:string;description:string;children:ReactNode}){
   const [embedded,setEmbedded]=useState(false)
-  useEffect(()=>{setEmbedded(new URLSearchParams(window.location.search).get('embed')==='1')},[])
+  useLayoutEffect(()=>{setEmbedded(window.self!==window.top || new URLSearchParams(window.location.search).get('embed')==='1')},[])
   return <><div className="admin-page-top-v1237">{!embedded&&<Link href="/admin" className="admin-back-v1237">← Admin Home</Link>}<div className="eyebrow">Administration</div><h1>{title}</h1><p>{description}</p></div>{children}</>
 }
 
