@@ -1,4 +1,9 @@
-# v13.137 Update Only
-Replace `app/globals.css` with this version.
+# v13.148 Update Only
 
-Change: locks the desktop admin `League Admin` title to the true horizontal center of the header viewport, independent of logo/profile widths.
+Adds clear success/error confirmation prompts on the admin simulator booking page for:
+- Create/Update Recurring Block
+- Block Simulator Time
+- Remove recurring blocks
+- Remove individual simulator times/occurrences
+
+Existing pre-removal confirmation prompts are retained.

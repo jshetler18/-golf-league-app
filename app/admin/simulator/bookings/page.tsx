@@ -33,20 +33,23 @@ export default function Page(){
  useEffect(()=>{if(g.admin)load()},[g.admin])
 
  async function add(e:FormEvent){
-  e.preventDefault();const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('bookings').insert({kind:'blocked',title:title||'Unavailable',start_at:stamp(date,h),end_at:stamp(date,h+dur),created_by:user?.id});setMsg(error?error.message:'Simulator time blocked.');if(!error)load()
+  e.preventDefault();const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('bookings').insert({kind:'blocked',title:title||'Unavailable',start_at:stamp(date,h),end_at:stamp(date,h+dur),created_by:user?.id});
+  if(error){setMsg(error.message);window.alert(`Unable to block simulator time: ${error.message}`);return}
+  setMsg('Simulator time blocked successfully.');window.alert('Simulator time was blocked successfully.');load()
  }
 
  async function saveRecurring(e:FormEvent){
   e.preventDefault();setMsg('')
   const {error}=await supabase.rpc('set_admin_sim_block_slot',{p_slot_id:editId,p_title:rTitle||'Unavailable',p_weekday:weekday,p_start_time:`${pad(rHour)}:00:00`,p_duration_hours:rDur,p_start_date:startDate,p_end_date:endDate})
-  if(error){setMsg(error.message);return}
-  setMsg(editId?'Recurring simulator block updated.':'Recurring simulator block created.');cancelEdit();load()
+  if(error){setMsg(error.message);window.alert(`Unable to save recurring block: ${error.message}`);return}
+  const successMessage=editId?'Recurring simulator block updated successfully.':'Recurring simulator block created successfully.'
+  setMsg(successMessage);window.alert(successMessage);cancelEdit();load()
  }
  function editRecurring(r:R){setEditId(r.id);setRTitle(r.title);setWeekday(r.weekday);setRHour(Number(r.start_time.slice(0,2)));setRDur(r.duration_hours);setStartDate(r.start_date);setEndDate(r.end_date);window.scrollTo({top:0,behavior:'smooth'})}
  function cancelEdit(){setEditId(null);setRTitle('Unavailable');setWeekday(1);setRHour(7);setRDur(1);setStartDate('');setEndDate('')}
- async function clearRecurring(r:R){if(!confirm(`Remove the recurring block “${r.title}”? Future occurrences will be removed. Past blocks will remain.`))return;const {error}=await supabase.rpc('clear_admin_sim_block_slot',{p_slot_id:r.id});setMsg(error?error.message:'Recurring simulator block removed.');if(!error){if(editId===r.id)cancelEdit();load()}}
+ async function clearRecurring(r:R){if(!confirm(`Remove the recurring block “${r.title}”? Future occurrences will be removed. Past blocks will remain.`))return;const {error}=await supabase.rpc('clear_admin_sim_block_slot',{p_slot_id:r.id});if(error){setMsg(error.message);window.alert(`Unable to remove recurring block: ${error.message}`);return}setMsg('Recurring simulator block removed successfully.');window.alert('Recurring simulator block was removed successfully.');if(editId===r.id)cancelEdit();load()}
 
- async function remove(b:B){const recurring=b.kind==='league'||!!b.admin_sim_block_slot_id||(b.kind==='blocked'&&b.title?.toLowerCase().includes('make-up'));if(!confirm(`${recurring?'Remove this occurrence only':'Cancel/remove this simulator time'}?${recurring?' The recurring schedule itself will stay in place.':''}`))return;const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('bookings').update({status:'cancelled',cancelled_by:user?.id,cancellation_reason:'Removed by administrator'}).eq('id',b.id);setMsg(error?error.message:'Simulator time removed.');if(!error)load()}
+ async function remove(b:B){const recurring=b.kind==='league'||!!b.admin_sim_block_slot_id||(b.kind==='blocked'&&b.title?.toLowerCase().includes('make-up'));if(!confirm(`${recurring?'Remove this occurrence only':'Cancel/remove this simulator time'}?${recurring?' The recurring schedule itself will stay in place.':''}`))return;const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('bookings').update({status:'cancelled',cancelled_by:user?.id,cancellation_reason:'Removed by administrator'}).eq('id',b.id);if(error){setMsg(error.message);window.alert(`Unable to remove simulator time: ${error.message}`);return}setMsg('Simulator time removed successfully.');window.alert('Simulator time was removed successfully.');load()}
 
  const filtered=useMemo(()=>{const now=new Date(),lim=new Date(now);if(range!=='all')lim.setDate(lim.getDate()+(range==='7'?7:30));return bookings.filter(b=>{const s=new Date(b.start_at);if(jump&&s.toLocaleDateString('en-CA')!==jump)return false;return range==='all'||s<=lim})},[bookings,range,jump])
  const who=(b:B)=>b.kind==='personal'?(b.user_id?names[b.user_id]||'Player':'Player'):b.kind==='league'?(teams.find(t=>t.id===b.team_id)?.name||b.title||'League'):b.title||'Unavailable'
