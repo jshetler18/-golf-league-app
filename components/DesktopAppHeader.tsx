@@ -15,7 +15,7 @@ const adminColumns=[
   },
   {
     title:'Account Management',
-    links:[{href:'/admin/accounts',title:'Accounts',icon:'👥'}]
+    links:[{href:'/admin/accounts',title:'Accounts',icon:'👤'}]
   },
   {
     title:'League Management',
