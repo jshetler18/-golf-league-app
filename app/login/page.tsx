@@ -33,8 +33,25 @@ export default function LoginPage(){
   async function submit(e:FormEvent){
     e.preventDefault(); setLoading(true); setMessage('')
     if(mode==='signup'){
-      const { error } = await supabase.auth.signUp({email,password,options:{data:{full_name:name}}})
-      setMessage(error ? error.message : 'Account created successfully. Your account is waiting for administrator approval. You’ll be able to book the simulator once approved.')
+      const cleanName=name.trim()
+      const cleanEmail=email.trim().toLowerCase()
+      const { data:signUpData, error } = await supabase.auth.signUp({email:cleanEmail,password,options:{data:{full_name:cleanName}}})
+      if(error){
+        setMessage(`Account request was not completed: ${error.message}`)
+      }else if(!signUpData.user){
+        setMessage('Account request was not completed. No account was created. Please try again, and if this continues contact the league administrator.')
+      }else if(Array.isArray(signUpData.user.identities) && signUpData.user.identities.length===0){
+        setMessage('Account request was not completed. This email may already be registered. Try signing in, use a different email address, or contact the league administrator.')
+      }else{
+        // A real auth user was created. The database creates the matching pending profile
+        // in the same signup transaction, so only now do we tell the player they are pending.
+        setEmail(cleanEmail)
+        setPassword('')
+        setMessage('Account request submitted successfully. Your account is now waiting for administrator approval. You’ll be able to access the app once approved.')
+        if(signUpData.session){
+          await refresh()
+        }
+      }
     }else{
       const { data, error } = await supabase.auth.signInWithPassword({email,password})
       if(error){
