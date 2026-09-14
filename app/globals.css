@@ -2189,3 +2189,12 @@ i .captain-mark-v1357{
     border-radius:14px;
   }
 }
+
+
+/* v13.124 — left-align Admin Home action buttons */
+@media (min-width:1181px){
+  .admin-header-links-v13122 a{
+    justify-content:flex-start;
+    text-align:left;
+  }
+}

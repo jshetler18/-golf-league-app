@@ -22,7 +22,7 @@ const adminColumns=[
       {href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},
       {href:'/admin/rules',title:'Rules',icon:'📋'},
       {href:'/admin/messages',title:'Messages',icon:'✉️'},
-      {href:'/admin/meeting-rsvp',title:'RSVP',icon:'✅'}
+      {href:'/admin/meeting-rsvp',title:"Meeting Setup & RSVP's",icon:'✅'}
     ]
   }
 ]
