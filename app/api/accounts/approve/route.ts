@@ -17,8 +17,8 @@ export async function POST(req:NextRequest){
     const {data:{user}}=await authClient.auth.getUser(token)
     if(!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
     const admin=createClient(url,secret,{auth:{persistSession:false}})
-    const {data:me}=await admin.from('profiles').select('role,status').eq('id',user.id).maybeSingle()
-    if(me?.role!=='admin'||me?.status!=='approved')return NextResponse.json({error:'Administrator access required.'},{status:403})
+    const {data:me}=await admin.from('profiles').select('role,status,is_account_approver').eq('id',user.id).maybeSingle()
+    if(!me||me.status!=='approved'||(me.role!=='admin'&&!me.is_account_approver))return NextResponse.json({error:'Account approval access required.'},{status:403})
 
     const {profileId}=await req.json()
     if(!profileId)return NextResponse.json({error:'Profile ID is required.'},{status:400})

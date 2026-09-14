@@ -24,13 +24,14 @@ export async function POST(req:NextRequest){
     const created=Date.parse(profile.created_at||'')
     if(!Number.isFinite(created)||Date.now()-created>30*60*1000)return NextResponse.json({ok:true,sent:0,detail:'Account request is outside the new-signup notification window.'})
 
-    const {data:admins,error:aErr}=await admin.from('profiles').select('id').eq('role','admin').eq('status','approved')
+    const {data:approvers,error:aErr}=await admin.from('profiles').select('id,role,is_account_approver').eq('status','approved').or('role.eq.admin,is_account_approver.eq.true')
     if(aErr)return NextResponse.json({error:aErr.message},{status:500})
-    const adminIds=(admins||[]).map((x:any)=>x.id)
-    if(!adminIds.length)return NextResponse.json({ok:true,sent:0,detail:'No approved administrators found.'})
+    const approverIds=(approvers||[]).map((x:any)=>x.id)
+    const approverMap=new Map((approvers||[]).map((x:any)=>[x.id,x]))
+    if(!approverIds.length)return NextResponse.json({ok:true,sent:0,detail:'No approved account approvers found.'})
     if(!priv)return NextResponse.json({ok:true,sent:0,detail:'Push server is not configured.'})
 
-    const {data:subs,error:sErr}=await admin.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',adminIds)
+    const {data:subs,error:sErr}=await admin.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',approverIds)
     if(sErr)return NextResponse.json({error:sErr.message},{status:500})
     webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',VAPID_PUBLIC_KEY,priv)
     const name=profile.full_name||profile.email||'A new player'
@@ -41,7 +42,7 @@ export async function POST(req:NextRequest){
         await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({
           title:'New Account Request',
           body:`${name} is waiting for account approval.`,
-          url:'/admin/accounts',
+          url:approverMap.get(s.user_id)?.role==='admin'?'/admin/accounts':'/account-approvals',
           tag:`account-request-${profile.id}`,
           kind:'account-request'
         }))
@@ -52,6 +53,6 @@ export async function POST(req:NextRequest){
     }
     return NextResponse.json({ok:true,sent})
   }catch(e:any){
-    return NextResponse.json({error:e?.message||'Unable to notify administrators.'},{status:500})
+    return NextResponse.json({error:e?.message||'Unable to notify account approvers.'},{status:500})
   }
 }
