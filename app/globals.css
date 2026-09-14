@@ -2209,3 +2209,8 @@ i .captain-mark-v1357{
 
 .admin-mobile-home-v13126{display:block;}
 @media (min-width:900px){.admin-mobile-home-v13126{display:none;}}
+
+/* v13.127 — administrator profile: simplified menu + login credentials */
+.admin-profile-login-v13127{margin-top:26px;max-width:620px}
+.admin-profile-login-v13127 .section-title{margin-bottom:14px}
+.admin-profile-login-v13127 .form-grid{max-width:540px}
