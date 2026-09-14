@@ -2448,3 +2448,54 @@ i .captain-mark-v1357{
     justify-self:end!important;
   }
 }
+
+/* v13.139 — keep League Admin centered in the actual top-row space between logo and profile */
+@media (min-width:1181px){
+  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134>.desktop-home-mainrow-v13121,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134>.desktop-home-mainrow-v13121{
+    display:grid!important;
+    grid-template-columns:max-content minmax(0,1fr) max-content!important;
+    align-items:center!important;
+    gap:24px!important;
+    width:100%!important;
+    min-height:103px!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-logo-v13113,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-logo-v13113{
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:start!important;
+    align-self:center!important;
+    margin:0!important;
+  }
+
+  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .admin-header-title-v13136,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .admin-header-title-v13136{
+    grid-column:2!important;
+    grid-row:1!important;
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    width:100%!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    align-self:center!important;
+    margin:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    z-index:auto!important;
+  }
+
+  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-profile-v13113,
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-profile-v13113{
+    grid-column:3!important;
+    grid-row:1!important;
+    justify-self:end!important;
+    align-self:center!important;
+    margin:0!important;
+    position:relative!important;
+  }
+}
