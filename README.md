@@ -1,5 +1,4 @@
-# v13.132 Update Only
+# v13.137 Update Only
+Replace `app/globals.css` with this version.
 
-Fixes the TypeScript build errors in `src/app/admin/page.tsx` from v13.131 while retaining the embedded admin single-scroll behavior and hidden embedded Admin Home back button.
-
-No database migration required.
+Change: locks the desktop admin `League Admin` title to the true horizontal center of the header viewport, independent of logo/profile widths.
