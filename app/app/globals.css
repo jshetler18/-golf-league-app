@@ -2457,3 +2457,19 @@ i .captain-mark-v1357{
     grid-template-columns: auto 1fr auto !important;
   }
 }
+
+/* v13.142 — hard-remove legacy League Admin header title */
+@media (min-width: 900px){
+  .admin-header-title-v13136,
+  .desktop-home-header-v13113 .admin-header-title-v13136,
+  .admin-static-nav-v13134 .admin-header-title-v13136,
+  .admin-top-row-v13140 .admin-header-title-v13136{
+    display:none !important;
+    visibility:hidden !important;
+    width:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+}
