@@ -2132,3 +2132,60 @@ i .captain-mark-v1357{
   .admin-header-column-v13122{padding:12px}
   .admin-header-links-v13122 a{padding:9px 10px;font-size:.92rem}
 }
+
+/* v13.123 — admin alerts/icons, rectangular simulator choices, consistent score review, larger admin logo */
+@media (min-width:1181px){
+  /* Increase the admin brand about 20% while keeping the compact admin header. */
+  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113 .desktop-home-logo-v13113 img{
+    width:min(246px,21.6vw);
+    max-height:103px;
+  }
+  .admin-home-unified-v13121 .desktop-home-logo-v13113 img{
+    width:min(222px,19.2vw);
+    max-height:94px;
+  }
+
+  /* Restore a simple visual icon to every admin-home action. */
+  .admin-home-link-v13123{
+    position:relative;
+    gap:9px;
+  }
+  .admin-home-icon-v13123{
+    display:inline-grid;
+    place-items:center;
+    flex:0 0 auto;
+    width:28px;
+    height:28px;
+    font-size:20px;
+    line-height:1;
+  }
+  .admin-account-alert-v13123{
+    position:absolute;
+    top:-8px;
+    right:-8px;
+    min-width:25px;
+    height:25px;
+    padding:0 7px;
+    display:grid;
+    place-items:center;
+    border:2px solid #fff;
+    border-radius:999px;
+    background:#d92d20;
+    color:#fff;
+    font-size:12px;
+    font-weight:900;
+    line-height:1;
+    box-shadow:0 3px 9px rgba(139,16,16,.28);
+  }
+
+  /* The two Simulator choices should read as wide rectangular actions. */
+  .simulator-admin-options-v13123{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    max-width:none;
+  }
+  .simulator-admin-options-v13123 .admin-page-card-v1237{
+    min-height:94px;
+    padding:18px 22px;
+    border-radius:14px;
+  }
+}

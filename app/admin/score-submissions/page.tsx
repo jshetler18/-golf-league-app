@@ -1,7 +1,7 @@
 'use client'
 import {useEffect,useState} from 'react'
 import {supabase} from '@/lib/supabase'
-import {useAdminGuard,AdminDenied} from '../admin-shared'
+import {useAdminGuard,AdminDenied,AdminFrame} from '../admin-shared'
 
 const pointMap:Record<number,[number,number]>={1:[1000,800],3:[700,600],5:[500,400],7:[300,200],9:[100,0]}
 
@@ -201,7 +201,7 @@ export default function ScoreSubmissions(){
  }
 
  if(!guard.ready||!guard.admin)return <AdminDenied {...guard}/>
- return <><section className="hero"><div className="eyebrow">Administration</div><h1>Score Submissions</h1><p>Review the player's scorecard image and submitted total. Nothing is posted until you approve it.</p></section>
+ return <AdminFrame title="Score Submissions" description="Review the player's scorecard image and submitted total. Nothing is posted until you approve it.">
  {msg&&<p className="message">{msg}</p>}
  <section className="card archive-scorecard-upload-v1297">
    <div className="section-title compact"><div><div className="eyebrow">Recorded Rounds Archive</div><h2>Upload a Past Scorecard</h2><p className="muted">Choose the league month, team, week, and exact Recorded Round. Linking the scorecard directly to the recording prevents older Week 4 matchup titles from causing a mismatch. The Team list only shows teams from the selected season.</p></div></div>
@@ -221,5 +221,5 @@ export default function ScoreSubmissions(){
    {images[r.id]?<a href={images[r.id]} target="_blank" rel="noreferrer" className="admin-scorecard-image-link"><img src={images[r.id]} alt={`${r.teams?.name} submitted scorecard`}/><span>Tap image to open full size</span></a>:<p className="message">No scorecard image is available.</p>}
    {r.status==='rejected'&&r.admin_note&&<div className="admin-denial-note"><b>Denial reason</b><span>{r.admin_note}</span></div>}
    {r.status==='pending'&&<div className="admin-actions"><button className="btn" disabled={busy===r.id} onClick={()=>approve(r)}>✓ Accept & Make Official</button><button className="btn danger" disabled={busy===r.id} onClick={()=>reject(r)}>Deny Scorecard</button></div>}
- </div>)}</div></>
+ </div>)}</div></AdminFrame>
 }

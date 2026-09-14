@@ -8,21 +8,21 @@ import { supabase } from '@/lib/supabase'
 const adminColumns=[
   {
     title:'Simulator Management',
-    links:[{href:'/admin/simulator',title:'Simulator Bookings'}]
+    links:[{href:'/admin/simulator',title:'Simulator Bookings',icon:'📅'}]
   },
   {
     title:'Account Management',
-    links:[{href:'/admin/accounts',title:'Accounts'}]
+    links:[{href:'/admin/accounts',title:'Accounts',icon:'👥'}]
   },
   {
     title:'League Management',
     links:[
-      {href:'/admin/teams',title:'Players & Teams'},
-      {href:'/admin/league',title:'League Setup & Scoring'},
-      {href:'/admin/score-submissions',title:'Score Submissions'},
-      {href:'/admin/rules',title:'Rules'},
-      {href:'/admin/messages',title:'Messages'},
-      {href:'/admin/meeting-rsvp',title:'RSVP'}
+      {href:'/admin/teams',title:'Players & Teams',icon:'⛳'},
+      {href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},
+      {href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},
+      {href:'/admin/rules',title:'Rules',icon:'📋'},
+      {href:'/admin/messages',title:'Messages',icon:'✉️'},
+      {href:'/admin/meeting-rsvp',title:'RSVP',icon:'✅'}
     ]
   }
 ]
@@ -32,6 +32,7 @@ export default function DesktopAppHeader(){
   const isAdminHome=pathname==='/admin'
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
+  const [pendingAccounts,setPendingAccounts]=useState(0)
   const wrap=useRef<HTMLDivElement>(null)
 
   useEffect(()=>{
@@ -44,6 +45,16 @@ export default function DesktopAppHeader(){
     })()
     return()=>{active=false}
   },[])
+
+  useEffect(()=>{
+    if(!isAdminHome)return
+    let active=true
+    ;(async()=>{
+      const {count}=await supabase.from('profiles').select('id',{count:'exact',head:true}).eq('status','pending')
+      if(active)setPendingAccounts(count||0)
+    })()
+    return()=>{active=false}
+  },[isAdminHome])
 
   useEffect(()=>{
     const close=(e:MouseEvent)=>{
@@ -85,7 +96,7 @@ export default function DesktopAppHeader(){
         {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
           <h2>{column.title}</h2>
           <nav className="admin-header-links-v13122">
-            {column.links.map(item=><Link href={item.href} key={item.href}>{item.title}</Link>)}
+            {column.links.map(item=><Link className="admin-home-link-v13123" href={item.href} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>)}
           </nav>
         </section>)}
       </div>
