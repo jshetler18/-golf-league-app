@@ -30,6 +30,7 @@ const adminColumns=[
 export default function DesktopAppHeader(){
   const pathname=usePathname()||''
   const [embedded,setEmbedded]=useState(false)
+  const isAdminRoute=pathname==='/admin'||pathname.startsWith('/admin/')
   const isAdminHome=pathname==='/admin'
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
@@ -50,14 +51,14 @@ export default function DesktopAppHeader(){
   },[])
 
   useEffect(()=>{
-    if(!isAdminHome)return
+    if(!isAdminRoute)return
     let active=true
     ;(async()=>{
       const {count}=await supabase.from('profiles').select('id',{count:'exact',head:true}).eq('status','pending')
       if(active)setPendingAccounts(count||0)
     })()
     return()=>{active=false}
-  },[isAdminHome])
+  },[isAdminRoute])
 
   useEffect(()=>{
     const close=(e:MouseEvent)=>{
@@ -74,7 +75,7 @@ export default function DesktopAppHeader(){
 
   if(embedded)return null
 
-  return <header className={`desktop-home-header-v13113${isAdminHome?' admin-home-unified-v13121':''}`}>
+  return <header className={`desktop-home-header-v13113${isAdminRoute?' admin-home-unified-v13121 admin-static-nav-v13134':''}`}>
     <div className="desktop-home-mainrow-v13121">
       <Link href="/" className="desktop-home-logo-v13113" aria-label="Golf Sim home">
         <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/>
@@ -98,7 +99,7 @@ export default function DesktopAppHeader(){
         </div>}
       </div>
     </div>
-    {isAdminHome&&<div className="admin-header-content-v13121">
+    {isAdminRoute&&<div className="admin-header-content-v13121">
       <div className="eyebrow">Administration</div>
       <h1>League Admin</h1>
       <p>Choose the area you want to manage.</p>
@@ -106,7 +107,7 @@ export default function DesktopAppHeader(){
         {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
           <h2>{column.title}</h2>
           <nav className="admin-header-links-v13122">
-            {column.links.map(item=><a className="admin-home-link-v13123" href={`/admin?panel=${encodeURIComponent(item.href.replace('/admin/',''))}`} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</a>)}
+            {column.links.map(item=>{const active=pathname===item.href||pathname.startsWith(item.href+'/');return <Link className={`admin-home-link-v13123${active?' active':''}`} href={item.href} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>})}
           </nav>
         </section>)}
       </div>
