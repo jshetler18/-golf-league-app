@@ -80,6 +80,7 @@ export default function DesktopAppHeader(){
       <Link href={isAdminRoute?'/admin':'/'} className="desktop-home-logo-v13113" aria-label={isAdminRoute?'League Admin home':'Golf Sim home'}>
         <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/>
       </Link>
+      {isAdminRoute&&<div className="admin-header-title-v13136">League Admin</div>}
       <div className="profile-wrap desktop-home-profile-v13113" ref={wrap}>
       <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">
         {profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}
@@ -100,8 +101,6 @@ export default function DesktopAppHeader(){
       </div>
     </div>
     {isAdminRoute&&<div className="admin-header-content-v13121">
-      <h1>League Admin</h1>
-      <p>Choose the area you want to manage.</p>
       <div className="admin-header-columns-v13122" aria-label="League administration">
         {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
           <h2>{column.title}</h2>

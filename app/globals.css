@@ -2322,3 +2322,77 @@ i .captain-mark-v1357{
 
 /* v13.135 — admin navigation cleanup */
 .admin-back-v1237{display:none!important}
+
+/* v13.136 — stable admin header during route changes; centered title in the top row */
+@media (min-width:1181px){
+  /* Use the admin header's own class as the source of truth instead of page-content :has()
+     selectors. This prevents the header from momentarily reflowing while a new route mounts. */
+  .desktop-home-header-v13113.admin-static-nav-v13134{
+    display:block!important;
+    width:min(1376px,calc(100vw - 64px))!important;
+    min-height:0!important;
+    margin:24px auto 0!important;
+    padding:18px 24px 22px!important;
+    position:relative!important;
+  }
+
+  .admin-static-nav-v13134>.desktop-home-mainrow-v13121{
+    display:grid!important;
+    grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr)!important;
+    align-items:center!important;
+    width:100%!important;
+    min-height:94px!important;
+    gap:24px!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  .admin-static-nav-v13134 .desktop-home-logo-v13113{
+    grid-column:1!important;
+    justify-self:start!important;
+    align-self:center!important;
+    margin:0!important;
+    line-height:0!important;
+  }
+  .admin-static-nav-v13134 .desktop-home-logo-v13113 img{
+    display:block!important;
+    width:min(246px,21.6vw)!important;
+    max-height:103px!important;
+    height:auto!important;
+    object-fit:contain!important;
+  }
+
+  .admin-header-title-v13136{
+    grid-column:2!important;
+    justify-self:center!important;
+    align-self:center!important;
+    white-space:nowrap;
+    color:#0b2d52;
+    font-size:2rem;
+    line-height:1.1;
+    font-weight:900;
+    letter-spacing:-.02em;
+    text-align:center;
+  }
+
+  .admin-static-nav-v13134 .desktop-home-profile-v13113{
+    grid-column:3!important;
+    justify-self:end!important;
+    align-self:center!important;
+    margin:0!important;
+    position:relative!important;
+  }
+
+  .admin-static-nav-v13134>.admin-header-content-v13121{
+    display:block!important;
+    width:100%!important;
+    clear:both!important;
+    margin:14px 0 0!important;
+    padding:16px 0 0!important;
+    border-top:1px solid #e1e7e3!important;
+  }
+  .admin-static-nav-v13134>.admin-header-content-v13121>h1,
+  .admin-static-nav-v13134>.admin-header-content-v13121>p{
+    display:none!important;
+  }
+}
