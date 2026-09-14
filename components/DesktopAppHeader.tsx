@@ -8,7 +8,10 @@ import { supabase } from '@/lib/supabase'
 const adminColumns=[
   {
     title:'Simulator Management',
-    links:[{href:'/admin/simulator',title:'Simulator Bookings',icon:'📅'}]
+    links:[
+      {href:'/admin/simulator/team-schedules',title:'Team & League Schedules',icon:'⛳'},
+      {href:'/admin/simulator/bookings',title:'Bookings & Block Time',icon:'📅'}
+    ]
   },
   {
     title:'Account Management',
