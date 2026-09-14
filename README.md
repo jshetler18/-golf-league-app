@@ -1,5 +1,2 @@
-v13.125 — Admin navigation cleanup
-
-- Keeps the profile control in the desktop admin header.
-- Removes the separate legacy Page Options/top navigation from all /admin routes.
-- Admin Home management buttons remain the primary admin navigation.
+# v13.126 Update Only
+Admin Home now opens selected admin sections directly below the dashboard navigation on desktop. Existing individual admin routes remain available and are embedded without duplicating the desktop header. Mobile Admin Home keeps its existing navigation behavior.

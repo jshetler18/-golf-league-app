@@ -2198,3 +2198,14 @@ i .captain-mark-v1357{
     text-align:left;
   }
 }
+
+
+/* v13.126 — Admin Home workspace: selected admin page opens below navigation */
+@media (min-width: 900px){
+  .admin-dashboard-workspace-v13126{width:100%;}
+  .admin-embedded-panel-v13126{margin-top:20px;width:100%;background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:22px;box-shadow:0 10px 30px rgba(15,23,42,.08);overflow:hidden;scroll-margin-top:18px;}
+  .admin-embedded-panel-v13126 iframe{display:block;width:100%;height:calc(100vh - 110px);min-height:760px;border:0;background:#f7f8f6;}
+}
+
+.admin-mobile-home-v13126{display:block;}
+@media (min-width:900px){.admin-mobile-home-v13126{display:none;}}

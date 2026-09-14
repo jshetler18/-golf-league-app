@@ -29,11 +29,14 @@ const adminColumns=[
 
 export default function DesktopAppHeader(){
   const pathname=usePathname()||''
+  const [embedded,setEmbedded]=useState(false)
   const isAdminHome=pathname==='/admin'
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
   const [pendingAccounts,setPendingAccounts]=useState(0)
   const wrap=useRef<HTMLDivElement>(null)
+
+  useEffect(()=>{setEmbedded(new URLSearchParams(window.location.search).get('embed')==='1')},[])
 
   useEffect(()=>{
     let active=true
@@ -69,6 +72,8 @@ export default function DesktopAppHeader(){
     location.href='/login'
   }
 
+  if(embedded)return null
+
   return <header className={`desktop-home-header-v13113${isAdminHome?' admin-home-unified-v13121':''}`}>
     <div className="desktop-home-mainrow-v13121">
       <Link href="/" className="desktop-home-logo-v13113" aria-label="Golf Sim home">
@@ -96,7 +101,7 @@ export default function DesktopAppHeader(){
         {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
           <h2>{column.title}</h2>
           <nav className="admin-header-links-v13122">
-            {column.links.map(item=><Link className="admin-home-link-v13123" href={item.href} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>)}
+            {column.links.map(item=><Link className="admin-home-link-v13123" href={`/admin?panel=${encodeURIComponent(item.href.replace('/admin/',''))}`} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>)}
           </nav>
         </section>)}
       </div>
