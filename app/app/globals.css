@@ -2397,105 +2397,55 @@ i .captain-mark-v1357{
   }
 }
 
-/* v13.137 — lock League Admin title to the true horizontal center of admin header */
-@media (min-width: 900px){
-  .admin-static-nav-v13134 .desktop-home-top-v13113{
-    position:relative!important;
-  }
-  .admin-static-nav-v13134 .admin-header-title-v13136{
-    position:absolute!important;
-    left:50%!important;
-    top:50%!important;
-    transform:translate(-50%,-50%)!important;
-    width:max-content!important;
-    max-width:calc(100% - 520px)!important;
-    margin:0!important;
-    z-index:2!important;
-    text-align:center!important;
-    pointer-events:none!important;
-  }
-}
-
-/* v13.138 — center League Admin in the available space between logo and profile */
-@media (min-width: 900px){
-  .admin-static-nav-v13134>.desktop-home-mainrow-v13121{
-    display:grid!important;
-    grid-template-columns:max-content minmax(0,1fr) max-content!important;
-    align-items:center!important;
-    width:100%!important;
-    gap:24px!important;
-  }
-  .admin-static-nav-v13134 .desktop-home-logo-v13113{
-    grid-column:1!important;
-    justify-self:start!important;
-  }
-  .admin-static-nav-v13134 .admin-header-title-v13136{
-    grid-column:2!important;
-    position:static!important;
-    left:auto!important;
-    top:auto!important;
-    transform:none!important;
-    width:auto!important;
-    max-width:none!important;
-    justify-self:stretch!important;
-    align-self:center!important;
-    text-align:center!important;
-    margin:0!important;
-    pointer-events:auto!important;
-  }
-  .admin-static-nav-v13134 .desktop-home-profile-v13113{
-    grid-column:3!important;
-    justify-self:end!important;
-  }
-}
-
-/* v13.139 — keep League Admin centered in the actual top-row space between logo and profile */
+/* v13.140 — definitive admin top-row layout: logo | centered title | profile */
 @media (min-width:1181px){
-  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134>.desktop-home-mainrow-v13121,
-  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134>.desktop-home-mainrow-v13121{
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140{
     display:grid!important;
     grid-template-columns:max-content minmax(0,1fr) max-content!important;
+    grid-template-rows:1fr!important;
     align-items:center!important;
-    gap:24px!important;
     width:100%!important;
     min-height:103px!important;
+    gap:24px!important;
     margin:0!important;
     padding:0!important;
+    position:relative!important;
   }
-
-  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-logo-v13113,
-  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-logo-v13113{
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .desktop-home-logo-v13113{
     grid-column:1!important;
     grid-row:1!important;
+    position:static!important;
     justify-self:start!important;
     align-self:center!important;
     margin:0!important;
   }
-
-  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .admin-header-title-v13136,
-  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .admin-header-title-v13136{
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .admin-header-title-v13136{
     grid-column:2!important;
     grid-row:1!important;
     position:static!important;
     inset:auto!important;
     transform:none!important;
-    width:100%!important;
-    max-width:none!important;
     justify-self:stretch!important;
     align-self:center!important;
+    width:100%!important;
+    max-width:none!important;
     margin:0!important;
+    padding:0!important;
     text-align:center!important;
     white-space:nowrap!important;
+    color:#0b2d52!important;
+    font-size:2rem!important;
+    line-height:1.1!important;
+    font-weight:900!important;
+    letter-spacing:-.02em!important;
     z-index:auto!important;
   }
-
-  body:has(.admin-dashboard-landing-v13134)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-profile-v13113,
-  body:has(.admin-page-top-v1237)>.desktop-home-header-v13113.admin-static-nav-v13134 .desktop-home-profile-v13113{
+  .desktop-home-header-v13113.admin-static-nav-v13134 > .admin-top-row-v13140 > .desktop-home-profile-v13113{
     grid-column:3!important;
     grid-row:1!important;
+    position:relative!important;
     justify-self:end!important;
     align-self:center!important;
     margin:0!important;
-    position:relative!important;
   }
 }
