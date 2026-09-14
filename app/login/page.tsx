@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 
 type Profile = { full_name:string; email:string|null; status:string; role:string; booking_enabled:boolean }
 type Mode = 'signin'|'signup'|'admin'
+const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(b64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 
 export default function LoginPage(){
   const [userEmail,setUserEmail]=useState('')
@@ -16,6 +18,8 @@ export default function LoginPage(){
   const [password,setPassword]=useState('')
   const [message,setMessage]=useState('')
   const [loading,setLoading]=useState(false)
+  const [pushBusy,setPushBusy]=useState(false)
+  const [pushMessage,setPushMessage]=useState('')
 
   async function refresh(){
     const { data } = await supabase.auth.getUser()
@@ -23,8 +27,8 @@ export default function LoginPage(){
     setUserEmail(data.user.email || '')
     const { data:p } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',data.user.id).maybeSingle()
     setProfile(p as Profile|null)
-    if(p?.role==='admin' && p?.status==='approved'){
-      window.location.replace('/admin')
+    if(p?.status==='approved'){
+      window.location.replace(p?.role==='admin'?'/admin':'/')
       return
     }
   }
@@ -48,6 +52,7 @@ export default function LoginPage(){
         setEmail(cleanEmail)
         setPassword('')
         setMessage('Account request submitted successfully. Your account is now waiting for administrator approval. You’ll be able to access the app once approved.')
+        try{await fetch('/api/push/account-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:signUpData.user.id})})}catch{}
         if(signUpData.session){
           await refresh()
         }
@@ -70,7 +75,10 @@ export default function LoginPage(){
           window.location.replace('/admin')
           return
         }
-        setMessage('Signed in successfully.')
+        if(p?.status==='approved'){
+          window.location.replace('/')
+          return
+        }
         await refresh()
       }
     }
@@ -79,14 +87,35 @@ export default function LoginPage(){
 
   async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('You have been signed out.') }
 
+  async function enableApprovalNotifications(){
+    setPushBusy(true);setPushMessage('')
+    try{
+      if(!('serviceWorker'in navigator)||!('PushManager'in window))throw new Error('Push notifications are not supported on this device/browser.')
+      const standalone=window.matchMedia('(display-mode: standalone)').matches||(navigator as any).standalone===true
+      const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)
+      if(isiOS&&!standalone)throw new Error('On iPhone, first add Golf Sim to your Home Screen, then open it there to enable notifications.')
+      const permission=await Notification.requestPermission()
+      if(permission!=='granted')throw new Error('Notification permission was not allowed. You can enable it later in your phone settings.')
+      const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
+      let sub=await reg.pushManager.getSubscription()
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(VAPID_PUBLIC_KEY)})
+      const {data:{user}}=await supabase.auth.getUser()
+      if(!user)throw new Error('Please sign in again to enable the approval notification.')
+      const j=sub.toJSON()
+      const {error}=await supabase.from('push_subscriptions').upsert({user_id:user.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh||null,auth:j.keys?.auth||null,updated_at:new Date().toISOString()},{onConflict:'endpoint'})
+      if(error)throw error
+      setPushMessage('Approval notifications are enabled on this device. You will be notified when your account is approved.')
+    }catch(e:any){setPushMessage(e?.message||'Unable to enable approval notifications.')}finally{setPushBusy(false)}
+  }
+
   return <div className="auth-app-shell-v1230">
     <div className="auth-app-brand-v1230"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" /></div>
     <main className="auth-app-content-v1230">
       {userEmail?<>
         <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<p>Your account is waiting for administrator approval.</p>}</div>
-          <div className="auth-app-actions-v1230"><Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link><button className="btn secondary" onClick={signOut}>Log Out</button></div>
+          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><button className="btn" disabled={pushBusy} onClick={enableApprovalNotifications}>{pushBusy?'Please wait…':'Enable Approval Notification'}</button>{pushMessage&&<p className="message">{pushMessage}</p>}</>}</div>
+          <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
         <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':'Request access to the 19th Hole Golf League app.'}</p></div>

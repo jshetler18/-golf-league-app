@@ -8,7 +8,23 @@ type Player={id:string;team_id:string|null;full_name:string}
 export default function Accounts(){const guard=useAdminGuard();const [requests,setRequests]=useState<Profile[]>([]),[approved,setApproved]=useState<Profile[]>([]),[teams,setTeams]=useState<Team[]>([]),[players,setPlayers]=useState<Player[]>([]),[msg,setMsg]=useState('')
  async function load(){if(!guard.admin)return;const [{data:r},{data:a},{data:s}]=await Promise.all([supabase.from('profiles').select('id,full_name,email,status,booking_enabled,created_at,player_id,is_scorecard_official').in('status',['pending','denied','suspended']).order('created_at'),supabase.from('profiles').select('id,full_name,email,status,booking_enabled,created_at,player_id,is_scorecard_official').eq('status','approved').neq('role','admin').order('full_name'),supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()]);setRequests((r||[]) as Profile[]);setApproved((a||[]) as Profile[]);const {data:t}=s?.id?await supabase.from('teams').select('id,name').eq('season_id',s.id).eq('is_active',true).order('name'):await supabase.from('teams').select('id,name').eq('is_active',true).order('name');setTeams((t||[]) as Team[]);const ids=(t||[]).map(x=>x.id);const {data:p}=ids.length?await supabase.from('players').select('id,team_id,full_name').in('team_id',ids).eq('is_active',true).order('full_name'):({data:[]} as any);setPlayers((p||[]) as Player[])}
  useEffect(()=>{load()},[guard.admin])
- async function status(id:string,value:'approved'|'denied'){const {error}=await supabase.from('profiles').update({status:value,booking_enabled:value==='approved'}).eq('id',id);setMsg(error?error.message:`Account ${value}.`);if(!error)load()}
+ async function status(id:string,value:'approved'|'denied'){
+  if(value==='approved'){
+   const {data:{session}}=await supabase.auth.getSession()
+   if(!session?.access_token){setMsg('Please sign in again to approve this account.');return}
+   try{
+    const res=await fetch('/api/accounts/approve',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({profileId:id})})
+    const out=await res.json().catch(()=>({}))
+    if(!res.ok){setMsg(out.error||'Unable to approve account.');return}
+    setMsg(out.detail||'Account approved.')
+    load()
+   }catch(e:any){setMsg(e?.message||'Unable to approve account.')}
+   return
+  }
+  const {error}=await supabase.from('profiles').update({status:value,booking_enabled:false}).eq('id',id)
+  setMsg(error?error.message:`Account ${value}.`)
+  if(!error)load()
+ }
  async function suspend(id:string){const {error}=await supabase.from('profiles').update({status:'suspended',booking_enabled:false}).eq('id',id);setMsg(error?error.message:'Booking access suspended.');if(!error)load()}
  async function link(id:string,playerId:string){const {error}=await supabase.from('profiles').update({player_id:playerId||null}).eq('id',id);setMsg(error?error.message:(playerId?'League player linked.':'League player link removed.'));if(!error)load()}
  async function scorecardOfficial(id:string,value:boolean){const {error}=await supabase.from('profiles').update({is_scorecard_official:value}).eq('id',id);setMsg(error?error.message:(value?'Scorecard Official access granted.':'Scorecard Official access removed.'));if(!error)load()}
