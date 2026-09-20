@@ -15,6 +15,7 @@
 
     <application
         android:theme="@style/AppTheme"
+        android:icon="@drawable/leaderboard_icon"
         android:label="19th Hole Leaderboard"
         android:usesCleartextTraffic="false">
 
@@ -47,7 +48,8 @@
         <service
             android:name=".WakeService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
 
     </application>
 
