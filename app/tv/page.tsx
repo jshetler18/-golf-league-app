@@ -15,7 +15,14 @@ export default function TVLeaderboard(){
  .on('postgres_changes',{event:'*',schema:'public',table:'weekly_scores',filter:`league_month_id=eq.${monthId}`},p=>{const n=(p.new||p.old) as any;setFlash(n.team_id||null);load();setTimeout(()=>setFlash(null),1600)})
  .on('postgres_changes',{event:'*',schema:'public',table:'monthly_team_handicaps',filter:`league_month_id=eq.${monthId}`},()=>load())
  .on('postgres_changes',{event:'*',schema:'public',table:'week4_matchups',filter:`league_month_id=eq.${monthId}`},()=>load())
- .on('postgres_changes',{event:'*',schema:'public',table:'cup_points',filter:`league_month_id=eq.${monthId}`},()=>load()).subscribe();return()=>{alive=false;supabase.removeChannel(channel)}},[monthId])
+ .on('postgres_changes',{event:'*',schema:'public',table:'cup_points',filter:`league_month_id=eq.${monthId}`},()=>load()).subscribe();
+ // Realtime is the primary update path. This quiet 60-second refresh is a safety net
+ // for TVs that briefly lose Wi-Fi or suspend their websocket while the screen is off.
+ const refreshTimer=window.setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine)load()},60000)
+ const recover=()=>load()
+ window.addEventListener('online',recover)
+ document.addEventListener('visibilitychange',recover)
+ return()=>{alive=false;window.clearInterval(refreshTimer);window.removeEventListener('online',recover);document.removeEventListener('visibilitychange',recover);supabase.removeChannel(channel)}},[monthId])
  const completedWeeks=[1,2,3].filter(w=>scores.some(s=>s.week_number===w));const latestWeek=completedWeeks.length?Math.max(...completedWeeks):1
  const calc=(through:number)=>teams.map(t=>({id:t.id,total:scores.filter(s=>s.team_id===t.id&&s.week_number<=through).reduce((a,s)=>a+Math.min(Number(s.official_total||0),scoreCap),0)})).sort((a,b)=>b.total-a.total||a.id.localeCompare(b.id))
  const prevRanks=useMemo(()=>{const map=new Map<string,number>();if(latestWeek>1)calc(latestWeek-1).forEach((r,i)=>map.set(r.id,i+1));return map},[teams,scores,latestWeek,scoreCap])
