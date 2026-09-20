@@ -50,14 +50,32 @@ export default function TVLeaderboard(){
     </div>})}
    </section>
   </main>
- return <main className="tv-approved">
+ return <main
+  className="tv-approved"
+  style={{
+    height: '100vh',
+    minHeight: 0,
+    overflow: 'hidden',
+    padding: '10px 18px',
+    boxSizing: 'border-box'
+  }}
+>
    <header className="tv-approved-header">
     <div className="tv-approved-logo"><img src="/tom-krise-logo.png" alt="Tom Krise 19th Hole Golf Simulator"/></div>
     <div className="tv-approved-titles"><div className="tv-approved-league">TOM KRISE 19TH HOLE GOLF LEAGUE</div><h1>MONTHLY STANDINGS</h1></div>
     <div className="tv-approved-divider"/>
     <div className="tv-approved-meta"><div className="tv-approved-month">{monthLabel}</div><div className="tv-approved-week">WEEK {latestWeek} OF 4</div></div>
    </header>
-   <section className="tv-approved-table">
+<section
+  className="tv-approved-table"
+  style={{
+    display: 'grid',
+    gridTemplateRows: 'auto repeat(10, minmax(0, 1fr))',
+ height: 'calc(100vh - 125px)',
+    minHeight: 0,
+    overflow: 'hidden'
+  }}
+>
     <div className="tv-approved-row tv-approved-head"><span>RANK</span><span>TEAM</span><span>HANDICAP</span><span>WEEK 1<small>ADJUSTED</small></span><span>WEEK 2<small>ADJUSTED</small></span><span>WEEK 3<small>ADJUSTED</small></span><span>TOTAL<small>ADJUSTED</small></span></div>
     {rows.slice(0,10).map(r=><div className={'tv-approved-row '+(flash===r.t.id?'tv-approved-flash':'')} key={r.t.id}>
       <span className="tv-approved-rank">{r.rank}</span><span className="tv-approved-team">{r.t.name.toUpperCase()}</span><span className="tv-approved-handicap">{r.h==null?'—':`${Math.round(r.h)>0?'+':''}${Math.round(r.h)}`}</span><span>{fmt(r.w1)}</span><span>{fmt(r.w2)}</span><span>{fmt(r.w3)}</span><span className="tv-approved-total"><b>{fmt(r.total)}</b><i className={r.change>0?'up':r.change<0?'down':''}>{r.change>0?'▲ '+r.change:r.change<0?'▼ '+Math.abs(r.change):'—'}</i></span>
