@@ -27,6 +27,7 @@ export default function CupTV() {
   const [teams, setTeams] = useState<Team[]>([])
   const [months, setMonths] = useState<Month[]>([])
   const [points, setPoints] = useState<CupPoint[]>([])
+  const [loading, setLoading] = useState(true)
 
   const load = async () => {
     const { data: season } = await supabase
@@ -37,43 +38,59 @@ export default function CupTV() {
       .limit(1)
       .maybeSingle()
 
-    if (!season) return
+    if (!season) {
+      setLoading(false)
+      return
+    }
 
     const [{ data: teamData }, { data: monthData }] = await Promise.all([
       supabase
         .from('teams')
         .select('id,name')
         .eq('season_id', season.id)
+        .eq('is_active', true)
         .order('name'),
 
       supabase
         .from('league_months')
         .select('id,month_start')
-        .eq('season_id', season.id)
-        .order('month_start')
+        .eq('season_id', season.id),
     ])
 
-    const activeMonths = (monthData || []) as Month[]
-    const monthIds = activeMonths.map(month => month.id)
+    const sortedMonths = ((monthData || []) as Month[]).sort((a, b) => {
+      const aMonth = new Date(a.month_start + 'T12:00:00').getMonth() + 1
+      const bMonth = new Date(b.month_start + 'T12:00:00').getMonth() + 1
 
-    let pointData: CupPoint[] = []
+      return MONTH_ORDER.indexOf(aMonth) - MONTH_ORDER.indexOf(bMonth)
+    })
 
-    if (monthIds.length > 0) {
-      const { data } = await supabase
+    setTeams((teamData || []) as Team[])
+    setMonths(sortedMonths)
+
+    const monthIds = sortedMonths.map(m => m.id)
+
+    if (monthIds.length) {
+      const { data: cupData } = await supabase
         .from('cup_points')
         .select('league_month_id,team_id,points,placement')
         .in('league_month_id', monthIds)
 
-      pointData = (data || []) as CupPoint[]
+      setPoints((cupData || []) as CupPoint[])
+    } else {
+      setPoints([])
     }
 
-    setTeams((teamData || []) as Team[])
-    setMonths(activeMonths)
-    setPoints(pointData)
+    setLoading(false)
   }
 
   useEffect(() => {
-    load()
+    let alive = true
+
+    const initialLoad = async () => {
+      if (alive) await load()
+    }
+
+    initialLoad()
 
     const channel = supabase
       .channel('cup-tv-live')
@@ -82,18 +99,15 @@ export default function CupTV() {
         {
           event: '*',
           schema: 'public',
-          table: 'cup_points'
+          table: 'cup_points',
         },
         () => load()
       )
       .subscribe()
 
-    // Safety refresh in case the TV temporarily loses Wi-Fi
+    // Safety refresh in case the TV briefly loses Wi-Fi.
     const refreshTimer = window.setInterval(() => {
-      if (
-        document.visibilityState === 'visible' &&
-        navigator.onLine
-      ) {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
         load()
       }
     }, 60000)
@@ -104,175 +118,283 @@ export default function CupTV() {
     document.addEventListener('visibilitychange', recover)
 
     return () => {
-      supabase.removeChannel(channel)
+      alive = false
       window.clearInterval(refreshTimer)
       window.removeEventListener('online', recover)
       document.removeEventListener('visibilitychange', recover)
+      supabase.removeChannel(channel)
     }
   }, [])
-
-  const orderedMonths = useMemo(() => {
-    return [...months].sort((a, b) => {
-      const aMonth =
-        new Date(a.month_start + 'T12:00:00').getMonth() + 1
-
-      const bMonth =
-        new Date(b.month_start + 'T12:00:00').getMonth() + 1
-
-      return (
-        MONTH_ORDER.indexOf(aMonth) -
-        MONTH_ORDER.indexOf(bMonth)
-      )
-    })
-  }, [months])
 
   const rows = useMemo(() => {
     return teams
       .map(team => {
-        const monthly = orderedMonths.map(month => {
-          const cupPoint = points.find(
-            point =>
-              point.team_id === team.id &&
-              point.league_month_id === month.id
+        const byMonth = months.map(month => {
+          const record = points.find(
+            p =>
+              p.team_id === team.id &&
+              p.league_month_id === month.id
           )
 
-          return cupPoint ? Number(cupPoint.points) : null
+          return record ? Number(record.points) : null
         })
 
-        while (monthly.length < 6) {
-          monthly.push(null)
-        }
-
-        const sixMonths = monthly.slice(0, 6)
-
-        const total = sixMonths.reduce<number>(
-          (sum, value) => sum + (value || 0),
+        const total = byMonth.reduce<number>(
+          (sum, value) => sum + (value ?? 0),
           0
         )
 
         return {
           team,
-          monthly: sixMonths,
-          total
+          byMonth,
+          total,
         }
       })
-      .sort((a, b) => {
-        if (b.total !== a.total) {
-          return b.total - a.total
-        }
+      .sort(
+        (a, b) =>
+          b.total - a.total ||
+          a.team.name.localeCompare(b.team.name)
+      )
+  }, [teams, months, points])
 
-        return a.team.name.localeCompare(b.team.name)
-      })
-      .map((row, index) => ({
-        ...row,
-        rank: index + 1
-      }))
-  }, [teams, orderedMonths, points])
+  if (loading) {
+    return (
+      <main
+        style={{
+          width: '100vw',
+          height: '100vh',
+          background: '#001a2d',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '42px',
+          fontWeight: 900,
+        }}
+      >
+        LOADING CUP STANDINGS...
+      </main>
+    )
+  }
 
   return (
     <main
-      className="tv-approved"
       style={{
+        width: '100vw',
         height: '100vh',
         minHeight: 0,
         overflow: 'hidden',
-        padding: '10px 18px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        background:
+          'linear-gradient(180deg, #00172a 0%, #002238 100%)',
+        color: '#ffffff',
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        padding: '0 28px',
       }}
     >
+      {/* HEADER */}
       <header
-        className="tv-approved-header"
         style={{
-          gridTemplateColumns: '250px minmax(0, 1fr)',
-          paddingRight: '20px'
+          position: 'relative',
+          height: '150px',
+          width: '100%',
+          flexShrink: 0,
         }}
       >
-        <div className="tv-approved-logo">
-          <img
-            src="/tom-krise-logo.png"
-            alt="Tom Krise 19th Hole Golf Simulator"
-          />
-        </div>
-
-        <div
-          className="tv-approved-titles"
+        {/* LOGO */}
+        <img
+          src="/tom-krise-logo.png"
+          alt="Tom Krise 19th Hole Golf Simulator"
           style={{
+            position: 'absolute',
+            left: '20px',
+            top: '8px',
+            width: '190px',
+            height: '130px',
+            objectFit: 'contain',
+          }}
+        />
+
+        {/* TRUE SCREEN-CENTERED TITLE */}
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '18px',
+            transform: 'translateX(-50%)',
             textAlign: 'center',
-            minWidth: 0
+            width: '950px',
+            maxWidth: '70vw',
+            whiteSpace: 'nowrap',
           }}
         >
-          <div className="tv-approved-league">
+          <div
+            style={{
+              color: '#8fe018',
+              fontSize: '34px',
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: '1px',
+            }}
+          >
             TOM KRISE 19TH HOLE GOLF LEAGUE
           </div>
 
-          <h1>CUP STANDINGS</h1>
+          <div
+            style={{
+              color: '#ffffff',
+              fontSize: '62px',
+              fontWeight: 900,
+              lineHeight: 1.05,
+              letterSpacing: '2px',
+              marginTop: '10px',
+              textShadow: '0 3px 4px rgba(0,0,0,.55)',
+            }}
+          >
+            CUP STANDINGS
+          </div>
         </div>
       </header>
 
+      {/* STANDINGS TABLE */}
       <section
-        className="tv-approved-table"
         style={{
-          display: 'grid',
-          gridTemplateRows: 'auto repeat(10, minmax(0, 1fr))',
-          height: 'calc(100vh - 125px)',
+          height: 'calc(100vh - 150px)',
           minHeight: 0,
-          overflow: 'hidden'
+          display: 'grid',
+          gridTemplateRows: '30px repeat(10, minmax(0, 1fr))',
+          border: '1px solid #8fe018',
+          borderRadius: '10px 10px 0 0',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
+        {/* COLUMN HEADERS */}
         <div
-          className="tv-approved-row tv-approved-head"
           style={{
+            display: 'grid',
             gridTemplateColumns:
-              '86px minmax(260px, 2fr) repeat(6, minmax(70px, 1fr)) 1.15fr',
-            paddingLeft: '8px',
-            boxSizing: 'border-box'
+              '82px 320px repeat(6, minmax(100px, 1fr)) 120px',
+            background:
+              'linear-gradient(180deg, #327d13 0%, #1d5e0d 100%)',
+            color: '#ffffff',
+            alignItems: 'center',
+            fontWeight: 900,
+            fontSize: '23px',
+            textShadow: '0 2px 2px rgba(0,0,0,.55)',
           }}
         >
-          <span>RANK</span>
-          <span>TEAM</span>
+          <span style={{ textAlign: 'center' }}>RANK</span>
+          <span style={{ textAlign: 'center' }}>TEAM</span>
 
           {MONTH_LABELS.map(month => (
-            <span key={month}>
+            <span
+              key={month}
+              style={{
+                textAlign: 'center',
+                borderLeft: '1px solid rgba(143,224,24,.4)',
+              }}
+            >
               {month}
             </span>
           ))}
 
-          <span>TOTAL</span>
-        </div>
-
-        {rows.slice(0, 10).map(row => (
-          <div
-            className="tv-approved-row"
-            key={row.team.id}
+          <span
             style={{
-              gridTemplateColumns:
-                '86px minmax(260px, 2fr) repeat(6, minmax(70px, 1fr)) 1.15fr',
-              paddingLeft: '8px',
-              boxSizing: 'border-box'
+              textAlign: 'center',
+              borderLeft: '1px solid rgba(143,224,24,.4)',
             }}
           >
-            <span className="tv-approved-rank">
-              {row.rank}
+            TOTAL
+          </span>
+        </div>
+
+        {/* TEAM ROWS */}
+        {rows.slice(0, 10).map((row, index) => (
+          <div
+            key={row.team.id}
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                '82px 320px repeat(6, minmax(100px, 1fr)) 120px',
+              alignItems: 'center',
+              minHeight: 0,
+              borderTop: '1px solid rgba(143,224,24,.55)',
+              background:
+                index % 2 === 0
+                  ? 'rgba(0,35,57,.96)'
+                  : 'rgba(0,29,48,.96)',
+            }}
+          >
+            {/* RANK */}
+            <span
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '40px',
+                fontWeight: 900,
+                borderRight: '1px solid rgba(143,224,24,.45)',
+              }}
+            >
+              {index + 1}
             </span>
 
-            <span className="tv-approved-team">
+            {/* TEAM */}
+            <span
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                paddingLeft: '34px',
+                boxSizing: 'border-box',
+                fontSize: '31px',
+                fontWeight: 900,
+                whiteSpace: 'nowrap',
+                borderRight: '1px solid rgba(143,224,24,.45)',
+              }}
+            >
               {row.team.name.toUpperCase()}
             </span>
 
-            {row.monthly.map((value, index) => (
-              <span key={MONTH_LABELS[index]}>
-                {value !== null
-                  ? Number(value).toLocaleString()
-                  : '—'}
-              </span>
-            ))}
+            {/* MONTHLY CUP POINTS */}
+            {MONTH_LABELS.map((label, monthIndex) => {
+              const value = row.byMonth[monthIndex]
 
+              return (
+                <span
+                  key={label}
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '30px',
+                    fontWeight: 800,
+                    borderRight:
+                      '1px solid rgba(143,224,24,.45)',
+                  }}
+                >
+                  {value === null
+                    ? '—'
+                    : value.toLocaleString()}
+                </span>
+              )
+            })}
+
+            {/* TOTAL */}
             <span
               style={{
-                fontWeight: 800
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '31px',
+                fontWeight: 900,
               }}
             >
-              {Number(row.total).toLocaleString()}
+              {row.total.toLocaleString()}
             </span>
           </div>
         ))}
