@@ -60,6 +60,7 @@ export default function CupTV() {
     const sortedMonths = ((monthData || []) as Month[]).sort((a, b) => {
       const aMonth =
         new Date(a.month_start + 'T12:00:00').getMonth() + 1
+
       const bMonth =
         new Date(b.month_start + 'T12:00:00').getMonth() + 1
 
@@ -77,7 +78,9 @@ export default function CupTV() {
     if (monthIds.length) {
       const { data: cupData } = await supabase
         .from('cup_points')
-        .select('league_month_id,team_id,points,placement')
+        .select(
+          'league_month_id,team_id,points,placement'
+        )
         .in('league_month_id', monthIds)
 
       setPoints((cupData || []) as CupPoint[])
@@ -124,13 +127,26 @@ export default function CupTV() {
     const recover = () => load()
 
     window.addEventListener('online', recover)
-    document.addEventListener('visibilitychange', recover)
+    document.addEventListener(
+      'visibilitychange',
+      recover
+    )
 
     return () => {
       alive = false
+
       window.clearInterval(refreshTimer)
-      window.removeEventListener('online', recover)
-      document.removeEventListener('visibilitychange', recover)
+
+      window.removeEventListener(
+        'online',
+        recover
+      )
+
+      document.removeEventListener(
+        'visibilitychange',
+        recover
+      )
+
       supabase.removeChannel(channel)
     }
   }, [])
@@ -138,29 +154,34 @@ export default function CupTV() {
   const rows = useMemo(() => {
     return teams
       .map(team => {
-        const byMonth = MONTH_ORDER.map(monthNumber => {
-          const month = months.find(
-            m =>
-              new Date(
-                m.month_start + 'T12:00:00'
-              ).getMonth() +
-                1 ===
-              monthNumber
-          )
+        const byMonth = MONTH_ORDER.map(
+          monthNumber => {
+            const month = months.find(
+              m =>
+                new Date(
+                  m.month_start + 'T12:00:00'
+                ).getMonth() +
+                  1 ===
+                monthNumber
+            )
 
-          if (!month) return null
+            if (!month) return null
 
-          const point = points.find(
-            p =>
-              p.team_id === team.id &&
-              p.league_month_id === month.id
-          )
+            const point = points.find(
+              p =>
+                p.team_id === team.id &&
+                p.league_month_id === month.id
+            )
 
-          return point ? Number(point.points) : null
-        })
+            return point
+              ? Number(point.points)
+              : null
+          }
+        )
 
         const total = byMonth.reduce<number>(
-          (sum, value) => sum + (value ?? 0),
+          (sum, value) =>
+            sum + (value ?? 0),
           0
         )
 
@@ -201,7 +222,8 @@ export default function CupTV() {
             display: flex;
             align-items: center;
             justify-content: center;
-            font: 900 3vw Arial, Helvetica, sans-serif;
+            font: 900 3vw Arial, Helvetica,
+              sans-serif;
           }
         `}</style>
       </main>
@@ -234,41 +256,75 @@ export default function CupTV() {
           <span>TEAM</span>
 
           {MONTH_LABELS.map(month => (
-            <span key={month}>{month}</span>
+            <span key={month}>
+              {month}
+            </span>
           ))}
 
           <span>TOTAL</span>
         </div>
 
-        {rows.slice(0, 10).map((row, index) => (
-          <div
-            className="cup-tv-row cup-tv-team-row"
-            key={row.team.id}
-          >
-            <span className="cup-tv-rank">
-              {index + 1}
-            </span>
+        {rows
+          .slice(0, 10)
+          .map((row, index, displayRows) => {
+            /*
+             * Competition ranking:
+             *
+             * 1600 = Rank 1
+             * 1600 = Rank 1
+             * 1400 = Rank 3
+             * 1400 = Rank 3
+             * 1000 = Rank 5
+             *
+             * Alphabetical order is used only
+             * to determine display order inside
+             * a tie.
+             */
+            const firstIndexWithTotal =
+              displayRows.findIndex(
+                other =>
+                  other.total === row.total
+              )
 
-            <span className="cup-tv-team">
-              {row.team.name.toUpperCase()}
-            </span>
+            const rank =
+              firstIndexWithTotal + 1
 
-            {row.byMonth.map((value, monthIndex) => (
-              <span
-                className="cup-tv-points"
-                key={MONTH_LABELS[monthIndex]}
+            return (
+              <div
+                className="cup-tv-row cup-tv-team-row"
+                key={row.team.id}
               >
-                {value === null
-                  ? '—'
-                  : value.toLocaleString()}
-              </span>
-            ))}
+                <span className="cup-tv-rank">
+                  {rank}
+                </span>
 
-            <span className="cup-tv-total">
-              {row.total.toLocaleString()}
-            </span>
-          </div>
-        ))}
+                <span className="cup-tv-team">
+                  {row.team.name.toUpperCase()}
+                </span>
+
+                {row.byMonth.map(
+                  (value, monthIndex) => (
+                    <span
+                      className="cup-tv-points"
+                      key={
+                        MONTH_LABELS[
+                          monthIndex
+                        ]
+                      }
+                    >
+                      {value === null
+                        ? '—'
+                        : value.toLocaleString()}
+                    </span>
+                  )
+                )}
+
+                <span className="cup-tv-total">
+                  {row.total.toLocaleString()}
+                </span>
+              </div>
+            )
+          })}
       </section>
 
       <style jsx>{`
@@ -288,7 +344,8 @@ export default function CupTV() {
             #002238 100%
           );
           color: #ffffff;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family: Arial, Helvetica,
+            sans-serif;
           padding: 0 2vw;
         }
 
@@ -327,13 +384,14 @@ export default function CupTV() {
         }
 
         .cup-tv-heading {
-          color: #ffffff;
+          color: #fff;
           font-size: 4vw;
           line-height: 1;
           font-weight: 900;
           letter-spacing: 0.12vw;
           margin-top: 1vh;
-          text-shadow: 0 0.25vh 0.3vh rgba(0, 0, 0, 0.6);
+          text-shadow: 0 0.25vh 0.3vh
+            rgba(0, 0, 0, 0.6);
         }
 
         .cup-tv-table {
@@ -384,24 +442,38 @@ export default function CupTV() {
           font-size: 1.35vw;
           font-weight: 900;
           line-height: 1;
-          text-shadow: 0 0.15vh 0.15vh rgba(0, 0, 0, 0.6);
+          text-shadow: 0 0.15vh 0.15vh
+            rgba(0, 0, 0, 0.6);
         }
 
         .cup-tv-table-head > span + span {
-          border-left: 1px solid rgba(143, 224, 24, 0.4);
+          border-left: 1px solid
+            rgba(143, 224, 24, 0.4);
         }
 
         .cup-tv-team-row {
-          border-top: 1px solid rgba(143, 224, 24, 0.55);
-          background: rgba(0, 31, 51, 0.96);
+          border-top: 1px solid
+            rgba(143, 224, 24, 0.55);
+          background: rgba(
+            0,
+            31,
+            51,
+            0.96
+          );
         }
 
         .cup-tv-team-row:nth-child(odd) {
-          background: rgba(0, 37, 59, 0.96);
+          background: rgba(
+            0,
+            37,
+            59,
+            0.96
+          );
         }
 
         .cup-tv-team-row > span + span {
-          border-left: 1px solid rgba(143, 224, 24, 0.45);
+          border-left: 1px solid
+            rgba(143, 224, 24, 0.45);
         }
 
         .cup-tv-rank {
