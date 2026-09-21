@@ -21,7 +21,7 @@ export default function TVLeaderboard(){
   ])
   setTeams((t||[]) as Team[])
   setMonths((m||[]) as Month[])
-  if(m?.length)setMonthId(m[m.length-1].id)
+if(m?.length)setMonthId(m[0].id)
  })()},[])
 
  useEffect(()=>{
