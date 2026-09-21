@@ -13,14 +13,11 @@ type Month = {
   month_start: string
 }
 
-type Matchup = {
-  id: string
+type CupPoint = {
   league_month_id: string
-  team_high_id: string
-  team_low_id: string
-  winner_team_id: string | null
-  high_points_awarded: number | null
-  low_points_awarded: number | null
+  team_id: string
+  points: number
+  placement: number | null
 }
 
 const MONTH_ORDER = [11, 12, 1, 2, 3, 4]
@@ -29,7 +26,7 @@ const MONTH_LABELS = ['NOV', 'DEC', 'JAN', 'FEB', 'MAR', 'APR']
 export default function CupTV() {
   const [teams, setTeams] = useState<Team[]>([])
   const [months, setMonths] = useState<Month[]>([])
-  const [matchups, setMatchups] = useState<Matchup[]>([])
+  const [points, setPoints] = useState<CupPoint[]>([])
 
   const load = async () => {
     const { data: season } = await supabase
@@ -58,22 +55,20 @@ export default function CupTV() {
     const activeMonths = (monthData || []) as Month[]
     const monthIds = activeMonths.map(m => m.id)
 
-    let matchupData: Matchup[] = []
+    let pointData: CupPoint[] = []
 
     if (monthIds.length > 0) {
       const { data } = await supabase
-        .from('week4_matchups')
-        .select(
-          'id,league_month_id,team_high_id,team_low_id,winner_team_id,high_points_awarded,low_points_awarded'
-        )
+        .from('cup_points')
+        .select('league_month_id,team_id,points,placement')
         .in('league_month_id', monthIds)
 
-      matchupData = (data || []) as Matchup[]
+      pointData = (data || []) as CupPoint[]
     }
 
     setTeams((teamData || []) as Team[])
     setMonths(activeMonths)
-    setMatchups(matchupData)
+    setPoints(pointData)
   }
 
   useEffect(() => {
@@ -86,7 +81,7 @@ export default function CupTV() {
         {
           event: '*',
           schema: 'public',
-          table: 'week4_matchups'
+          table: 'cup_points'
         },
         () => load()
       )
@@ -116,8 +111,10 @@ export default function CupTV() {
 
   const orderedMonths = useMemo(() => {
     return [...months].sort((a, b) => {
-      const aMonth = new Date(a.month_start + 'T12:00:00').getMonth() + 1
-      const bMonth = new Date(b.month_start + 'T12:00:00').getMonth() + 1
+      const aMonth =
+        new Date(a.month_start + 'T12:00:00').getMonth() + 1
+      const bMonth =
+        new Date(b.month_start + 'T12:00:00').getMonth() + 1
 
       return (
         MONTH_ORDER.indexOf(aMonth) -
@@ -130,27 +127,25 @@ export default function CupTV() {
     return teams
       .map(team => {
         const monthly = orderedMonths.map(month => {
-          return matchups
-            .filter(m => m.league_month_id === month.id)
-            .reduce((total, matchup) => {
-              if (matchup.team_high_id === team.id) {
-                return total + Number(matchup.high_points_awarded || 0)
-              }
+          const cupPoint = points.find(
+            p =>
+              p.team_id === team.id &&
+              p.league_month_id === month.id
+          )
 
-              if (matchup.team_low_id === team.id) {
-                return total + Number(matchup.low_points_awarded || 0)
-              }
-
-              return total
-            }, 0)
+          return cupPoint ? Number(cupPoint.points) : null
         })
 
         while (monthly.length < 6) {
-          monthly.push(0)
+          monthly.push(null)
         }
 
         const sixMonths = monthly.slice(0, 6)
-        const total = sixMonths.reduce((sum, points) => sum + points, 0)
+
+        const total = sixMonths.reduce<number>(
+          (sum, value) => sum + (value || 0),
+          0
+        )
 
         return {
           team,
@@ -166,7 +161,7 @@ export default function CupTV() {
         ...row,
         rank: index + 1
       }))
-  }, [teams, orderedMonths, matchups])
+  }, [teams, orderedMonths, points])
 
   return (
     <main
@@ -179,7 +174,12 @@ export default function CupTV() {
         boxSizing: 'border-box'
       }}
     >
-      <header className="tv-approved-header">
+      <header
+        className="tv-approved-header"
+        style={{
+          gridTemplateColumns: '250px minmax(0, 1fr) 300px'
+        }}
+      >
         <div className="tv-approved-logo">
           <img
             src="/tom-krise-logo.png"
@@ -194,12 +194,25 @@ export default function CupTV() {
           <h1>CUP STANDINGS</h1>
         </div>
 
-        <div className="tv-approved-divider" />
-
-        <div className="tv-approved-meta">
-          <div className="tv-approved-month">
+        <div
+          className="tv-approved-meta"
+          style={{
+            minWidth: 0,
+            overflow: 'hidden',
+            paddingLeft: '20px',
+            boxSizing: 'border-box'
+          }}
+        >
+          <div
+            className="tv-approved-month"
+            style={{
+              whiteSpace: 'nowrap',
+              fontSize: 'clamp(22px, 2.5vw, 38px)'
+            }}
+          >
             SEASON STANDINGS
           </div>
+
           <div className="tv-approved-week">
             CUP POINTS
           </div>
@@ -220,7 +233,9 @@ export default function CupTV() {
           className="tv-approved-row tv-approved-head"
           style={{
             gridTemplateColumns:
-              '70px 2fr repeat(6, minmax(70px, 1fr)) 1.15fr'
+              '86px minmax(260px, 2fr) repeat(6, minmax(70px, 1fr)) 1.15fr',
+            paddingLeft: '8px',
+            boxSizing: 'border-box'
           }}
         >
           <span>RANK</span>
@@ -239,7 +254,9 @@ export default function CupTV() {
             key={row.team.id}
             style={{
               gridTemplateColumns:
-                '70px 2fr repeat(6, minmax(70px, 1fr)) 1.15fr'
+                '86px minmax(260px, 2fr) repeat(6, minmax(70px, 1fr)) 1.15fr',
+              paddingLeft: '8px',
+              boxSizing: 'border-box'
             }}
           >
             <span className="tv-approved-rank">
@@ -250,10 +267,10 @@ export default function CupTV() {
               {row.team.name.toUpperCase()}
             </span>
 
-            {row.monthly.map((points, index) => (
+            {row.monthly.map((value, index) => (
               <span key={MONTH_LABELS[index]}>
-                {points > 0
-                  ? Number(points).toLocaleString()
+                {value !== null
+                  ? Number(value).toLocaleString()
                   : '—'}
               </span>
             ))}
