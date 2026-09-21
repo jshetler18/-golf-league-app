@@ -45,6 +45,7 @@ export default function CupTV() {
         .select('id,name')
         .eq('season_id', season.id)
         .order('name'),
+
       supabase
         .from('league_months')
         .select('id,month_start')
@@ -53,7 +54,7 @@ export default function CupTV() {
     ])
 
     const activeMonths = (monthData || []) as Month[]
-    const monthIds = activeMonths.map(m => m.id)
+    const monthIds = activeMonths.map(month => month.id)
 
     let pointData: CupPoint[] = []
 
@@ -87,6 +88,7 @@ export default function CupTV() {
       )
       .subscribe()
 
+    // Safety refresh in case the TV temporarily loses Wi-Fi
     const refreshTimer = window.setInterval(() => {
       if (
         document.visibilityState === 'visible' &&
@@ -113,6 +115,7 @@ export default function CupTV() {
     return [...months].sort((a, b) => {
       const aMonth =
         new Date(a.month_start + 'T12:00:00').getMonth() + 1
+
       const bMonth =
         new Date(b.month_start + 'T12:00:00').getMonth() + 1
 
@@ -128,9 +131,9 @@ export default function CupTV() {
       .map(team => {
         const monthly = orderedMonths.map(month => {
           const cupPoint = points.find(
-            p =>
-              p.team_id === team.id &&
-              p.league_month_id === month.id
+            point =>
+              point.team_id === team.id &&
+              point.league_month_id === month.id
           )
 
           return cupPoint ? Number(cupPoint.points) : null
@@ -154,7 +157,10 @@ export default function CupTV() {
         }
       })
       .sort((a, b) => {
-        if (b.total !== a.total) return b.total - a.total
+        if (b.total !== a.total) {
+          return b.total - a.total
+        }
+
         return a.team.name.localeCompare(b.team.name)
       })
       .map((row, index) => ({
@@ -177,7 +183,8 @@ export default function CupTV() {
       <header
         className="tv-approved-header"
         style={{
-          gridTemplateColumns: '250px minmax(0, 1fr) 300px'
+          gridTemplateColumns: '250px minmax(0, 1fr)',
+          paddingRight: '20px'
         }}
       >
         <div className="tv-approved-logo">
@@ -187,35 +194,18 @@ export default function CupTV() {
           />
         </div>
 
-        <div className="tv-approved-titles">
+        <div
+          className="tv-approved-titles"
+          style={{
+            textAlign: 'center',
+            minWidth: 0
+          }}
+        >
           <div className="tv-approved-league">
             TOM KRISE 19TH HOLE GOLF LEAGUE
           </div>
+
           <h1>CUP STANDINGS</h1>
-        </div>
-
-        <div
-          className="tv-approved-meta"
-          style={{
-            minWidth: 0,
-            overflow: 'hidden',
-            paddingLeft: '20px',
-            boxSizing: 'border-box'
-          }}
-        >
-          <div
-            className="tv-approved-month"
-            style={{
-              whiteSpace: 'nowrap',
-              fontSize: 'clamp(22px, 2.5vw, 38px)'
-            }}
-          >
-            SEASON STANDINGS
-          </div>
-
-          <div className="tv-approved-week">
-            CUP POINTS
-          </div>
         </div>
       </header>
 
@@ -242,7 +232,9 @@ export default function CupTV() {
           <span>TEAM</span>
 
           {MONTH_LABELS.map(month => (
-            <span key={month}>{month}</span>
+            <span key={month}>
+              {month}
+            </span>
           ))}
 
           <span>TOTAL</span>
@@ -275,7 +267,11 @@ export default function CupTV() {
               </span>
             ))}
 
-            <span style={{ fontWeight: 800 }}>
+            <span
+              style={{
+                fontWeight: 800
+              }}
+            >
               {Number(row.total).toLocaleString()}
             </span>
           </div>
