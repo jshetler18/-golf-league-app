@@ -62,7 +62,6 @@ export default function TVLeaderboard(){
    setTeams((t||[]) as Team[])
    setMonths((m||[]) as Month[])
 
-   // Start with the first league month.
    if(m?.length)setMonthId(m[0].id)
 
   })()
@@ -162,8 +161,6 @@ export default function TVLeaderboard(){
 
    .subscribe()
 
-  // Safety refresh for TVs that briefly lose Wi-Fi
-  // or suspend the realtime connection.
   const refreshTimer=window.setInterval(()=>{
 
    if(
@@ -217,9 +214,9 @@ export default function TVLeaderboard(){
    :1
 
  /*
-  * Movement arrows are only allowed once
-  * EVERY active team has an approved score
-  * for the current week.
+  * Movement arrows only appear once every
+  * active team has an approved score for
+  * the current week.
   */
  const currentWeekComplete=
   teams.length>0 &&
@@ -268,12 +265,11 @@ export default function TVLeaderboard(){
   *
   * Example:
   *
-  * 85.5 = 1
-  * 85.5 = 1
-  * 82.0 = 3
-  * 80.5 = 4
-  * 80.5 = 4
-  * 79.0 = 6
+  * 85.5 = Rank 1
+  * 85.5 = Rank 1
+  * 82.0 = Rank 3
+  * 80.5 = Rank 4
+  * 80.5 = Rank 4
   */
  const addRanks=(
   list:{id:string;total:number}[]
@@ -295,7 +291,7 @@ export default function TVLeaderboard(){
  }
 
  /*
-  * Rankings from the previous completed week.
+  * Previous completed week's rankings.
   */
  const prevRanks=useMemo(()=>{
 
@@ -367,10 +363,6 @@ export default function TVLeaderboard(){
    const old=
     prevRanks.get(t.id)
 
-   /*
-    * Do not display movement until the
-    * entire current week is complete.
-    */
    const change=
     latestWeek>1 &&
     currentWeekComplete &&
@@ -832,15 +824,17 @@ export default function TVLeaderboard(){
        {/*
         * TOTAL COLUMN
         *
-        * The score and movement indicator
-        * each get their own fixed half of
-        * the cell so every row lines up.
+        * Total score is positioned closer
+        * to the center of the cell.
+        *
+        * Movement still has its own aligned
+        * area so all arrows and dashes line up.
         */}
        <span
         className="tv-approved-total"
         style={{
          display:'grid',
-         gridTemplateColumns:'1fr 1fr',
+         gridTemplateColumns:'58% 42%',
          alignItems:'center',
          width:'100%',
          boxSizing:'border-box'
@@ -852,7 +846,7 @@ export default function TVLeaderboard(){
           display:'block',
           width:'100%',
           textAlign:'right',
-          paddingRight:'18px',
+          paddingRight:'6px',
           boxSizing:'border-box',
           fontVariantNumeric:'tabular-nums'
          }}
@@ -872,7 +866,7 @@ export default function TVLeaderboard(){
           display:'block',
           width:'100%',
           textAlign:'left',
-          paddingLeft:'18px',
+          paddingLeft:'12px',
           boxSizing:'border-box',
           fontVariantNumeric:'tabular-nums',
           whiteSpace:'nowrap'
