@@ -62,10 +62,7 @@ export default function TVLeaderboard(){
    setTeams((t||[]) as Team[])
    setMonths((m||[]) as Month[])
 
-   /*
-    * Start with the first league month.
-    * For this season that is November.
-    */
+   // Start with the first league month.
    if(m?.length)setMonthId(m[0].id)
 
   })()
@@ -123,17 +120,10 @@ export default function TVLeaderboard(){
      filter:`league_month_id=eq.${monthId}`
     },
     p=>{
-
      const n=(p.new||p.old) as any
-
      setFlash(n.team_id||null)
-
      load()
-
-     setTimeout(
-      ()=>setFlash(null),
-      1600
-     )
+     setTimeout(()=>setFlash(null),1600)
     }
    )
 
@@ -172,13 +162,8 @@ export default function TVLeaderboard(){
 
    .subscribe()
 
-  /*
-   * Realtime is the primary update path.
-   *
-   * This quiet 60-second refresh is a safety
-   * net for TVs that briefly lose Wi-Fi or
-   * suspend their websocket while asleep.
-   */
+  // Safety refresh for TVs that briefly lose Wi-Fi
+  // or suspend the realtime connection.
   const refreshTimer=window.setInterval(()=>{
 
    if(
@@ -192,23 +177,14 @@ export default function TVLeaderboard(){
 
   const recover=()=>load()
 
-  window.addEventListener(
-   'online',
-   recover
-  )
-
-  document.addEventListener(
-   'visibilitychange',
-   recover
-  )
+  window.addEventListener('online',recover)
+  document.addEventListener('visibilitychange',recover)
 
   return()=>{
 
    alive=false
 
-   window.clearInterval(
-    refreshTimer
-   )
+   window.clearInterval(refreshTimer)
 
    window.removeEventListener(
     'online',
@@ -220,16 +196,14 @@ export default function TVLeaderboard(){
     recover
    )
 
-   supabase.removeChannel(
-    channel
-   )
+   supabase.removeChannel(channel)
+
   }
 
  },[monthId])
 
  /*
-  * Determine which of Weeks 1-3 is
-  * currently represented on the leaderboard.
+  * Determine the current leaderboard week.
   */
  const completedWeeks=[1,2,3].filter(
   w=>scores.some(
@@ -243,13 +217,9 @@ export default function TVLeaderboard(){
    :1
 
  /*
-  * IMPORTANT:
-  *
-  * This checks whether EVERY active team
-  * has an APPROVED score for the current week.
-  *
-  * Until this becomes true, all movement
-  * indicators remain "—".
+  * Movement arrows are only allowed once
+  * EVERY active team has an approved score
+  * for the current week.
   */
  const currentWeekComplete=
   teams.length>0 &&
@@ -262,8 +232,7 @@ export default function TVLeaderboard(){
   )
 
  /*
-  * Calculate cumulative standings through
-  * the selected week.
+  * Calculate cumulative standings.
   */
  const calc=(through:number)=>
   teams
@@ -299,39 +268,34 @@ export default function TVLeaderboard(){
   *
   * Example:
   *
-  * 85.5 = Rank 1
-  * 85.5 = Rank 1
-  * 82.0 = Rank 3
-  * 80.5 = Rank 4
-  * 80.5 = Rank 4
-  * 79.0 = Rank 6
+  * 85.5 = 1
+  * 85.5 = 1
+  * 82.0 = 3
+  * 80.5 = 4
+  * 80.5 = 4
+  * 79.0 = 6
   */
  const addRanks=(
   list:{id:string;total:number}[]
  )=>{
 
-  return list.map(
-   (row,index)=>{
+  return list.map(row=>{
 
-    const firstIndex=
-     list.findIndex(
-      x=>x.total===row.total
-     )
+   const firstIndex=
+    list.findIndex(
+     x=>x.total===row.total
+    )
 
-    return{
-     ...row,
-     rank:firstIndex+1
-    }
+   return{
+    ...row,
+    rank:firstIndex+1
    }
-  )
+
+  })
  }
 
  /*
-  * Previous completed week's rankings.
-  *
-  * These are what the current standings
-  * will be compared against once every
-  * team's current-week score is approved.
+  * Rankings from the previous completed week.
   */
  const prevRanks=useMemo(()=>{
 
@@ -350,6 +314,7 @@ export default function TVLeaderboard(){
     )
 
    })
+
   }
 
   return map
@@ -362,7 +327,7 @@ export default function TVLeaderboard(){
  ])
 
  /*
-  * Current standings.
+  * Current leaderboard rows.
   */
  const rows=useMemo(()=>{
 
@@ -403,18 +368,8 @@ export default function TVLeaderboard(){
     prevRanks.get(t.id)
 
    /*
-    * MOVEMENT RULE:
-    *
-    * Week 1:
-    * Always show —
-    *
-    * Week 2 or Week 3:
-    * Show — until EVERY active team has an
-    * approved score for the current week.
-    *
-    * Once all scores are approved:
-    * Compare current rank to previous
-    * completed week's rank.
+    * Do not display movement until the
+    * entire current week is complete.
     */
    const change=
     latestWeek>1 &&
@@ -518,7 +473,7 @@ export default function TVLeaderboard(){
   matchups.length===5
 
  /*
-  * WEEK 4 MATCH PLAY SCREEN
+  * WEEK 4 MATCH PLAY
   */
  if(showWeek4)
   return(
@@ -610,17 +565,11 @@ export default function TVLeaderboard(){
 
         <span className="tv-week4-match">
 
-         <b>
-          {x.seed_high}
-         </b>
+         <b>{x.seed_high}</b>
 
-         <i>
-          VS
-         </i>
+         <i>VS</i>
 
-         <b>
-          {x.seed_low}
-         </b>
+         <b>{x.seed_low}</b>
 
         </span>
 
@@ -806,44 +755,30 @@ export default function TVLeaderboard(){
 
     <div className="tv-approved-row tv-approved-head">
 
-     <span>
-      RANK
-     </span>
+     <span>RANK</span>
 
-     <span>
-      TEAM
-     </span>
+     <span>TEAM</span>
 
-     <span>
-      HANDICAP
-     </span>
+     <span>HANDICAP</span>
 
      <span>
       WEEK 1
-      <small>
-       ADJUSTED
-      </small>
+      <small>ADJUSTED</small>
      </span>
 
      <span>
       WEEK 2
-      <small>
-       ADJUSTED
-      </small>
+      <small>ADJUSTED</small>
      </span>
 
      <span>
       WEEK 3
-      <small>
-       ADJUSTED
-      </small>
+      <small>ADJUSTED</small>
      </span>
 
      <span>
       TOTAL
-      <small>
-       ADJUSTED
-      </small>
+      <small>ADJUSTED</small>
      </span>
 
     </div>
@@ -894,9 +829,34 @@ export default function TVLeaderboard(){
         {fmt(r.w3)}
        </span>
 
-       <span className="tv-approved-total">
+       {/*
+        * TOTAL COLUMN
+        *
+        * The score and movement indicator
+        * each get their own fixed half of
+        * the cell so every row lines up.
+        */}
+       <span
+        className="tv-approved-total"
+        style={{
+         display:'grid',
+         gridTemplateColumns:'1fr 1fr',
+         alignItems:'center',
+         width:'100%',
+         boxSizing:'border-box'
+        }}
+       >
 
-        <b>
+        <b
+         style={{
+          display:'block',
+          width:'100%',
+          textAlign:'right',
+          paddingRight:'18px',
+          boxSizing:'border-box',
+          fontVariantNumeric:'tabular-nums'
+         }}
+        >
          {fmt(r.total)}
         </b>
 
@@ -908,6 +868,15 @@ export default function TVLeaderboard(){
            ?'down'
            :''
          }
+         style={{
+          display:'block',
+          width:'100%',
+          textAlign:'left',
+          paddingLeft:'18px',
+          boxSizing:'border-box',
+          fontVariantNumeric:'tabular-nums',
+          whiteSpace:'nowrap'
+         }}
         >
 
          {
