@@ -32,6 +32,22 @@ export default function LoginPage(){
   }
   useEffect(()=>{refresh()},[])
 
+  // While a signed-in player is waiting for approval, keep checking the profile.
+  // As soon as an administrator approves the account, refresh() redirects them
+  // automatically into the app without requiring another sign-in or page refresh.
+  useEffect(()=>{
+    if(!userEmail || profile?.status!=='pending') return
+    const checkApproval=()=>{ if(document.visibilityState==='visible') refresh() }
+    const timer=window.setInterval(checkApproval,5000)
+    window.addEventListener('focus',checkApproval)
+    document.addEventListener('visibilitychange',checkApproval)
+    return ()=>{
+      window.clearInterval(timer)
+      window.removeEventListener('focus',checkApproval)
+      document.removeEventListener('visibilitychange',checkApproval)
+    }
+  },[userEmail,profile?.status])
+
   async function prepareDefaultNotifications(){
     try{
       if(!('serviceWorker'in navigator)||!('PushManager'in window))return null
@@ -61,8 +77,6 @@ export default function LoginPage(){
     if(mode==='signup'){
       const cleanName=name.trim()
       const cleanEmail=email.trim().toLowerCase()
-      // Notifications are on by default for new accounts when the device/browser allows them.
-      // Asking here keeps the browser permission prompt tied to the user's Request Account tap.
       const defaultPushSubscription=await prepareDefaultNotifications()
       const { data:signUpData, error } = await supabase.auth.signUp({email:cleanEmail,password,options:{data:{full_name:cleanName}}})
       if(error){
@@ -72,8 +86,6 @@ export default function LoginPage(){
       }else if(Array.isArray(signUpData.user.identities) && signUpData.user.identities.length===0){
         setMessage('Account request was not completed. This email may already be registered. Try signing in, use a different email address, or contact the league administrator.')
       }else{
-        // A real auth user was created. The database creates the matching pending profile
-        // in the same signup transaction, so only now do we tell the player they are pending.
         setEmail(cleanEmail)
         setPassword('')
         await saveDefaultNotificationSubscription(signUpData.user.id,defaultPushSubscription)
@@ -113,15 +125,13 @@ export default function LoginPage(){
 
   async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('You have been signed out.') }
 
-
-
   return <div className="auth-app-shell-v1230">
     <div className="auth-app-brand-v1230"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" /></div>
     <main className="auth-app-content-v1230">
       {userEmail?<>
         <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<p>Your account is waiting for administrator approval.</p>}</div>
+          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><p className="muted">This page checks automatically. Once your account is approved, you’ll be taken directly to the home screen.</p></>}</div>
           <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
