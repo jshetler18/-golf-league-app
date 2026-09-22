@@ -20,13 +20,20 @@ export async function POST(req:NextRequest){
     const {data:me}=await admin.from('profiles').select('role,status,is_account_approver').eq('id',user.id).maybeSingle()
     if(!me||me.status!=='approved'||(me.role!=='admin'&&!me.is_account_approver))return NextResponse.json({error:'Account approval access required.'},{status:403})
 
-    const {profileId,accessType='league'}=await req.json()
+    const {profileId,accessType='league',playerId=null}=await req.json()
     if(!profileId)return NextResponse.json({error:'Profile ID is required.'},{status:400})
     const {data:profile,error:pErr}=await admin.from('profiles').select('id,full_name,email,status').eq('id',profileId).maybeSingle()
     if(pErr||!profile)return NextResponse.json({error:pErr?.message||'Account not found.'},{status:404})
 
     if(!['league','sim_only'].includes(accessType))return NextResponse.json({error:'Invalid account access type.'},{status:400})
-    const {error:updateErr}=await admin.from('profiles').update({status:'approved',booking_enabled:true,access_type:accessType}).eq('id',profileId)
+    if(accessType==='league'&&!playerId)return NextResponse.json({error:'Select the league player and team before approving this account.'},{status:400})
+    if(accessType==='league'){
+      const {data:player,error:playerErr}=await admin.from('players').select('id,team_id,is_active').eq('id',playerId).maybeSingle()
+      if(playerErr||!player||!player.is_active||!player.team_id)return NextResponse.json({error:'The selected league player is not active on a team.'},{status:400})
+      const {data:existing}=await admin.from('profiles').select('id,full_name').eq('player_id',playerId).neq('id',profileId).maybeSingle()
+      if(existing)return NextResponse.json({error:`That league player is already linked to ${existing.full_name||'another account'}.`},{status:400})
+    }
+    const {error:updateErr}=await admin.from('profiles').update({status:'approved',booking_enabled:true,access_type:accessType,player_id:accessType==='league'?playerId:null}).eq('id',profileId)
     if(updateErr)return NextResponse.json({error:updateErr.message},{status:500})
 
     if(!priv)return NextResponse.json({ok:true,sent:0,detail:'Account approved. Push server is not configured.'})
@@ -49,7 +56,7 @@ export async function POST(req:NextRequest){
         if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)
       }
     }
-    return NextResponse.json({ok:true,sent,detail:sent>0?'Account approved and player notification sent.':'Account approved. The player does not yet have a registered phone notification subscription.'})
+    return NextResponse.json({ok:true,sent,detail:sent>0?'Account approved, linked to the league roster, and player notification sent.':'Account approved and linked to the league roster. The player does not yet have a registered phone notification subscription.'})
   }catch(e:any){
     return NextResponse.json({error:e?.message||'Unable to approve account.'},{status:500})
   }
