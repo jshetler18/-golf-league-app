@@ -30,13 +30,14 @@ export default function AccountApprovalsPage(){
  },[])
  useEffect(()=>{load()},[load])
 
- async function approve(row:PendingAccount){
-  if(!window.confirm(`Approve ${row.full_name||row.email||'this player'} for Golf Sim access?`))return
+ async function approve(row:PendingAccount,accessType:'league'|'sim_only'){
+  const label=accessType==='sim_only'?'Simulator Booking Only':'League Member'
+  if(!window.confirm(`Approve ${row.full_name||row.email||'this player'} as ${label}?`))return
   setBusy(row.id);setMsg('Approving account…')
   try{
    const {data:{session}}=await supabase.auth.getSession()
    if(!session?.access_token){setMsg('Please sign in again.');return}
-   const r=await fetch('/api/accounts/approve',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({profileId:row.id})})
+   const r=await fetch('/api/accounts/approve',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({profileId:row.id,accessType})})
    const j=await r.json().catch(()=>({}))
    if(!r.ok){setMsg(j.error||'Unable to approve account.');return}
    setRows(prev=>prev.filter(x=>x.id!==row.id))
@@ -50,7 +51,7 @@ export default function AccountApprovalsPage(){
   {msg&&<p className="message">{msg}</p>}
   {rows.length===0?<div className="card scorecard-official-empty-v1298"><strong>All caught up!</strong><span>There are no new accounts waiting for approval.</span></div>:<div className="scorecard-official-list-v1298">{rows.map(r=><article className="card scorecard-official-card-v1298" key={r.id}>
    <div className="submission-head"><div><h2>{r.full_name||'New Player'}</h2><p>{r.email||'No email shown'}</p><small>Requested {new Date(r.created_at).toLocaleString()}</small></div><span className="submission-status pending">pending</span></div>
-   <div className="scorecard-official-actions-v1298"><button className="btn" disabled={busy===r.id} onClick={()=>approve(r)}>✓ Approve New Player</button></div>
+   <div className="scorecard-official-actions-v1298 account-approval-actions-v13159"><button className="btn" disabled={busy===r.id} onClick={()=>approve(r,'league')}>✓ Approve League Member</button><button className="btn secondary" disabled={busy===r.id} onClick={()=>approve(r,'sim_only')}>📅 Approve Booking Only</button></div>
   </article>)}</div>}
  </div></PlayerPage>
 }

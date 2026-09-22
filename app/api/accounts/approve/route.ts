@@ -20,12 +20,13 @@ export async function POST(req:NextRequest){
     const {data:me}=await admin.from('profiles').select('role,status,is_account_approver').eq('id',user.id).maybeSingle()
     if(!me||me.status!=='approved'||(me.role!=='admin'&&!me.is_account_approver))return NextResponse.json({error:'Account approval access required.'},{status:403})
 
-    const {profileId}=await req.json()
+    const {profileId,accessType='league'}=await req.json()
     if(!profileId)return NextResponse.json({error:'Profile ID is required.'},{status:400})
     const {data:profile,error:pErr}=await admin.from('profiles').select('id,full_name,email,status').eq('id',profileId).maybeSingle()
     if(pErr||!profile)return NextResponse.json({error:pErr?.message||'Account not found.'},{status:404})
 
-    const {error:updateErr}=await admin.from('profiles').update({status:'approved',booking_enabled:true}).eq('id',profileId)
+    if(!['league','sim_only'].includes(accessType))return NextResponse.json({error:'Invalid account access type.'},{status:400})
+    const {error:updateErr}=await admin.from('profiles').update({status:'approved',booking_enabled:true,access_type:accessType}).eq('id',profileId)
     if(updateErr)return NextResponse.json({error:updateErr.message},{status:500})
 
     if(!priv)return NextResponse.json({ok:true,sent:0,detail:'Account approved. Push server is not configured.'})
@@ -38,7 +39,7 @@ export async function POST(req:NextRequest){
       try{
         await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({
           title:'Account Approved',
-          body:'Your Golf Sim account has been approved. You can now sign in.',
+          body:accessType==='sim_only'?'Your Golf Sim reservation account has been approved. You can now sign in and reserve simulator time.':'Your Golf Sim account has been approved. You can now sign in.',
           url:'/login',
           tag:`account-approved-${profileId}`,
           kind:'account-approved'
