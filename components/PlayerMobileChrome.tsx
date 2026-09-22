@@ -106,6 +106,7 @@ export function PlayerMobileBottom(){
 
   if(accessType==='sim_only'){
     return <nav className="player-mobile-bottom" aria-label="Simulator booking navigation">
+      <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
       <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
     </nav>
   }
