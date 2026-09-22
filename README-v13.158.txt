@@ -1,5 +1,3 @@
-v13.158 — Cancellation popup simplification
-
-- Removed the redundant Cancel All checkbox from multi-hour cancellation.
-- All individual hourly time slots remain selected by default when the cancellation popup opens.
-- Players can uncheck only the hour(s) they want to keep, then use Cancel Selected Time.
+v13.158
+Fixes pending-account notification RLS and removes the Enable Approval Notification button.
+New account notification permission is requested by default during account creation when supported; users can later disable notifications in Settings.

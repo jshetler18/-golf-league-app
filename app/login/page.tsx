@@ -18,8 +18,6 @@ export default function LoginPage(){
   const [password,setPassword]=useState('')
   const [message,setMessage]=useState('')
   const [loading,setLoading]=useState(false)
-  const [pushBusy,setPushBusy]=useState(false)
-  const [pushMessage,setPushMessage]=useState('')
 
   async function refresh(){
     const { data } = await supabase.auth.getUser()
@@ -34,11 +32,38 @@ export default function LoginPage(){
   }
   useEffect(()=>{refresh()},[])
 
+  async function prepareDefaultNotifications(){
+    try{
+      if(!('serviceWorker'in navigator)||!('PushManager'in window))return null
+      const standalone=window.matchMedia('(display-mode: standalone)').matches||(navigator as any).standalone===true
+      const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)
+      if(isiOS&&!standalone)return null
+      let permission=Notification.permission
+      if(permission==='default')permission=await Notification.requestPermission()
+      if(permission!=='granted')return null
+      const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
+      let sub=await reg.pushManager.getSubscription()
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(VAPID_PUBLIC_KEY)})
+      return sub
+    }catch{return null}
+  }
+
+  async function saveDefaultNotificationSubscription(userId:string,sub:PushSubscription|null){
+    if(!sub)return
+    try{
+      const j=sub.toJSON()
+      await supabase.from('push_subscriptions').upsert({user_id:userId,endpoint:sub.endpoint,p256dh:j.keys?.p256dh||null,auth:j.keys?.auth||null,updated_at:new Date().toISOString()},{onConflict:'endpoint'})
+    }catch{}
+  }
+
   async function submit(e:FormEvent){
     e.preventDefault(); setLoading(true); setMessage('')
     if(mode==='signup'){
       const cleanName=name.trim()
       const cleanEmail=email.trim().toLowerCase()
+      // Notifications are on by default for new accounts when the device/browser allows them.
+      // Asking here keeps the browser permission prompt tied to the user's Request Account tap.
+      const defaultPushSubscription=await prepareDefaultNotifications()
       const { data:signUpData, error } = await supabase.auth.signUp({email:cleanEmail,password,options:{data:{full_name:cleanName}}})
       if(error){
         setMessage(`Account request was not completed: ${error.message}`)
@@ -51,6 +76,7 @@ export default function LoginPage(){
         // in the same signup transaction, so only now do we tell the player they are pending.
         setEmail(cleanEmail)
         setPassword('')
+        await saveDefaultNotificationSubscription(signUpData.user.id,defaultPushSubscription)
         setMessage('Account request submitted successfully. Your account is now waiting for administrator approval. You’ll be able to access the app once approved.')
         try{await fetch('/api/push/account-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:signUpData.user.id})})}catch{}
         if(signUpData.session){
@@ -87,26 +113,7 @@ export default function LoginPage(){
 
   async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('You have been signed out.') }
 
-  async function enableApprovalNotifications(){
-    setPushBusy(true);setPushMessage('')
-    try{
-      if(!('serviceWorker'in navigator)||!('PushManager'in window))throw new Error('Push notifications are not supported on this device/browser.')
-      const standalone=window.matchMedia('(display-mode: standalone)').matches||(navigator as any).standalone===true
-      const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)
-      if(isiOS&&!standalone)throw new Error('On iPhone, first add Golf Sim to your Home Screen, then open it there to enable notifications.')
-      const permission=await Notification.requestPermission()
-      if(permission!=='granted')throw new Error('Notification permission was not allowed. You can enable it later in your phone settings.')
-      const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
-      let sub=await reg.pushManager.getSubscription()
-      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(VAPID_PUBLIC_KEY)})
-      const {data:{user}}=await supabase.auth.getUser()
-      if(!user)throw new Error('Please sign in again to enable the approval notification.')
-      const j=sub.toJSON()
-      const {error}=await supabase.from('push_subscriptions').upsert({user_id:user.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh||null,auth:j.keys?.auth||null,updated_at:new Date().toISOString()},{onConflict:'endpoint'})
-      if(error)throw error
-      setPushMessage('Approval notifications are enabled on this device. You will be notified when your account is approved.')
-    }catch(e:any){setPushMessage(e?.message||'Unable to enable approval notifications.')}finally{setPushBusy(false)}
-  }
+
 
   return <div className="auth-app-shell-v1230">
     <div className="auth-app-brand-v1230"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" /></div>
@@ -114,7 +121,7 @@ export default function LoginPage(){
       {userEmail?<>
         <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><button className="btn" disabled={pushBusy} onClick={enableApprovalNotifications}>{pushBusy?'Please wait…':'Enable Approval Notification'}</button>{pushMessage&&<p className="message">{pushMessage}</p>}</>}</div>
+          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<p>Your account is waiting for administrator approval.</p>}</div>
           <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
