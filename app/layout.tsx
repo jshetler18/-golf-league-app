@@ -1,4 +1,5 @@
 import './globals.css'
+import './booking-overrides.css'
 import AppChrome from '@/components/AppChrome'
 
 export const metadata = {
