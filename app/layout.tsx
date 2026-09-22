@@ -1,6 +1,7 @@
 import './globals.css'
 import './booking-overrides.css'
 import AppChrome from '@/components/AppChrome'
+import NotificationApprovalPrompt from '@/components/NotificationApprovalPrompt'
 
 export const metadata = {
   title: 'Tom Krise 19th Hole Golf League',
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AppChrome>{children}</AppChrome>
+        <NotificationApprovalPrompt />
       </body>
     </html>
   )
