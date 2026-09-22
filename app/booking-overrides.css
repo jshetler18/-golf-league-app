@@ -1,0 +1,18 @@
+/* Booking availability colors: blocked/admin-unavailable stays red; only elapsed time is gray. */
+.slot.blocked:disabled{
+  background:#fde9e9!important;
+  border-color:#efb7b7!important;
+  color:#6f2525!important;
+  box-shadow:none!important;
+  opacity:1!important;
+}
+.slot.blocked:disabled strong{color:#6f2525!important;}
+.slot.past:disabled{
+  background:#f1f2f3!important;
+  border-color:#d9ddda!important;
+  color:#9aa19d!important;
+  box-shadow:none!important;
+  opacity:.78!important;
+  cursor:not-allowed!important;
+}
+.slot.past:disabled strong{color:#858d88!important;}
