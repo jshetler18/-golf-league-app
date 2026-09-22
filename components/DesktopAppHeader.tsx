@@ -6,111 +6,45 @@ import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 const adminColumns=[
-  {
-    title:'Simulator Management',
-    links:[
-      {href:'/admin/simulator/team-schedules',title:'Team & League Schedules',icon:'⛳'},
-      {href:'/admin/simulator/bookings',title:'Bookings & Block Time',icon:'📅'}
-    ]
-  },
-  {
-    title:'Account Management',
-    links:[{href:'/admin/accounts',title:'Accounts',icon:'👤'}]
-  },
-  {
-    title:'League Management',
-    links:[
-      {href:'/admin/teams',title:'Players & Teams',icon:'👥'},
-      {href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},
-      {href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},
-      {href:'/admin/rules',title:'Rules',icon:'📋'},
-      {href:'/admin/messages',title:'Messages',icon:'✉️'},
-      {href:'/admin/meeting-rsvp',title:"Meeting Setup & RSVP's",icon:'✅'}
-    ]
-  }
+  {title:'Simulator Management',links:[{href:'/admin/simulator/team-schedules',title:'Team & League Schedules',icon:'⛳'},{href:'/admin/simulator/bookings',title:'Bookings & Block Time',icon:'📅'}]},
+  {title:'Account Management',links:[{href:'/admin/accounts',title:'Accounts',icon:'👤'}]},
+  {title:'League Management',links:[{href:'/admin/teams',title:'Players & Teams',icon:'👥'},{href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},{href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},{href:'/admin/rules',title:'Rules',icon:'📋'},{href:'/admin/messages',title:'Messages',icon:'✉️'},{href:'/admin/meeting-rsvp',title:"Meeting Setup & RSVP's",icon:'✅'}]}
 ]
 
 export default function DesktopAppHeader(){
   const pathname=usePathname()||''
   const [embedded,setEmbedded]=useState(false)
   const isAdminRoute=pathname==='/admin'||pathname.startsWith('/admin/')
-  const isAdminHome=pathname==='/admin'
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
   const [pendingAccounts,setPendingAccounts]=useState(0)
   const wrap=useRef<HTMLDivElement>(null)
 
   useEffect(()=>{setEmbedded(new URLSearchParams(window.location.search).get('embed')==='1')},[])
+  useEffect(()=>{let active=true;(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!active||!user)return;const {data:p}=await supabase.from('profiles').select('full_name,avatar_url,is_scorecard_official,role,status,access_type').eq('id',user.id).maybeSingle();if(active)setProfile(p)})();return()=>{active=false}},[])
+  useEffect(()=>{if(!isAdminRoute)return;let active=true;(async()=>{const {count}=await supabase.from('profiles').select('id',{count:'exact',head:true}).eq('status','pending');if(active)setPendingAccounts(count||0)})();return()=>{active=false}},[isAdminRoute])
+  useEffect(()=>{const close=(e:MouseEvent)=>{if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',close);return()=>document.removeEventListener('mousedown',close)},[])
 
-  useEffect(()=>{
-    let active=true
-    ;(async()=>{
-      const {data:{user}}=await supabase.auth.getUser()
-      if(!active||!user)return
-      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url,is_scorecard_official,role,status').eq('id',user.id).maybeSingle()
-      if(active)setProfile(p)
-    })()
-    return()=>{active=false}
-  },[])
-
-  useEffect(()=>{
-    if(!isAdminRoute)return
-    let active=true
-    ;(async()=>{
-      const {count}=await supabase.from('profiles').select('id',{count:'exact',head:true}).eq('status','pending')
-      if(active)setPendingAccounts(count||0)
-    })()
-    return()=>{active=false}
-  },[isAdminRoute])
-
-  useEffect(()=>{
-    const close=(e:MouseEvent)=>{
-      if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)
-    }
-    document.addEventListener('mousedown',close)
-    return()=>document.removeEventListener('mousedown',close)
-  },[])
-
-  async function logout(){
-    await supabase.auth.signOut()
-    location.href='/login'
-  }
-
+  async function logout(){await supabase.auth.signOut();location.href='/login'}
   if(embedded)return null
+  const simOnly=profile?.access_type==='sim_only'
 
   return <header className={`desktop-home-header-v13113${isAdminRoute?' admin-home-unified-v13121 admin-static-nav-v13134':''}`}>
     <div className={`desktop-home-mainrow-v13121${isAdminRoute?' admin-top-row-v13140':''}`}>
-      <Link href={isAdminRoute?'/admin':'/'} className="desktop-home-logo-v13113" aria-label={isAdminRoute?'League Admin home':'Golf Sim home'}>
-        <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/>
-      </Link>
+      <Link href={isAdminRoute?'/admin':'/'} className="desktop-home-logo-v13113" aria-label={isAdminRoute?'League Admin home':'Golf Sim home'}><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/></Link>
       <div className="profile-wrap desktop-home-profile-v13113" ref={wrap}>
-      <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">
-        {profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}
-        <b>⌄</b>
-      </button>
+        <button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>
         {open&&<div className="profile-menu">
-          {profile?.role==='admin'?<>
-            <Link href="/profile">My Profile</Link>
-            <button onClick={logout}>Log Out ↪</button>
-          </>:<>
-            <Link href="/submit-score">Submit Score</Link>
-            {(profile?.status==='approved'&&profile?.is_scorecard_official)&&<Link href="/scorecard-official">Scorecard Admin</Link>}
-            <Link href="/profile">My Profile</Link>
-            <Link href="/settings">Settings</Link>
-            <button onClick={logout}>Log Out ↪</button>
+          {profile?.role==='admin'?<><Link href="/profile">My Profile</Link><button onClick={logout}>Log Out ↪</button></>:<>
+            {!simOnly&&<Link href="/submit-score">Submit Score</Link>}
+            {!simOnly&&(profile?.status==='approved'&&profile?.is_scorecard_official)&&<Link href="/scorecard-official">Scorecard Admin</Link>}
+            <Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button>
           </>}
         </div>}
       </div>
     </div>
-    {isAdminRoute&&<div className="admin-header-content-v13121">
-      <div className="admin-header-columns-v13122" aria-label="League administration">
-        {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}>
-          <h2>{column.title}</h2>
-          <nav className="admin-header-links-v13122">
-            {column.links.map(item=>{const active=pathname===item.href||pathname.startsWith(item.href+'/');return <Link className={`admin-home-link-v13123${active?' active':''}`} href={item.href} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>})}
-          </nav>
-        </section>)}
-      </div>
-    </div>}
+    {isAdminRoute&&<div className="admin-header-content-v13121"><div className="admin-header-columns-v13122" aria-label="League administration">
+      {adminColumns.map(column=><section className="admin-header-column-v13122" key={column.title}><h2>{column.title}</h2><nav className="admin-header-links-v13122">{column.links.map(item=>{const active=pathname===item.href||pathname.startsWith(item.href+'/');return <Link className={`admin-home-link-v13123${active?' active':''}`} href={item.href} key={item.href}><span className="admin-home-icon-v13123">{item.icon}</span><span>{item.title}</span>{item.href==='/admin/accounts'&&pendingAccounts>0&&<span className="admin-account-alert-v13123" aria-label={`${pendingAccounts} pending account request${pendingAccounts===1?'':'s'}`}>{pendingAccounts}</span>}</Link>})}</nav></section>)}
+    </div></div>}
   </header>
 }
