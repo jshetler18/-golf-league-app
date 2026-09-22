@@ -2476,3 +2476,23 @@ i .captain-mark-v1357{
 
 /* v13.143 — final removal of obsolete League Admin header title */
 .admin-header-title-v13136 { display:none !important; }
+
+/* v13.155 — passed simulator time slots */
+.slot.blocked:disabled{background:#f1f2f3!important;border-color:#d9ddda!important;color:#9aa19d!important;box-shadow:none!important;}
+.slot.blocked:disabled strong{color:#858d88!important;}
+
+/* v13.156 — late-booking grace period + partial reservation cancellation */
+.slot.past:disabled{background:#f1f2f3!important;border-color:#d9ddda!important;color:#9aa19d!important;box-shadow:none!important;opacity:.78;cursor:not-allowed}
+.slot.past:disabled strong{color:#858d88!important}
+.cancel-hours-modal{max-width:520px}
+.cancel-hour-options{display:grid;gap:9px;margin:18px 0}
+.cancel-hour-option{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:#f8faf9;cursor:pointer;text-align:left}
+.cancel-hour-option input{width:20px;height:20px;accent-color:var(--accent);flex:0 0 auto}
+.cancel-hour-option span{display:flex;flex-direction:column;gap:2px}
+.cancel-hour-option small{color:var(--muted)}
+.cancel-all-option{background:#eef5f1;border-color:#bfd5c8}
+
+/* v13.156 — late-booking grace period + partial reservation cancellation */
+.slot.past:disabled{background:#f1f2f3!important;border-color:#d9ddda!important;color:#9aa19d!important;box-shadow:none!important;opacity:.78;cursor:not-allowed}
+.slot.past:disabled strong{color:#858d88!important}
+.cancel-hours-modal{max-width:520px}.cancel-hour-options{display:grid;gap:9px;margin:18px 0}.cancel-hour-option{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:#f8faf9;cursor:pointer;text-align:left}.cancel-hour-option input{width:20px;height:20px;accent-color:var(--accent);flex:0 0 auto}.cancel-hour-option span{display:flex;flex-direction:column;gap:2px}.cancel-hour-option small{color:var(--muted)}.cancel-all-option{background:#eef5f1;border-color:#bfd5c8}
