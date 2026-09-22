@@ -30,7 +30,7 @@ export async function POST(req:NextRequest){
   const name=booker?.full_name||booker?.email||'A player'
   const body=`${name} booked ${fmtDate(b.start_at)} from ${fmtTime(b.start_at)} to ${fmtTime(b.end_at)}.`
   let sent=0
-  for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title:'Golf Sim Reservation Confirmation',body,url:'/admin/simulator/bookings',tag:`admin-booking-${b.id}`,kind:'admin-booking'}));sent++}catch(e:any){if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+  for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title:'Golf Sim Reservation Confirmation',body,url:'/book',tag:`admin-booking-${b.id}`,kind:'admin-booking'}));sent++}catch(e:any){if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
   return NextResponse.json({ok:true,sent})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to notify administrator.'},{status:500})}
 }
