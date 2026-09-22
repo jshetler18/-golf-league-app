@@ -2610,10 +2610,9 @@ i .captain-mark-v1357{
 }
 
 
-/* v13.159 — simulator-only account access */
-.account-approval-actions-v13159{display:flex;gap:10px;flex-wrap:wrap}
-.sim-only-welcome-v13159{margin:18px 16px 8px;padding:20px;border-radius:18px;background:#fff;border:1px solid #dfe7df;text-align:center}
-.sim-only-welcome-v13159 h1{margin:0 0 6px;font-size:24px}
-.sim-only-welcome-v13159 p{margin:0;color:#657168}
-.sim-only-bottom-v13159{grid-template-columns:repeat(2,1fr)!important}
-@media(max-width:700px){.account-approval-actions-v13159{display:grid;grid-template-columns:1fr}.account-approval-actions-v13159 .btn{width:100%}}
+/* v13.158 — cancellation selection reliability */
+.cancel-hour-option{font:inherit!important;-webkit-appearance:none!important;appearance:none!important;}
+.cancel-hour-option.cancel-hour-selected{border-color:#b42318!important;background:#fff1f0!important;}
+.cancel-hour-option.cancel-hour-selected input{accent-color:#b42318!important;}
+.cancel-hour-option.cancel-hour-kept{border-color:#b8c2bc!important;background:#f4f6f5!important;}
+.cancel-hour-option.cancel-hour-kept small{color:#53635a!important;font-weight:750!important;}
