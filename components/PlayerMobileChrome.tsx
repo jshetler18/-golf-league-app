@@ -18,7 +18,7 @@ export function PlayerMobileHeader({title}:{title:string}){
     ;(async()=>{
       const {data:{user}}=await supabase.auth.getUser()
       if(!user)return
-      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url,is_scorecard_official,role,status').eq('id',user.id).single()
+      const {data:p}=await supabase.from('profiles').select('full_name,avatar_url,is_scorecard_official,role,status,access_type').eq('id',user.id).single()
       setProfile(p)
     })()
   },[])
@@ -41,6 +41,8 @@ export function PlayerMobileHeader({title}:{title:string}){
     location.href='/login'
   }
 
+  const simOnly=profile?.access_type==='sim_only'
+
   return <header className="player-mobile-header">
     <button type="button" className="player-mobile-logo player-mobile-back" onClick={goBack} aria-label="Go back">
       <span className="player-mobile-back-arrow" aria-hidden="true">‹</span>
@@ -52,7 +54,9 @@ export function PlayerMobileHeader({title}:{title:string}){
         <b>⌄</b>
       </button>
       {open&&<div className="profile-menu">
-        <Link href="/submit-score">Submit Score</Link>{(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link href="/scorecard-official">Scorecard Admin</Link>}<Link href="/profile">My Profile</Link>
+        {!simOnly&&<Link href="/submit-score">Submit Score</Link>}
+        {!simOnly&&(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link href="/scorecard-official">Scorecard Admin</Link>}
+        <Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
       </div>}
@@ -63,9 +67,17 @@ export function PlayerMobileHeader({title}:{title:string}){
 export function PlayerMobileBottom(){
   const path=usePathname()
   const [unread,setUnread]=useState(0)
+  const [accessType,setAccessType]=useState<string|null>(null)
   const load=useCallback(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
-    if(!user){setUnread(0);return}
+    if(!user){setUnread(0);setAccessType(null);return}
+    const {data:p}=await supabase.from('profiles').select('access_type').eq('id',user.id).maybeSingle()
+    setAccessType(p?.access_type||'league')
+    if(p?.access_type==='sim_only'){
+      setUnread(0)
+      syncAppBadge(0)
+      return
+    }
     const [{data:a},{data:r}]=await Promise.all([
       supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
       supabase.from('announcement_reads').select('announcement_id').eq('user_id',user.id)
@@ -91,6 +103,13 @@ export function PlayerMobileBottom(){
       supabase.removeChannel(channel)
     }
   },[path,load])
+
+  if(accessType==='sim_only'){
+    return <nav className="player-mobile-bottom" aria-label="Simulator booking navigation">
+      <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
+    </nav>
+  }
+
   return <nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
     <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
