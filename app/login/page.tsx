@@ -137,7 +137,7 @@ export default function LoginPage(){
       </>:<>
         <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':'Request access to the 19th Hole Golf League app.'}</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setMessage('')}}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setMessage('')}}>Create Account</button></div>
+          <div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setMessage('')}}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setMessage('')}}>Request Access</button></div>
           {mode==='admin'&&<button type="button" className="auth-back-player-v1231" onClick={()=>{setMode('signin');setMessage('')}}>← Back to Player Sign In</button>}
           <form onSubmit={submit} className="form-grid single">
             {mode==='signup' && <label className="field">Full name<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} /></label>}
