@@ -2616,3 +2616,28 @@ i .captain-mark-v1357{
 .cancel-hour-option.cancel-hour-selected input{accent-color:#b42318!important;}
 .cancel-hour-option.cancel-hour-kept{border-color:#b8c2bc!important;background:#f4f6f5!important;}
 .cancel-hour-option.cancel-hour-kept small{color:#53635a!important;font-weight:750!important;}
+
+
+/* v13.159 — keep player bottom navigation locked to the viewport while scrolling */
+@media(max-width:1180px){
+  .player-mobile-bottom{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    top:auto!important;
+    width:100%!important;
+    z-index:1000!important;
+    transform:none!important;
+    margin:0!important;
+  }
+  .player-page{padding-bottom:calc(80px + env(safe-area-inset-bottom));}
+}
+@media(min-width:851px) and (max-width:1180px){
+  .player-mobile-bottom{
+    left:50%!important;
+    right:auto!important;
+    width:min(850px,100vw)!important;
+    transform:translateX(-50%)!important;
+  }
+}
