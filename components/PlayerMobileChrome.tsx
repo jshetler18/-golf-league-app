@@ -56,6 +56,7 @@ export function PlayerMobileHeader({title}:{title:string}){
       {open&&<div className="profile-menu">
         {!simOnly&&<Link href="/submit-score">Submit Score</Link>}
         {!simOnly&&(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link href="/scorecard-official">Scorecard Admin</Link>}
+        {profile?.status==='approved'&&profile?.role==='admin'&&<Link href="/send-message">Send Message</Link>}
         <Link href="/profile">My Profile</Link>
         <Link href="/settings">Settings</Link>
         <button onClick={logout}>Log Out ↪</button>
