@@ -33,10 +33,25 @@ export default function Messages(){
     if(!rError)setRead(new Set((r||[]).map(x=>x.announcement_id)))
   },[])
 
+  async function markAllVisibleRead(){
+    const {data:{user}}=await supabase.auth.getUser()
+    if(!user)return
+    const now=new Date().toISOString()
+    const {data:visible}=await supabase.from('announcements').select('id').or(`expires_at.is.null,expires_at.gt.${now}`)
+    const ids=(visible||[]).map(x=>x.id)
+    if(!ids.length){window.dispatchEvent(new Event('league-unread-changed'));return}
+    const {error}=await supabase.from('announcement_reads').upsert(ids.map(id=>({announcement_id:id,user_id:user.id})),{onConflict:'announcement_id,user_id'})
+    if(!error){
+      setRead(new Set(ids))
+      window.dispatchEvent(new Event('league-unread-changed'))
+    }
+  }
+
   useEffect(()=>{
     const requested=new URLSearchParams(window.location.search).get('message')
     if(requested)setSelectedId(requested)
     load()
+    markAllVisibleRead()
 
     const onFocus=()=>load()
     const onVisible=()=>{if(document.visibilityState==='visible')load()}
