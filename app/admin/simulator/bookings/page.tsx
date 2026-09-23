@@ -18,19 +18,30 @@ export default function Page(){
  const [bookings,setBookings]=useState<B[]>([]),[teams,setTeams]=useState<any[]>([]),[names,setNames]=useState<Record<string,string>>({})
  const [date,setDate]=useState(''),[h,setH]=useState(12),[dur,setDur]=useState(1),[title,setTitle]=useState('Unavailable')
  const [range,setRange]=useState('7'),[jump,setJump]=useState(''),[msg,setMsg]=useState('')
+ const [bookingDaysAhead,setBookingDaysAhead]=useState(30),[settingsBusy,setSettingsBusy]=useState(false)
  const [recurring,setRecurring]=useState<R[]>([]),[editId,setEditId]=useState<string|null>(null),[rTitle,setRTitle]=useState('Unavailable'),[weekday,setWeekday]=useState(1),[rHour,setRHour]=useState(7),[rDur,setRDur]=useState(1),[startDate,setStartDate]=useState(''),[endDate,setEndDate]=useState('')
 
  async function load(){
-  const [{data:b},{data:t},{data:r}]=await Promise.all([
+  const [{data:b},{data:t},{data:r},{data:settings}]=await Promise.all([
    supabase.from('bookings').select('id,kind,user_id,team_id,title,start_at,end_at,admin_sim_block_slot_id').eq('status','active').gte('end_at',new Date().toISOString()).order('start_at').limit(500),
    supabase.from('teams').select('id,name'),
-   supabase.from('admin_sim_block_slots').select('id,title,weekday,start_time,duration_hours,start_date,end_date').order('weekday').order('start_time')
+   supabase.from('admin_sim_block_slots').select('id,title,weekday,start_time,duration_hours,start_date,end_date').order('weekday').order('start_time'),
+   supabase.from('simulator_settings').select('booking_days_ahead').eq('id',1).maybeSingle()
   ])
-  const rows=(b||[]) as B[];setBookings(rows);setTeams(t||[]);setRecurring((r||[]) as R[])
+  const rows=(b||[]) as B[];setBookings(rows);setTeams(t||[]);setRecurring((r||[]) as R[]);if(settings?.booking_days_ahead)setBookingDaysAhead(settings.booking_days_ahead)
   const ids=[...new Set(rows.map(x=>x.user_id).filter(Boolean))] as string[]
   if(ids.length){const {data:p}=await supabase.from('profiles').select('id,full_name,email').in('id',ids);setNames(Object.fromEntries((p||[]).map(x=>[x.id,x.full_name||x.email||'Player'])))}else setNames({})
  }
  useEffect(()=>{if(g.admin)load()},[g.admin])
+
+ async function saveBookingWindow(e:FormEvent){
+  e.preventDefault();setSettingsBusy(true);setMsg('')
+  const days=Math.max(1,Math.min(365,Number(bookingDaysAhead)||30))
+  const {data:{user}}=await supabase.auth.getUser()
+  const {error}=await supabase.from('simulator_settings').update({booking_days_ahead:days,updated_at:new Date().toISOString(),updated_by:user?.id}).eq('id',1)
+  if(error){setMsg(error.message);window.alert(`Unable to update booking window: ${error.message}`)}else{setBookingDaysAhead(days);setMsg(`Players can now book up to ${days} days in advance.`);window.alert(`Booking window updated to ${days} days.`)}
+  setSettingsBusy(false)
+ }
 
  async function add(e:FormEvent){
   e.preventDefault();const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('bookings').insert({kind:'blocked',title:title||'Unavailable',start_at:stamp(date,h),end_at:stamp(date,h+dur),created_by:user?.id});
@@ -56,6 +67,8 @@ export default function Page(){
  if(!g.ready||!g.admin)return <AdminDenied {...g}/>
  return <AdminFrame title="Bookings & Block Time" description="View upcoming simulator use and create one-time or recurring simulator blocks.">
   {msg&&<p className="message">{msg}</p>}
+
+  <div className="card"><h2>Player Booking Window</h2><form onSubmit={saveBookingWindow} className="form-grid"><label className="field">Days Players Can Book in Advance<input type="number" min="1" max="365" value={bookingDaysAhead} onChange={e=>setBookingDaysAhead(+e.target.value)}/></label><div style={{display:"flex",alignItems:"end"}}><button className="btn" disabled={settingsBusy}>{settingsBusy?"Saving…":"Save Booking Window"}</button></div></form><p className="muted" style={{marginTop:10}}>Currently, players can reserve simulator time from today through {bookingDaysAhead} days in advance. Change this at any time.</p></div>
 
   <div className="card"><h2>{editId?'Edit Recurring Simulator Block':'Add Recurring Simulator Block'}</h2>
    <form onSubmit={saveRecurring} className="form-grid">
