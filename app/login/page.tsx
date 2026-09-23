@@ -142,7 +142,7 @@ export default function LoginPage(){
           <form onSubmit={submit} className="form-grid single">
             {mode==='signup' && <label className="field">Full name<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} /></label>}
             <label className="field">Email<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} /></label>
-            <label className="field">Password<input type="password" required minLength={6} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} /></label>
+            <label className="field">Password<input type="password" required minLength={4} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} /></label>
             <button className="btn auth-primary-v1230" disabled={loading}>{loading?'Please wait…':mode==='signup'?'Request Account':mode==='admin'?'Enter Admin':'Sign In'}</button>
           </form>
           {mode==='signin'&&<button type="button" className="btn secondary admin-login-choice-v1231" onClick={()=>{setMode('admin');setMessage('')}}>Admin Login</button>}
