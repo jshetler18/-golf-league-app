@@ -5,6 +5,15 @@ import {supabase} from '@/lib/supabase'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 import {RichTextDisplay} from '@/components/RichTextEditor'
 
+function sentTimestamp(iso:string){
+  const date=new Date(iso)
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'long',month:'long',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}).formatToParts(date)
+  const part=(type:string)=>parts.find(p=>p.type===type)?.value||''
+  const day=Number(part('day'))
+  const suffix=day%100>=11&&day%100<=13?'th':day%10===1?'st':day%10===2?'nd':day%10===3?'rd':'th'
+  return `Sent: ${part('weekday')}, ${part('month')} ${day}${suffix}, ${part('year')} at ${part('hour')}:${part('minute')}${part('dayPeriod').toLowerCase()}`
+}
+
 export default function Messages(){
   const [rows,setRows]=useState<any[]>([])
   const [read,setRead]=useState<Set<string>>(new Set())
@@ -79,5 +88,5 @@ export default function Messages(){
 
   const selected=selectedId?rows.find(m=>m.id===selectedId):null
 
-  return <PlayerPage title="Messages"><div className="simple-mobile-page"><h1>Messages</h1>{selected?<div className="message-detail"><button type="button" className="message-back" onClick={showAll}>← All Messages</button><div className="message-card message-card-open"><div><strong>{selected.title}</strong>{selected.audience==='team'&&<span className="message-audience-pill">Team Message</span>}</div><RichTextDisplay value={selected.body}/><small>{new Date(selected.created_at).toLocaleDateString()}</small></div></div>:<><p className="muted">League messages and announcements.</p><div className="message-list">{rows.length?rows.map(m=><button key={m.id} onClick={()=>showMessage(m.id)} className={'message-card '+(!read.has(m.id)?'unread':'')}><div><strong>{m.title}</strong>{m.audience==='team'&&<span className="message-audience-pill">Team Message</span>}{!read.has(m.id)&&<span className="new-dot">New</span>}</div><RichTextDisplay value={m.body}/><small>{new Date(m.created_at).toLocaleDateString()}</small></button>):<div className="card">No messages yet.</div>}</div></>}</div></PlayerPage>
+  return <PlayerPage title="Messages"><div className="simple-mobile-page"><h1>Messages</h1>{selected?<div className="message-detail"><button type="button" className="message-back" onClick={showAll}>← All Messages</button><div className="message-card message-card-open"><div><strong>{selected.title}</strong>{selected.audience==='team'&&<span className="message-audience-pill">Team Message</span>}</div><RichTextDisplay value={selected.body}/><small>{sentTimestamp(selected.created_at)}</small></div></div>:<><p className="muted">League messages and announcements.</p><div className="message-list">{rows.length?rows.map(m=><button key={m.id} onClick={()=>showMessage(m.id)} className={'message-card '+(!read.has(m.id)?'unread':'')}><div><strong>{m.title}</strong>{m.audience==='team'&&<span className="message-audience-pill">Team Message</span>}{!read.has(m.id)&&<span className="new-dot">New</span>}</div><RichTextDisplay value={m.body}/><small>{sentTimestamp(m.created_at)}</small></button>):<div className="card">No messages yet.</div>}</div></>}</div></PlayerPage>
 }
