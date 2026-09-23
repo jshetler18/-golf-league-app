@@ -15,8 +15,8 @@ export default function SendMessagePage(){
   useEffect(()=>{;(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
     if(!user){location.href='/login';return}
-    const {data:p}=await supabase.from('profiles').select('role,status').eq('id',user.id).maybeSingle()
-    if(p?.role!=='admin'||p?.status!=='approved'){setReady(true);return}
+    const {data:p}=await supabase.from('profiles').select('role,status,is_account_approver').eq('id',user.id).maybeSingle()
+    if(p?.status!=='approved'||(!p?.is_account_approver&&p?.role!=='admin')){setReady(true);return}
     setAllowed(true)
     const {data:s}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
     const {data:t}=s?.id
@@ -27,6 +27,6 @@ export default function SendMessagePage(){
   })()},[])
 
   if(!ready)return <PlayerPage title="Send Message"><div className="card"><p>Loading…</p></div></PlayerPage>
-  if(!allowed)return <PlayerPage title="Send Message"><div className="card"><h2>Admin Access Required</h2><p>This page is available only to an approved administrator.</p></div></PlayerPage>
+  if(!allowed)return <PlayerPage title="Send Message"><div className="card"><h2>Admin Access Required</h2><p>This page is available only to an approved account approver or administrator.</p></div></PlayerPage>
   return <PlayerPage title="Send Message"><AdminAnnouncements teams={teams}/></PlayerPage>
 }
