@@ -2641,3 +2641,7 @@ i .captain-mark-v1357{
     transform:translateX(-50%)!important;
   }
 }
+
+
+/* v13.160 — simulator booking-window denial popup */
+.booking-denied-x{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:#fde7e7;color:#c92525;font-size:46px;font-weight:900;line-height:1}
