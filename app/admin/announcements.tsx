@@ -45,7 +45,6 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
         .from('profiles')
         .select('id,full_name,email')
         .eq('status','approved')
-        .neq('role','admin')
         .order('full_name')
     ])
     if(error){setMessage(error.message);return}
