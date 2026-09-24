@@ -64,7 +64,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
       const {data:missingProfiles}=await supabase.from('profiles').select('id,full_name,email').in('id',missingIds)
       for(const p of missingProfiles||[])names[p.id]=p.full_name||p.email||'Player'
     }
-    setViewerProfiles(Object.fromEntries(Object.entries(names).map(([id,name])=>[id,{id,name}])))
+    setViewerProfiles(Object.fromEntries(Object.entries(names).map(([id,name])=>[id,{id,name:String(name||'Player')}])) as Record<string,ApprovedPlayer>)
     const grouped:Record<string,Reader[]>={}
     for(const r of readRows||[]){(grouped[r.announcement_id]??=[]).push({user_id:r.user_id,read_at:r.read_at,name:names[r.user_id]||'Player'})}
     setReaders(grouped)
