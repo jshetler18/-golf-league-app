@@ -57,6 +57,11 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
     const {data:readRows,error:readError}=await supabase.from('announcement_reads').select('announcement_id,user_id,read_at').in('announcement_id',ids).order('read_at',{ascending:true})
     if(readError){setMessage(readError.message);return}
     const names=Object.fromEntries((profiles||[]).map(p=>[p.id,p.full_name||p.email||'Player']))
+    const missingIds=[...new Set((readRows||[]).map(r=>r.user_id).filter(id=>!names[id]))]
+    if(missingIds.length){
+      const {data:missingProfiles}=await supabase.from('profiles').select('id,full_name,email').in('id',missingIds)
+      for(const p of missingProfiles||[])names[p.id]=p.full_name||p.email||'Player'
+    }
     const grouped:Record<string,Reader[]>={}
     for(const r of readRows||[]){(grouped[r.announcement_id]??=[]).push({user_id:r.user_id,read_at:r.read_at,name:names[r.user_id]||'Player'})}
     setReaders(grouped)
