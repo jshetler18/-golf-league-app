@@ -2645,3 +2645,19 @@ i .captain-mark-v1357{
 
 /* v13.160 — simulator booking-window denial popup */
 .booking-denied-x{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:#fde7e7;color:#c92525;font-size:46px;font-weight:900;line-height:1}
+
+
+/* v13.161 — phone layout for player-side Send Message controls */
+@media(max-width:760px){
+  .player-page .admin-announcements-section{margin-top:0;min-width:0}
+  .player-page .admin-announcement-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px}
+  .player-page .admin-announcement-grid>.card{min-width:0;padding:16px}
+  .player-page .admin-check{box-sizing:border-box;display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;align-items:start!important;gap:10px!important;width:100%!important;padding:12px!important}
+  .player-page .admin-check input{width:20px!important;height:20px!important;margin:2px 0 0!important}
+  .player-page .admin-check span{display:flex!important;min-width:0;flex-direction:column!important;gap:3px!important}
+  .player-page .admin-check strong,.player-page .admin-check small{display:block!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  .player-page .admin-check strong{font-size:15px;line-height:1.25}
+  .player-page .admin-check small{font-size:13px;line-height:1.35}
+  .player-page .admin-announcement-item{flex-direction:column!important;width:100%;min-width:0}
+  .player-page .announcement-read-button-v1237{max-width:100%;white-space:normal;text-align:left;line-height:1.25}
+}
