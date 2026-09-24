@@ -31,6 +31,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [saving,setSaving]=useState(false)
   const [readers,setReaders]=useState<Record<string,Reader[]>>({})
   const [approvedPlayers,setApprovedPlayers]=useState<ApprovedPlayer[]>([])
+  const [viewerProfiles,setViewerProfiles]=useState<Record<string,ApprovedPlayer>>({})
   const [openReaders,setOpenReaders]=useState<string|null>(null)
 
   async function load(){
@@ -51,7 +52,8 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
     if(profileError){setMessage(profileError.message);return}
     const announcements=(data||[]) as Announcement[]
     setRows(announcements)
-    setApprovedPlayers((profiles||[]).map(p=>({id:p.id,name:p.full_name||p.email||'Player'})))
+    const eligible=(profiles||[]).map(p=>({id:p.id,name:p.full_name||p.email||'Player'}))
+    setApprovedPlayers(eligible)
     const ids=announcements.map(a=>a.id)
     if(!ids.length){setReaders({});return}
     const {data:readRows,error:readError}=await supabase.from('announcement_reads').select('announcement_id,user_id,read_at').in('announcement_id',ids).order('read_at',{ascending:true})
@@ -62,6 +64,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
       const {data:missingProfiles}=await supabase.from('profiles').select('id,full_name,email').in('id',missingIds)
       for(const p of missingProfiles||[])names[p.id]=p.full_name||p.email||'Player'
     }
+    setViewerProfiles(Object.fromEntries(Object.entries(names).map(([id,name])=>[id,{id,name}])))
     const grouped:Record<string,Reader[]>={}
     for(const r of readRows||[]){(grouped[r.announcement_id]??=[]).push({user_id:r.user_id,read_at:r.read_at,name:names[r.user_id]||'Player'})}
     setReaders(grouped)
@@ -153,15 +156,19 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
             const teamName=a.team_id?teams.find(t=>t.id===a.team_id)?.name:null
             const readMap=readerMaps[a.id]||{}
             const viewedCount=Object.keys(readMap).length
+            const rosterMap=new Map(approvedPlayers.map(p=>[p.id,p]))
+            for(const id of Object.keys(readMap))if(!rosterMap.has(id))rosterMap.set(id,viewerProfiles[id]||{id,name:readMap[id].name||'Player'})
+            const statsPlayers=[...rosterMap.values()]
+            const totalCount=Math.max(statsPlayers.length,viewedCount)
             return <div className="admin-announcement-item" key={a.id}>
               <div className="admin-announcement-copy">
                 <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
                 <RichTextDisplay value={a.body} className="admin-announcement-body-v1237"/>
                 <small>Posted {new Date(a.created_at).toLocaleDateString()}{a.expires_at?` · Expires ${new Date(a.expires_at).toLocaleDateString()}`:''}</small>
                 <div className="announcement-read-tools-v1237">
-                  <button type="button" className="announcement-read-button-v1237" onClick={()=>setOpenReaders(openReaders===a.id?null:a.id)}>{viewedCount} of {approvedPlayers.length} viewed · View Players</button>
+                  <button type="button" className="announcement-read-button-v1237" onClick={()=>setOpenReaders(openReaders===a.id?null:a.id)}>{viewedCount} of {totalCount} viewed · View Players</button>
                   {openReaders===a.id&&<div className="announcement-reader-roster-v1238">
-                    {approvedPlayers.length===0?<span className="muted">No approved players found.</span>:approvedPlayers.map(p=>{
+                    {statsPlayers.length===0?<span className="muted">No approved players found.</span>:statsPlayers.map(p=>{
                       const read=readMap[p.id]
                       return <div className={`announcement-reader-row-v1238 ${read?'viewed':'not-viewed'}`} key={p.id}>
                         <span className="announcement-reader-check-v1238" aria-label={read?'Viewed':'Not viewed'}>{read?'✓':''}</span>
