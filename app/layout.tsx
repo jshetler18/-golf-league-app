@@ -2,6 +2,7 @@ import './globals.css'
 import './booking-overrides.css'
 import AppChrome from '@/components/AppChrome'
 import NotificationApprovalPrompt from '@/components/NotificationApprovalPrompt'
+import PwaRegistration from '@/components/PwaRegistration'
 
 export const metadata = {
   title: 'Tom Krise 19th Hole Golf League',
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <PwaRegistration />
         <AppChrome>{children}</AppChrome>
         <NotificationApprovalPrompt />
       </body>
