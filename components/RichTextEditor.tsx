@@ -7,7 +7,7 @@ type Props={value:string;onChange:(value:string)=>void;placeholder?:string}
 export function RichTextEditor({value,onChange,placeholder='Start typing…'}:Props){
   const ref=useRef<HTMLDivElement>(null)
   const cleanEditorHtml=(html:string)=>normalizeRichText(html)
-  useEffect(()=>{if(ref.current&&ref.current.innerHTML!==value)ref.current.innerHTML=value},[value])
+  // Keep React state from rewriting contentEditable while the user is typing.\n  // Replacing innerHTML on each keystroke makes mobile browsers lose the caret\n  // position (most noticeably when the space bar is pressed).\n  useEffect(()=>{\n    const editor=ref.current\n    if(!editor)return\n    if(document.activeElement===editor)return\n    if(editor.innerHTML!==value)editor.innerHTML=value\n  },[value])
   function cmd(command:string,arg?:string){ref.current?.focus();document.execCommand(command,false,arg);onChange(cleanEditorHtml(ref.current?.innerHTML||''))}
   function link(){const url=window.prompt('Enter a web address (https://…)')?.trim();if(url)cmd('createLink',url)}
   return <div className="rich-editor-v1237">
