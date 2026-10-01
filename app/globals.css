@@ -2661,3 +2661,9 @@ i .captain-mark-v1357{
   .player-page .admin-announcement-item{flex-direction:column!important;width:100%;min-width:0}
   .player-page .announcement-read-button-v1237{max-width:100%;white-space:normal;text-align:left;line-height:1.25}
 }
+
+
+/* v13.162 — Send Message editor starts as regular text on player/profile page */
+.player-page .rich-edit-area-v1237{
+  font-weight:400;
+}
