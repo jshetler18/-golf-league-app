@@ -16,8 +16,9 @@ export async function POST(req:NextRequest){
     const supabase=createClient(url,key,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false,autoRefreshToken:false}})
     const {data:{user},error:userError}=await supabase.auth.getUser(token)
     if(userError||!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
-    const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single()
-    if(profile?.role!=='admin')return NextResponse.json({error:'Admin access required.'},{status:403})
+    const {data:profile}=await supabase.from('profiles').select('role,status,is_account_approver').eq('id',user.id).single()
+    const canSend=profile?.status==='approved'&&(profile?.role==='admin'||profile?.is_account_approver===true)
+    if(!canSend)return NextResponse.json({error:'Admin access required.'},{status:403})
 
     const payload=await req.json()
     const announcementId=String(payload.announcementId||'')
