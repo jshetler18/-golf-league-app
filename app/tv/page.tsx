@@ -662,7 +662,7 @@ export default function TVLeaderboard(){
 
       <img
        src=
-        "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo.png"
+        "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
        alt=
         "Tom Krise 19th Hole Golf League"
       />
@@ -999,7 +999,7 @@ export default function TVLeaderboard(){
 
      <img
       src=
-       "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo.png"
+       "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
       alt=
        "Tom Krise 19th Hole Golf League"
      />
