@@ -502,7 +502,7 @@ export default function CupTV() {
 
         <img
           className="cup-tv-logo"
-          src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo.png"
+          src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
           alt="Tom Krise 19th Hole Golf League"
         />
 
