@@ -660,7 +660,7 @@ export default function TVLeaderboard(){
        "tv-approved-logo"
      >
 
-      <img
+      <img style={{ transform: 'scale(1.2)', transformOrigin: 'left center' }}
        src=
         "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
        alt=
@@ -997,7 +997,7 @@ export default function TVLeaderboard(){
       "tv-approved-logo"
     >
 
-     <img
+     <img style={{ transform: 'scale(1.2)', transformOrigin: 'left center' }}
       src=
        "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
       alt=
