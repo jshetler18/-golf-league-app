@@ -502,8 +502,8 @@ export default function CupTV() {
 
         <img
           className="cup-tv-logo"
-          src="/tom-krise-logo.png"
-          alt="Tom Krise 19th Hole Golf Simulator"
+          src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo.png"
+          alt="Tom Krise 19th Hole Golf League"
         />
 
         <div className="cup-tv-title">
