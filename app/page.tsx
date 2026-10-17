@@ -36,7 +36,29 @@ export default function Home(){
  useEffect(()=>{const fn=(e:MouseEvent)=>{if(wrap.current&&!wrap.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',fn);return()=>document.removeEventListener('mousedown',fn)},[])
  useEffect(()=>{let alive=true;const check=async()=>{try{const r=await fetch('/api/youtube/live',{cache:'no-store'});const j=await r.json();if(alive)setYoutubeLive(j?.isLive?j:null)}catch{}};check();const timer=window.setInterval(check,60000);return()=>{alive=false;window.clearInterval(timer)}},[])
  async function logout(){await supabase.auth.signOut();location.href='/login'}
- if(!authReady||!profile)return <div className="mobile-home auth-home-loading" aria-live="polite"><div className="auth-home-loading-inner">Checking sign in…</div></div>
+ if(!authReady||!profile)return <div className="golf-auth-loading" role="status" aria-live="polite" aria-label="Checking sign in status">
+  <div className="golf-auth-loading-content">
+   <div className="golf-auth-ball-wrap" aria-hidden="true"><div className="golf-auth-ball">⛳</div><div className="golf-auth-orbit"/></div>
+   <strong>Checking Sign In</strong>
+   <span>Getting your golf league ready…</span>
+   <div className="golf-auth-progress" aria-hidden="true"><div/></div>
+  </div>
+  <style>{`
+   .golf-auth-loading{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#06172d,#0d3050 55%,#082b24);color:white;text-align:center;padding:24px;box-sizing:border-box}
+   .golf-auth-loading-content{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(320px,90vw)}
+   .golf-auth-ball-wrap{position:relative;width:112px;height:112px;display:grid;place-items:center;margin-bottom:10px}
+   .golf-auth-ball{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#fff,#e6edf2 62%,#a5b5c4);box-shadow:inset -8px -9px 14px #8b9ca755,0 8px 25px #0008;font-size:37px;animation:golfAuthBounce 1.6s ease-in-out infinite}
+   .golf-auth-orbit{position:absolute;inset:0;border:4px solid #ffffff20;border-top-color:#9cdb3b;border-right-color:#9cdb3b;border-radius:50%;animation:golfAuthSpin 1.2s linear infinite}
+   .golf-auth-loading strong{font-size:23px;letter-spacing:.02em}
+   .golf-auth-loading span{font-size:14px;color:#d5e3ee}
+   .golf-auth-progress{height:6px;width:100%;margin-top:12px;background:#ffffff30;border-radius:20px;overflow:hidden}
+   .golf-auth-progress>div{height:100%;width:38%;background:linear-gradient(90deg,#7ecb27,#d1f97b);border-radius:20px;animation:golfAuthProgress 1.6s ease-in-out infinite}
+   @keyframes golfAuthSpin{to{transform:rotate(360deg)}}
+   @keyframes golfAuthBounce{50%{transform:translateY(-5px)}}
+   @keyframes golfAuthProgress{0%{transform:translateX(-105%)}100%{transform:translateX(270%)}}
+   @media(prefers-reduced-motion:reduce){.golf-auth-ball,.golf-auth-orbit,.golf-auth-progress>div{animation:none}.golf-auth-progress>div{width:100%}}
+  `}</style>
+ </div>
  if(profile?.status==='approved'&&profile?.access_type==='sim_only')return <div className="mobile-home sim-only-home-v13159">
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Laurel View Golf Simulator"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
   <div className="sim-only-welcome-v13159"><h1>Golf Simulator</h1><p>Your account is approved for simulator reservations.</p></div>
