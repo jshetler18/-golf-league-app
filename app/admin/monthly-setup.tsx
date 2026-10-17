@@ -8,7 +8,7 @@ type Player={id:string;team_id:string|null;full_name:string;official_tee_color:s
 type CourseTee={color:string;yardage:string}
 type CourseProfile={
  id:string;course_name:string;course_location:string|null;bonus_hole_1:number|null;bonus_hole_2:number|null;bonus_birdie_value:number;
- elevation_ft:number;stimp_options:string[];gimmie_feet:number;wind:string;greens:string;fairways:string;mulligans:boolean;
+ elevation_ft:number;stimp_options:string[];gimmie_feet:number;wind:string;greens:string;fairways:string;realism:string;mulligans:boolean;
  pins_week_1:string;pins_week_2:string;pins_week_3:string;pins_week_4:string
 }
 type MonthRow={id:string;month_start:string;course_profile_id:string|null}
@@ -29,7 +29,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  const [course,setCourse]=useState('');const [courseLocation,setCourseLocation]=useState('')
  const [b1,setB1]=useState(11);const [b2,setB2]=useState(12);const [bonus,setBonus]=useState(.1)
  const [pins,setPins]=useState<Record<number,string>>({...defaultPins})
- const [elevation,setElevation]=useState(2000);const [gimmie,setGimmie]=useState(5);const [wind,setWind]=useState('None');const [greens,setGreens]=useState('Normal');const [fairways,setFairways]=useState('Normal');const [mulligans,setMulligans]=useState(false)
+ const [elevation,setElevation]=useState(2000);const [gimmie,setGimmie]=useState(5);const [wind,setWind]=useState('None');const [greens,setGreens]=useState('Normal');const [fairways,setFairways]=useState('Normal');const [mulligans,setMulligans]=useState(false);const [realism,setRealism]=useState('Force Realistic')
  const [courseTees,setCourseTees]=useState<Record<string,CourseTee>>({})
  const [monthStart,setMonthStart]=useState(months[0][0]);const [monthId,setMonthId]=useState('');const [assignedProfileId,setAssignedProfileId]=useState('')
  const [handicaps,setHandicaps]=useState<Record<string,string>>({});const [playerTeeLevels,setPlayerTeeLevels]=useState<Record<string,string>>({})
@@ -63,7 +63,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
  async function saveHandicapStandard(){const n=Number(standardDraft);if(!Number.isFinite(n)||n<=0){setMsg('Enter a valid handicap standard.');return};const {error}=await supabase.from('seasons').update({handicap_standard:n}).eq('id',seasonId);if(error){setMsg(error.message);return};setHandicapStandard(n);setMsg(`Handicap standard updated to ${n}. All recommendations have been recalculated.`)}
 
  function resetCourse(){
-   setProfileId('');setCourse('');setCourseLocation('');setB1(11);setB2(12);setBonus(.1);setPins({...defaultPins});setElevation(2000);setGimmie(5);setWind('None');setGreens('Normal');setFairways('Normal');setMulligans(false);setCourseTees({});setMsg('')
+   setProfileId('');setCourse('');setCourseLocation('');setB1(11);setB2(12);setBonus(.1);setPins({...defaultPins});setElevation(2000);setGimmie(5);setWind('None');setGreens('Normal');setFairways('Normal');setMulligans(false);setRealism('Force Realistic');setCourseTees({});setMsg('')
  }
  async function loadProfile(id:string){
    setProfileId(id);setMsg('')
@@ -71,7 +71,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    const p=profiles.find(x=>x.id===id);if(!p)return
    setCourse(p.course_name);setCourseLocation(p.course_location||'');setB1(p.bonus_hole_1||11);setB2(p.bonus_hole_2||12);setBonus(Number(p.bonus_birdie_value))
    setPins({1:p.pins_week_1||'Thursday',2:p.pins_week_2||'Friday',3:p.pins_week_3||'Saturday',4:p.pins_week_4||'Sunday'})
-   setElevation(p.elevation_ft);setGimmie(p.gimmie_feet);setWind(p.wind);setGreens(p.greens);setFairways(p.fairways);setMulligans(p.mulligans)
+   setElevation(p.elevation_ft);setGimmie(p.gimmie_feet);setWind(p.wind);setGreens(p.greens);setFairways(p.fairways);setMulligans(p.mulligans);setRealism(p.realism||'Force Realistic')
    const {data:tees}=await supabase.from('course_profile_tee_boxes').select('tee_level,course_tee_color,yardage').eq('course_profile_id',id)
    setCourseTees(Object.fromEntries((tees||[]).map(t=>[t.tee_level,{color:t.course_tee_color,yardage:String(t.yardage)}])))
  }
@@ -81,7 +81,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    const incomplete=teeLevels.filter(l=>courseTees[l.key]&&(!courseTees[l.key].color.trim()||!courseTees[l.key].yardage))
    if(incomplete.length){setMsg('Each course tee entry needs both a tee color/name and yardage.');return}
    setMsg('Saving course…')
-   const payload={course_name:course.trim(),course_location:courseLocation.trim()||null,bonus_hole_1:b1,bonus_hole_2:b2,bonus_birdie_value:bonus,elevation_ft:elevation,stimp_options:['10','11'],gimmie_feet:gimmie,wind,greens,fairways,mulligans,pins_week_1:pins[1],pins_week_2:pins[2],pins_week_3:pins[3],pins_week_4:pins[4],updated_at:new Date().toISOString()}
+   const payload={course_name:course.trim(),course_location:courseLocation.trim()||null,bonus_hole_1:b1,bonus_hole_2:b2,bonus_birdie_value:bonus,elevation_ft:elevation,stimp_options:['10','11'],gimmie_feet:gimmie,wind,greens,fairways,realism,mulligans,pins_week_1:pins[1],pins_week_2:pins[2],pins_week_3:pins[3],pins_week_4:pins[4],updated_at:new Date().toISOString()}
    let id=profileId
    if(id){
      const {error}=await supabase.from('course_profiles').update(payload).eq('id',id);if(error){setMsg(error.message);return}
@@ -144,7 +144,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    }
    const cp=profiles.find(p=>p.id===assignedProfileId);if(!cp){setMsg('Course setup could not be found.');return}
    setMsg('Assigning course to month…')
-   const payload={season_id:seasonId,month_start:monthStart,course_profile_id:cp.id,course_name:cp.course_name,course_location:cp.course_location,bonus_hole_1:cp.bonus_hole_1,bonus_hole_2:cp.bonus_hole_2,bonus_birdie_value:cp.bonus_birdie_value,elevation_ft:cp.elevation_ft,stimp_options:cp.stimp_options,gimmie_feet:cp.gimmie_feet,wind:cp.wind,greens:cp.greens,fairways:cp.fairways,mulligans:cp.mulligans,pins_week_1:cp.pins_week_1,pins_week_2:cp.pins_week_2,pins_week_3:cp.pins_week_3,pins_week_4:cp.pins_week_4,round_pin_days:[cp.pins_week_1,cp.pins_week_2,cp.pins_week_3,cp.pins_week_4]}
+   const payload={season_id:seasonId,month_start:monthStart,course_profile_id:cp.id,course_name:cp.course_name,course_location:cp.course_location,bonus_hole_1:cp.bonus_hole_1,bonus_hole_2:cp.bonus_hole_2,bonus_birdie_value:cp.bonus_birdie_value,elevation_ft:cp.elevation_ft,stimp_options:cp.stimp_options,gimmie_feet:cp.gimmie_feet,wind:cp.wind,greens:cp.greens,fairways:cp.fairways,realism:cp.realism||'Force Realistic',mulligans:cp.mulligans,pins_week_1:cp.pins_week_1,pins_week_2:cp.pins_week_2,pins_week_3:cp.pins_week_3,pins_week_4:cp.pins_week_4,round_pin_days:[cp.pins_week_1,cp.pins_week_2,cp.pins_week_3,cp.pins_week_4]}
    let id=monthId
    if(id){const {error}=await supabase.from('league_months').update(payload).eq('id',id);if(error){setMsg(error.message);return}}
    else{const {data,error}=await supabase.from('league_months').insert(payload).select('id').single();if(error){setMsg(error.message);return};id=data.id;setMonthId(id)}
@@ -245,7 +245,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
          <label className="field">Stimp<input value="10 or 11 — team choice" disabled/></label>
          <label className="field">Gimmies (ft)<input type="number" value={gimmie} onChange={e=>setGimmie(Number(e.target.value))}/></label>
          <label className="field">Wind<input value={wind} onChange={e=>setWind(e.target.value)}/></label><label className="field">Greens<input value={greens} onChange={e=>setGreens(e.target.value)}/></label><label className="field">Fairways<input value={fairways} onChange={e=>setFairways(e.target.value)}/></label>
-         <label className="field">Mulligans<select value={mulligans?'on':'off'} onChange={e=>setMulligans(e.target.value==='on')}><option value="off">Off</option><option value="on">On</option></select></label>
+         <label className="field">Realism<select value={realism} onChange={e=>setRealism(e.target.value)}><option value="Force Realistic">Force Realistic</option></select></label><label className="field">Mulligans<select value={mulligans?'on':'off'} onChange={e=>setMulligans(e.target.value==='on')}><option value="off">Off</option><option value="on">On</option></select></label>
        </div>
        <h3>Course Tee Boxes &amp; Yardages</h3><p className="muted">Map each league tee level to this course's actual tee color and yardage.</p>
        <div className="course-tee-grid-v1344">{teeLevels.map(l=><div className="course-tee-row-v1344" key={l.key}><strong>{l.label}</strong><label className="field">Course Tee Color<select value={courseTees[l.key]?.color||''} onChange={e=>setCourseTees(v=>({...v,[l.key]:{color:e.target.value,yardage:v[l.key]?.yardage||''}}))}><option value="">Select color</option>{teeColors.map(c=><option key={c}>{c}</option>)}</select></label><label className="field">Yardage<input type="number" value={courseTees[l.key]?.yardage||''} onChange={e=>setCourseTees(v=>({...v,[l.key]:{color:v[l.key]?.color||'',yardage:e.target.value}}))}/></label></div>)}</div>
