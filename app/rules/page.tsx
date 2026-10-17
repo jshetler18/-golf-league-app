@@ -222,8 +222,8 @@ export default function Rules(){
                   <div><small>WIND</small><strong>{selected.wind||'Not set'}</strong></div>
                   <div><small>GREENS</small><strong>{selected.greens||'Not set'}</strong></div>
                   <div><small>FAIRWAYS</small><strong>{selected.fairways||'Not set'}</strong></div>
-                  <div><small>REALISM</small><strong>{selected.realism||'Force Realistic'}</strong></div>
                   <div><small>MULLIGANS</small><strong>{selected.mulligans?'On':'Off'}</strong></div>
+                  <div><small>REALISM</small><strong>{selected.realism||'Force Realistic'}</strong></div>
                 </div>
               </section>
 
