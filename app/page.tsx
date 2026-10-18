@@ -5,6 +5,7 @@ import {useCallback,useEffect,useRef,useState} from 'react'
 import type {ComponentType, SVGProps} from 'react'
 import {supabase} from '@/lib/supabase'
 import {syncAppBadge} from '@/lib/appBadge'
+import ViewportBottomNav from '@/components/ViewportBottomNav'
 import {CalendarIcon,StandingsIcon,TrophyIcon,MessagesIcon,TeamsIcon,HistoryIcon,RulesIcon,HomeIcon,LiveIcon} from '@/components/PlayerIcons'
 
 type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:string}
@@ -63,7 +64,7 @@ export default function Home(){
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Laurel View Golf Simulator"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
   <div className="sim-only-welcome-v13159"><h1>Golf Simulator</h1><p>Your account is approved for simulator reservations.</p></div>
   <nav className="mobile-menu"><Link href="/my-bookings" className="mobile-menu-row"><span className="menu-icon"><CalendarIcon /></span><span className="menu-copy"><span className="menu-title">Sim Reservations</span></span><span className="menu-arrow">›</span></Link></nav>
-  <nav className="mobile-bottom sim-only-bottom-v13159"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link></nav>
+  <ViewportBottomNav><nav className="mobile-bottom sim-only-bottom-v13159"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link></nav></ViewportBottomNav>
  </div>
  return <div className="mobile-home">
   <section className="mobile-brand"><img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League"/><div className="profile-wrap" ref={wrap}><button className="profile-button" onClick={()=>setOpen(!open)} aria-label="Open profile menu">{profile?.avatar_url?<img src={profile.avatar_url} alt="Profile"/>:<span>👤</span>}<b>⌄</b></button>{open&&<div className="profile-menu"><Link href="/submit-score">Submit Score</Link>{(profile?.status==='approved'&&(profile?.is_scorecard_official||profile?.role==='admin'))&&<Link href="/scorecard-official">Scorecard Admin</Link>}{(profile?.status==='approved'&&(profile?.is_account_approver||profile?.role==='admin'))&&<Link href="/account-approvals">Account Approvals</Link>}{profile?.status==='approved'&&(profile?.is_account_approver||profile?.role==='admin')&&<Link href="/send-message">Send Message</Link>}<Link href="/profile">My Profile</Link><Link href="/settings">Settings</Link><button onClick={logout}>Log Out ↪</button></div>}</div></section>
@@ -74,4 +75,4 @@ export default function Home(){
   <Bottom unread={unread}/>
  </div>
 }
-function Bottom({unread}:{unread:number}){return <nav className="mobile-bottom"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link><Link href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link><Link href="/messages" className="bottom-message"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav>}
+function Bottom({unread}:{unread:number}){return <ViewportBottomNav><nav className="mobile-bottom"><Link className="active" href="/"><span><HomeIcon /></span><b>Home</b></Link><Link href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link><Link href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link><Link href="/messages" className="bottom-message"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link></nav></ViewportBottomNav>}
