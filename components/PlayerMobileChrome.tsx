@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { syncAppBadge } from '@/lib/appBadge'
+import ViewportBottomNav from '@/components/ViewportBottomNav'
 import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
@@ -107,18 +108,18 @@ export function PlayerMobileBottom(){
   },[path,load])
 
   if(accessType==='sim_only'){
-    return <nav className="player-mobile-bottom" aria-label="Simulator booking navigation">
+    return <ViewportBottomNav><nav className="player-mobile-bottom" aria-label="Simulator booking navigation">
       <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
       <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
-    </nav>
+    </nav></ViewportBottomNav>
   }
 
-  return <nav className="player-mobile-bottom" aria-label="Player navigation">
+  return <ViewportBottomNav><nav className="player-mobile-bottom" aria-label="Player navigation">
     <Link className={path==='/'?'active':''} href="/"><span><HomeIcon /></span><b>Home</b></Link>
     <Link className={path==='/my-bookings'?'active':''} href="/my-bookings"><span><CalendarIcon /></span><b>Reservations</b></Link>
     <Link className={path==='/my-team'?'active':''} href="/my-team"><span><TeamsIcon /></span><b>My Team</b></Link>
     <Link className={`${path==='/messages'?'active':''} player-bottom-message`} href="/messages"><span><MessagesIcon /></span>{unread>0&&<i>{unread}</i>}<b>Messages</b></Link>
-  </nav>
+  </nav></ViewportBottomNav>
 }
 
 export function PlayerPage({title,children}:{title:string;children:ReactNode}){
