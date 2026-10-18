@@ -3,12 +3,15 @@
 import {useEffect,useState} from 'react'
 import {supabase} from '@/lib/supabase'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
+import ProfilePhotoCropper from '@/components/ProfilePhotoCropper'
 
 type ProfileRow={full_name:string;avatar_url:string|null;role:string;email:string|null}
 
 export default function Profile(){
   const [name,setName]=useState('')
   const [avatar,setAvatar]=useState<string|null>(null)
+  const [chosenPhoto,setChosenPhoto]=useState<File|null>(null)
+  const [uploadingPhoto,setUploadingPhoto]=useState(false)
   const [role,setRole]=useState('player')
   const [email,setEmail]=useState('')
   const [newPassword,setNewPassword]=useState('')
@@ -28,17 +31,30 @@ export default function Profile(){
     setEmail(user.email||p?.email||'')
   })()},[])
 
-  async function upload(e:any){
-    const f=e.target.files?.[0]
-    if(!f)return
-    const {data:{user}}=await supabase.auth.getUser()
-    if(!user)return
-    const ext=f.name.split('.').pop()
-    const path=`${user.id}/profile.${ext}`
-    const {error}=await supabase.storage.from('avatars').upload(path,f,{upsert:true})
-    if(error){setMsg(error.message);return}
-    const {data}=supabase.storage.from('avatars').getPublicUrl(path)
-    setAvatar(data.publicUrl+'?v='+Date.now())
+  function choosePhoto(e:React.ChangeEvent<HTMLInputElement>){
+    const file=e.target.files?.[0]
+    e.target.value=''
+    if(!file)return
+    if(!file.type.startsWith('image/')){setMsg('Please choose an image.');return}
+    if(file.size>10*1024*1024){setMsg('Please choose a photo smaller than 10 MB.');return}
+    setMsg('')
+    setChosenPhoto(file)
+  }
+
+  async function uploadAdjustedPhoto(blob:Blob){
+    setUploadingPhoto(true)
+    try{
+      const {data:{user}}=await supabase.auth.getUser()
+      if(!user)throw Error('Please sign in again.')
+      const path=user.id+'/profile.jpg'
+      const {error}=await supabase.storage.from('avatars').upload(path,blob,{upsert:true,contentType:'image/jpeg'})
+      if(error)throw error
+      const {data}=supabase.storage.from('avatars').getPublicUrl(path)
+      setAvatar(data.publicUrl+'?v='+Date.now())
+      setChosenPhoto(null)
+      setMsg('Photo positioned. Select Save Profile to publish it.')
+    }catch(e){setMsg(e instanceof Error?e.message:'Photo upload failed.')}
+    finally{setUploadingPhoto(false)}
   }
 
   async function save(){
@@ -64,7 +80,7 @@ export default function Profile(){
     }finally{setSavingCredentials(false)}
   }
 
-  const content=<div className="simple-mobile-page"><h1>My Profile</h1><div className="profile-editor"><div className="avatar-preview">{avatar?<img src={avatar} alt="Profile"/>:<span>👤</span>}</div><label className="btn secondary">Choose Profile Photo<input hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={upload}/></label><label>Display Name<input value={name} onChange={e=>setName(e.target.value)}/></label><button className="btn" onClick={save}>Save Profile</button>{msg&&<p>{msg}</p>}</div>{role==='admin'&&<section className="card admin-profile-login-v13127"><div className="section-title"><div><h2>Administrator Login</h2><p className="muted">Change the username used to sign in and set a new password.</p></div></div><div className="form-grid single"><label className="field">Username / Email<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label className="field">New Password<input type="password" minLength={6} autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="Leave blank to keep current password"/></label><label className="field">Confirm New Password<input type="password" minLength={6} autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Re-enter new password"/></label><button className="btn" type="button" disabled={savingCredentials} onClick={saveAdminCredentials}>{savingCredentials?'Saving…':'Update Admin Login'}</button>{credentialMsg&&<p className="message">{credentialMsg}</p>}</div></section>}</div>
+  const content=<div className="simple-mobile-page"><h1>My Profile</h1><div className="profile-editor"><div className="avatar-preview">{avatar?<img src={avatar} alt="Profile"/>:<span>👤</span>}</div><label className="btn secondary">Choose Profile Photo<input hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={choosePhoto}/></label><label>Display Name<input value={name} onChange={e=>setName(e.target.value)}/></label><button className="btn" onClick={save}>Save Profile</button>{msg&&<p>{msg}</p>}</div>{role==='admin'&&<section className="card admin-profile-login-v13127"><div className="section-title"><div><h2>Administrator Login</h2><p className="muted">Change the username used to sign in and set a new password.</p></div></div><div className="form-grid single"><label className="field">Username / Email<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label className="field">New Password<input type="password" minLength={6} autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="Leave blank to keep current password"/></label><label className="field">Confirm New Password<input type="password" minLength={6} autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Re-enter new password"/></label><button className="btn" type="button" disabled={savingCredentials} onClick={saveAdminCredentials}>{savingCredentials?'Saving…':'Update Admin Login'}</button>{credentialMsg&&<p className="message">{credentialMsg}</p>}</div></section>}</div>
 
-  return <PlayerPage title="My Profile">{content}</PlayerPage>
+  return <PlayerPage title="My Profile">{content}{chosenPhoto&&<ProfilePhotoCropper file={chosenPhoto} onCancel={()=>setChosenPhoto(null)} onApply={uploadAdjustedPhoto} busy={uploadingPhoto}/>}</PlayerPage>
 }
