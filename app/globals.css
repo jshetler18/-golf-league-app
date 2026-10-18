@@ -2667,3 +2667,17 @@ i .captain-mark-v1357{
 .player-page .rich-edit-area-v1237{
   font-weight:400;
 }
+
+/* Circular avatar framing with touch dragging and zoom. */
+.volunteer-crop-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(4,22,14,.65);padding:16px;overflow:auto}
+.volunteer-crop-dialog{width:min(100%,440px);max-height:95dvh;overflow-y:auto;border-radius:18px;background:#fff;padding:22px;text-align:center;box-shadow:0 16px 50px #0005}
+.volunteer-crop-dialog h2{font-size:22px;margin:0 0 9px}
+.volunteer-crop-dialog>p{margin:0 0 16px;font-size:15px;line-height:1.45}
+.volunteer-crop-view{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;width:280px;height:280px;max-width:100%;margin:0 auto 18px;border-radius:50%;background:#e2e9e3;border:4px solid #398746;box-sizing:content-box;cursor:grab}
+.volunteer-crop-view:active{cursor:grabbing}
+.volunteer-crop-view img{position:absolute;max-width:none!important;max-height:none!important;object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.volunteer-crop-zoom{display:flex;align-items:center;gap:13px;text-align:left;font-size:17px;font-weight:700;margin:12px auto 20px;max-width:300px}
+.volunteer-crop-zoom input{flex:1;min-width:0;width:100%;accent-color:#2e7b33}
+.volunteer-crop-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.volunteer-crop-actions button{min-height:49px;padding:11px 17px;font-size:16px;font-weight:700}
+@media(max-width:360px){.volunteer-crop-view{transform:scale(.88);transform-origin:center;margin:-12px auto 5px}.volunteer-crop-dialog{padding:14px}}
