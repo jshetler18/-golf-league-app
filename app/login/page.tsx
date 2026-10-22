@@ -18,13 +18,16 @@ export default function LoginPage(){
   const [password,setPassword]=useState('')
   const [message,setMessage]=useState('')
   const [loading,setLoading]=useState(false)
+  const [profileError,setProfileError]=useState('')
 
   async function refresh(){
     const { data } = await supabase.auth.getUser()
-    if(!data.user){ setUserEmail(''); setProfile(null); return }
+    if(!data.user){ setUserEmail(''); setProfile(null); setProfileError(''); return }
     setUserEmail(data.user.email || '')
-    const { data:p } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',data.user.id).maybeSingle()
-    setProfile(p as Profile|null)
+    const { data:p, error:lookupError } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',data.user.id).maybeSingle()
+    if(lookupError || !p){setProfile(null);setProfileError(lookupError?.message || 'Your account profile could not be found. Please contact the league administrator.');return}
+    setProfileError('')
+    setProfile(p as Profile)
     if(p?.status==='approved'){
       window.location.replace(p?.role==='admin'?'/admin':'/')
       return
@@ -36,7 +39,7 @@ export default function LoginPage(){
   // As soon as an administrator approves the account, refresh() redirects them
   // automatically into the app without requiring another sign-in or page refresh.
   useEffect(()=>{
-    if(!userEmail || profile?.status!=='pending') return
+    if(!userEmail || (profile?.status!=='pending' && !profileError)) return
     const checkApproval=()=>{ if(document.visibilityState==='visible') refresh() }
     const timer=window.setInterval(checkApproval,5000)
     window.addEventListener('focus',checkApproval)
@@ -46,7 +49,7 @@ export default function LoginPage(){
       window.removeEventListener('focus',checkApproval)
       document.removeEventListener('visibilitychange',checkApproval)
     }
-  },[userEmail,profile?.status])
+  },[userEmail,profile?.status,profileError])
 
   async function prepareDefaultNotifications(){
     try{
@@ -100,7 +103,8 @@ export default function LoginPage(){
       if(error){
         setMessage(error.message)
       }else if(mode==='admin'){
-        const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
+        const { data:p, error:lookupError } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
+        if(lookupError || !p){setMessage('Unable to verify account access: '+(lookupError?.message || 'Profile not found'));setLoading(false);return}
         if(p?.role==='admin' && p?.status==='approved'){
           window.location.href='/admin'
           return
@@ -131,8 +135,8 @@ export default function LoginPage(){
       {userEmail?<>
         <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'pending'}`}>{profile?.status || 'Pending'}</span><h2>Signed In</h2><p>{userEmail}</p><p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><p className="muted">This page checks automatically. Once your account is approved, you’ll be taken directly to the home screen.</p></>}</div>
-          <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
+          <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'error'}`}>{profile?.status || 'Profile Unavailable'}</span><h2>Signed In</h2><p>{userEmail}</p>{profileError&&<p role="alert" className="message">Unable to verify account status: {profileError}. Please retry or contact the league administrator.</p>}<p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><p className="muted">This page checks automatically. Once your account is approved, you’ll be taken directly to the home screen.</p></>}</div>
+          <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}{profileError&&<button className="btn" onClick={refresh}>Retry</button>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
         <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':'Request access to the 19th Hole Golf League app.'}</p></div>
