@@ -11,10 +11,10 @@ const resilientFetch: typeof fetch = async (input, init) => {
   const isRest = new URL(request.url).pathname.startsWith('/rest/v1/')
   for (let attempt = 0; ; attempt++) {
     const response = await fetch(request.clone())
-    if (!isRest || response.status !== 401 || attempt >= 3) return response
+    if (!isRest || ![400, 401].includes(response.status) || attempt >= 4) return response
     const body = await response.clone().json().catch(() => null)
-    if (body?.code !== 'PGRST303' || !String(body?.message || '').includes('JWT issued at future')) return response
-    await new Promise(resolve => setTimeout(resolve, [500, 1500, 3000][attempt]))
+    if (!/JWT issued at future/i.test(String(body?.message || body?.error || ''))) return response
+    await new Promise(resolve => setTimeout(resolve, [1000, 2000, 3500, 5000][attempt]))
   }
 }
 
