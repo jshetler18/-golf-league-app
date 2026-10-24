@@ -54,3 +54,7 @@ The isolated Vercel project currently has the two public Supabase environment va
 ### Storage reference audit
 
 Six V2 profile avatar URLs still reference the original Supabase project; all six need to be rewritten to V2 URLs **after** the actual avatar files are transferred and verified. Three score submission records contain relative `image_path` values (not hardcoded absolute original-project URLs); the private scorecard binaries still need migration. The V2 storage buckets exist but objects remain absent. Do not retire original storage until all references are independently verified.
+
+### V2 notification deployment verification (2026-10-24)
+
+Isolated commits `8ace6bd` (push registration missing-secret 503 guard) and `811d6d9` (booking-admin missing-secret/VAPID 503 guard) deployed to the V2 preview. Vercel deployment `dpl_7gbZK2BTPPf89Qp6SdNn5odyod4u` is READY at commit `811d6d9`, and `/my-bookings` returned HTTP 200. A second deployment `dpl_EYRk41UC86Luge2HJ1XEmDP49iVg` also reached READY. These checks confirm deployment and page response only, **not successful push delivery**. V2 `SUPABASE_SECRET_KEY` and `VAPID_PRIVATE_KEY` remain unconfigured; push registration and delivery require authenticated testing after credentials are added.
