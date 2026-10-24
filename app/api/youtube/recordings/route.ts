@@ -4,6 +4,7 @@ import {FULL_MONTHS,getKnownTeamNames,getRoundMetadata,getYouTubeChannelWithUplo
 
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
+// Golf V2 preview: rebuild archive endpoint after YouTube API configuration.
 
 type Recording={
   videoId:string
