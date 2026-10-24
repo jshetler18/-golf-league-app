@@ -34,6 +34,6 @@ Updated 2026-10-24. **NOT READY FOR CUTOVER.**
 - Rotate any previously exposed V2 deployment hook URL after rollout.
 - Never present the migration as complete while file transfer, future booking cutover or acceptance tests are outstanding.
 
-### Booking identity audit (2026-10-24)
+### Booking identity audit (2026-10-24) — resolved for staged snapshot
 
-The 80 staged personal bookings include **22 records belonging to 7 distinct original owner IDs that are not present in the 35 restored V2 auth accounts**. Nineteen of the 22 are marked active, and **one of the 22 is a future booking** (based on `start_at`). Do not activate or silently discard that reservation. Resolve the owner's identity, establish a safe account mapping or obtain an explicit disposition, and recheck the original live booking data at cutover. Blocked and league bookings normally have null `user_id` and are not evidence of missing owners. The original production app remains authoritative until cutover.
+The initial readiness view falsely flagged 22 personal booking owners and 21 creators because it recognized only IDs present in the two-row `account_id_map` table and did not check directly preserved auth UUIDs. The V2-only `migration_private.booking_migration_readiness` view was corrected to check `auth.users` after applying optional ID remaps. Verified **80/80 personal booking owners, 80/80 personal creators and 80/80 cancellers valid**; **365/365 league** and **632/632 blocked** creators and cancellers valid. League/blocked bookings intentionally have no personal owner. Re-run after fresh original-to-V2 booking synchronization at cutover. No original data was changed.
