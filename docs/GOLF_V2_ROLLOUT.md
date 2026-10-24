@@ -58,3 +58,7 @@ Six V2 profile avatar URLs still reference the original Supabase project; all si
 ### V2 notification deployment verification (2026-10-24)
 
 Isolated commits `8ace6bd` (push registration missing-secret 503 guard) and `811d6d9` (booking-admin missing-secret/VAPID 503 guard) deployed to the V2 preview. Vercel deployment `dpl_7gbZK2BTPPf89Qp6SdNn5odyod4u` is READY at commit `811d6d9`, and `/my-bookings` returned HTTP 200. A second deployment `dpl_EYRk41UC86Luge2HJ1XEmDP49iVg` also reached READY. These checks confirm deployment and page response only, **not successful push delivery**. V2 `SUPABASE_SECRET_KEY` and `VAPID_PRIVATE_KEY` remain unconfigured; push registration and delivery require authenticated testing after credentials are added.
+
+### V2 push registration least-privilege fallback
+
+Commit `3eefef9` allows approved users to register their own push subscription using their authenticated Supabase client when the V2 `SUPABASE_SECRET_KEY` is unavailable. V2 `push_subscriptions` has owner-scoped authenticated RLS (`user_id = auth.uid()`) and authenticated INSERT/UPDATE/SELECT grants; V2 `profiles` allows own-profile reads. Cross-account endpoint reassignment remains privileged and returns an explicit conflict without a server secret. This enables a future registration test but **does not enable notification delivery**; booking-admin notifications still need `SUPABASE_SECRET_KEY` and the matching `VAPID_PRIVATE_KEY`. Verify end-to-end with signed-in V2 user and browser before declaring functional.
