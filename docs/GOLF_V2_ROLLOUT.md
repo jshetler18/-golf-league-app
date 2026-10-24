@@ -33,3 +33,7 @@ Updated 2026-10-24. **NOT READY FOR CUTOVER.**
 - Local Windows backup files: `%USERPROFILE%\\GolfV2Migration\\golf-auth.backup` and `v2-auth-safety.backup`. Keep local; never upload, commit, paste or email password hashes, secrets or backup content.
 - Rotate any previously exposed V2 deployment hook URL after rollout.
 - Never present the migration as complete while file transfer, future booking cutover or acceptance tests are outstanding.
+
+### Booking identity audit (2026-10-24)
+
+The 80 staged personal bookings include **22 records belonging to 7 distinct original owner IDs that are not present in the 35 restored V2 auth accounts**. Nineteen of the 22 are marked active, and **one of the 22 is a future booking** (based on `start_at`). Do not activate or silently discard that reservation. Resolve the owner's identity, establish a safe account mapping or obtain an explicit disposition, and recheck the original live booking data at cutover. Blocked and league bookings normally have null `user_id` and are not evidence of missing owners. The original production app remains authoritative until cutover.
