@@ -1,34 +1,35 @@
-# Golf App V2 — isolated rollout
+# Golf App V2 — isolated rollout and cutover checklist
 
-**Safety:** Do not modify the original golf project, volunteer project, main branch, or live domain. Do not restore the raw Auth archive into V2: two email identities already exist with different UUIDs.
+Updated 2026-10-24. **NOT READY FOR CUTOVER.**
 
-## Projects
-- Original Supabase: `csaqnjkytxaondagusef` — read only.
-- V2 Supabase: `aopuvcxjwlqwitxigeyr`.
-- Volunteer Supabase: `ghljzqzkngwcauxusarv` — out of scope.
-- Isolated Git branch: `golf-v2-isolated-build`; Vercel V2 test deployment must be verified to build this branch, not `main`.
-- Live domain `www.lvvgolfsim.com` remains on original until user approves cutover.
+## Isolation and safety
+- Original golf Supabase `csaqnjkytxaondagusef`: **read only**. Do not change its database, production Vercel project, production domain `www.lvvgolfsim.com`, or GitHub `main`.
+- Volunteer Supabase `ghljzqzkngwcauxusarv`: **never modify**.
+- V2 Supabase `aopuvcxjwlqwitxigeyr`; isolated GitHub branch `golf-v2-isolated-build`.
+- V2 Vercel project `golf-league-v2-test`; preview deployment `dpl_6PrM55RhpUQgcqo5HRuxoatzGQPZ` previously reported READY, but protected by Vercel SSO. Recheck after code changes.
+- Do not point the two Fire TVs or the live domain to V2 until tests and explicit cutover approval.
 
-## Completed and verified (2026-10-24)
-- 37 application tables created in V2, with RLS enabled; historical user-independent records copied.
-- Private, revoked `migration_private` staging: 35 original profiles, 1,077 bookings, 129 linked records, two verified account ID mappings. Booking audit tracks all 1,077.
-- 1,047 active and 30 cancelled bookings; 883 future starts at inspection time. Only 58 bookings have fully mapped account references. None imported into `public.bookings`.
-- Original Auth: 35 users and 35 identities. V2 Auth: 2 users and 2 identities; both have matching V2 profiles.
-- `jshetler@lvv1.com` is V2 admin, approved, booking enabled, account approver and scorecard official. Preserve this access.
-- `joeshetler@ymail.com` is a pending V2 user; compare to original before reconciling.
-- Booking, chat, reactions, notification preferences and push subscription RLS policies installed on V2. They still require authenticated user-level functional tests.
-- A local Windows archive `%USERPROFILE%\GolfV2Migration\golf-auth.backup` was created by the user with `pg_dump` from original Auth tables and checked using `pg_restore --list`. Archive includes `auth.users` and `auth.identities`. It has NOT been imported. **Never upload, commit, email, or paste archive content or credentials.**
+## Verified progress
+- 37 public application tables and historical league data transferred.
+- 35 original Auth users and password hashes restored; 33 original UUIDs preserved and two mapped to preexisting V2 UUIDs. All 35 email-confirmed. Password-preserving login was tested for the player and admin accounts; complete user-by-user validation is still outstanding.
+- 35 profiles reconciled: 33 approved booking-enabled league users, 1 approved admin, 1 pending booking-disabled user. `joeshetler@ymail.com` is approved **player**, not admin; `jshetler@lvv1.com` retains admin access.
+- Private staging holds 35 original profiles, 1,077 source bookings, 129 linked records and two account-ID mappings.
+- 195 historical bookings imported with original booking IDs; 882 future bookings remain staged and deliberately **not active**, while production remains the booking source of truth.
+- 74 public RLS policies, 74 public indexes, 37 check constraints, 72 foreign keys, and 37 primary keys present in V2, matching original **counts**. Some original UNIQUE constraints are represented by unique indexes in V2 (original 21 UNIQUE constraints vs V2 2); test equivalence, do not assume equal behavior from counts alone.
+- Original `avatars` and `round-scorecards` storage buckets and eight matching storage policies created in V2. **File contents not transferred**.
+- 20 public functions and 6 triggers previously restored; check current definitions and invocation rights before release.
+- Supabase security advisor anonymous SECURITY DEFINER execution warnings cleared in V2. Internal trigger function EXECUTE revoked from authenticated role for `enforce_booking_rules` and `sync_weekly_score_raw_history`. Remaining authenticated-function warnings require individual review.
 
-## Still required
-1. Safely reconcile 33 missing Auth users and two existing email collisions, preserving encrypted password hashes and the V2 admin's identity and permissions. Prepare a collision-aware, transactional process; do not run `pg_restore` directly against live V2 Auth tables. Validate the complete Auth schema/identities/triggers/constraints and Supabase-supported migration procedure first. The local archive cannot be accessed by connected tools.
-2. Reconcile all 35 profiles and linked data with verified UUID mapping; activate bookings only after referential integrity, time overlaps and status checks.
-3. Original database has **18 public function overloads**, whereas V2 has **4**. Migrate and test the missing functions, triggers, indexes, constraints and remaining RLS policies. Booking RPCs, enforcement and updated_at triggers are especially important.
-4. Migrate storage buckets/objects and verify URL access; configure notifications, cron, VAPID and push safely without duplicate sends.
-5. Verify isolated Vercel test build uses V2 branch and V2 environment variables; test sign-in and JWT/PostgREST, admin, scorecards, reservations, chat, leaderboards, Fire TV and mobile PWA.
-6. Explicit user approval before live domain switch; preserve rollback and backups.
+## Remaining blockers and tasks
+1. **Transfer binary storage objects:** original has 7 avatar objects and 23 private round-scorecard objects; V2 buckets remain empty. Do not mistake storage metadata for actual bytes. Private originals require an authenticated, approved migration route.
+2. **Reconcile 129 staged linked records:** 72 announcement reads, 33 booking reminder deliveries, 1 chat preference, 2 chat read states, 18 push subscriptions and 3 approved round submissions. Import only after validating original-to-V2 user references. **Do not blindly copy push subscriptions or trigger duplicate notifications**; clients may need to re-subscribe to V2.
+3. **Final booking synchronization:** reconcile all 1,077 original bookings with V2, map original UUIDs, preserve cancellation states and resolve conflicts. Import the 882 future bookings only in a controlled cutover window after stopping writes on original. Note most blocked and league bookings intentionally have NULL personal owner IDs; investigate personal owner mappings separately.
+4. **Validate security:** compare RLS predicates, function grants, constraints and RPC behavior (counts alone insufficient); review remaining security advisor warnings. Supabase leaked-password protection is a separate Auth dashboard setting.
+5. **Functional acceptance tests:** original-password sign-in for player, admin and booking-only accounts; booking/cancel/time-window/overlap; admin blocking and approvals; scorecard upload/official approval/rejection and Recorded Rounds; messaging, push, reminders; monthly/Cup leaderboards, Fire TV views and mobile PWA.
+6. **Deployment and cutover:** verify V2 environment variables point only to V2; recheck preview build and app functionality. Obtain explicit user approval for live domain and TV switch, with rollback plan.
+7. **Booking window discrepancy:** both original and V2 were observed with 7-day booking windows, despite earlier user preference for 30 days. Do not change this setting without confirmation.
 
-## Password migration safety
-- Passwords can be preserved via Auth encrypted hashes, but login compatibility is **not yet tested**.
-- Source users have UUIDs different from the two V2 test users. Never overwrite V2 Auth rows or force original UUIDs into the two existing V2 identities without a controlled reconciliation plan.
-- The local archive is sensitive; restrict access, do not share it, and securely remove it after successful migration and validation.
-- If database credentials are needed, prompt only on the user's laptop, never in chat.
+## Sensitive backups and secrets
+- Local Windows backup files: `%USERPROFILE%\\GolfV2Migration\\golf-auth.backup` and `v2-auth-safety.backup`. Keep local; never upload, commit, paste or email password hashes, secrets or backup content.
+- Rotate any previously exposed V2 deployment hook URL after rollout.
+- Never present the migration as complete while file transfer, future booking cutover or acceptance tests are outstanding.
