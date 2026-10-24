@@ -9,7 +9,8 @@ export async function POST(req:NextRequest){
   if(!token)return NextResponse.json({error:'Not signed in.'},{status:401})
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL!
   const pub=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  const secret=process.env.SUPABASE_SECRET_KEY!
+  const secret=process.env.SUPABASE_SECRET_KEY
+  if (!secret) return NextResponse.json({error:'Notifications are not configured.'},{status:503})
   const authClient=createClient(url,pub,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}})
   const {data:{user}}=await authClient.auth.getUser(token)
   if(!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
