@@ -12,6 +12,7 @@ export async function POST(req:NextRequest){
   const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'')
   if(!token)return NextResponse.json({error:'Not signed in.'},{status:401})
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL!,pub=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,secret=process.env.SUPABASE_SECRET_KEY!,priv=process.env.VAPID_PRIVATE_KEY
+  if(!secret||!priv)return NextResponse.json({error:'Booking notifications are not configured.'},{status:503})
   const auth=createClient(url,pub,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false}})
   const {data:{user}}=await auth.auth.getUser(token)
   if(!user)return NextResponse.json({error:'Invalid sign-in.'},{status:401})
