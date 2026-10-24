@@ -9,9 +9,10 @@ function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).r
 export default function NotificationApprovalPrompt(){
  const path=usePathname();const [show,setShow]=useState(false),[busy,setBusy]=useState(false),[msg,setMsg]=useState('')
  useEffect(()=>{(async()=>{
-  if(path==='/login'||!('serviceWorker'in navigator)||!('PushManager'in window))return
-  const {data:{user}}=await supabase.auth.getUser();if(!user)return
-  const {data:p}=await supabase.from('profiles').select('status').eq('id',user.id).maybeSingle();if(p?.status!=='approved')return
+  if(path==='/login')return
+  if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){setMsg('This app session does not support web push. Please confirm this icon was installed from the Golf V2 test site using Safari > Add to Home Screen.');setShow(true);return}
+  const {data:{user},error:userError}=await supabase.auth.getUser();if(!user){if(userError){setMsg('Notification setup could not verify your sign-in. Sign out and back in, then reopen the app.');setShow(true)}return}
+  const {data:p,error:profileError}=await supabase.from('profiles').select('status').eq('id',user.id).maybeSingle();if(profileError||!p){setMsg('Notification setup could not load your V2 account approval. Please report this message.');setShow(true);return}if(p.status!=='approved')return
   if(Notification.permission==='denied'){setMsg('Notifications are blocked in iPhone settings. Enable them for this Home Screen app, then reopen it.');setShow(true);return}
   const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
   const sub=await reg.pushManager.getSubscription()
@@ -31,7 +32,7 @@ export default function NotificationApprovalPrompt(){
   }
   const dismissed=sessionStorage.getItem('notification-prompt-dismissed')==='1'
   if(!dismissed)setShow(true)
- })().catch(()=>{})},[path])
+ })().catch((e)=>{setMsg('Notification setup encountered an error: '+(e?.message||'unknown error'));setShow(true)})},[path])
  async function enable(){setBusy(true);setMsg('');try{
   const permission=await Notification.requestPermission();if(permission!=='granted')throw new Error('Notifications were not allowed. You can enable them later in Settings.')
   const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
