@@ -1,6 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react';import {supabase} from '@/lib/supabase'; import {PlayerPage} from '@/components/PlayerMobileChrome'
-const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+const VAPID_PUBLIC_KEY='BPZqymvEA841isoUA5oz4-PicInDnM34vMvhh5pGO7MhK6Hi6xRYzjG_1mYZYf8ebYtLzk3IH4oT5uNhgOGreYU'
 function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(b64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 async function registerPush(sub:PushSubscription){const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error('Please sign in again.');const j=sub.toJSON();const res=await fetch('/api/push/register',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth})});const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Unable to register notifications.')}
 export default function Settings(){const [pw,setPw]=useState(''),[msg,setMsg]=useState(''),[pushMsg,setPushMsg]=useState(''),[pushOn,setPushOn]=useState(false),[busy,setBusy]=useState(false),[chatPush,setChatPush]=useState(true)
