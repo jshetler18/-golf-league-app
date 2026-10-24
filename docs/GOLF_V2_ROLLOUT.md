@@ -37,3 +37,7 @@ Updated 2026-10-24. **NOT READY FOR CUTOVER.**
 ### Booking identity audit (2026-10-24) — resolved for staged snapshot
 
 The initial readiness view falsely flagged 22 personal booking owners and 21 creators because it recognized only IDs present in the two-row `account_id_map` table and did not check directly preserved auth UUIDs. The V2-only `migration_private.booking_migration_readiness` view was corrected to check `auth.users` after applying optional ID remaps. Verified **80/80 personal booking owners, 80/80 personal creators and 80/80 cancellers valid**; **365/365 league** and **632/632 blocked** creators and cancellers valid. League/blocked bookings intentionally have no personal owner. Re-run after fresh original-to-V2 booking synchronization at cutover. No original data was changed.
+
+### Protected V2 page smoke test (2026-10-24)
+
+Vercel connector authorization restored; protected deployment was fetched successfully. Verified HTTP 200 with no obvious server-error markup for `/login`, `/my-bookings`, `/results`, `/cup`, `/live`, `/messages`, `/teams`, `/rules`, `/history`, and `/admin`. Correct reservation route is `/my-bookings` (not `/bookings`); Recorded Rounds is `/live`. These are unauthenticated HTTP page-response checks, **not** authenticated browser workflows. Remaining: authenticated UI transactions, storage binaries, push registration and cutover synchronization.
