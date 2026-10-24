@@ -11,7 +11,10 @@ export default function NotificationApprovalPrompt(){
  useEffect(()=>{(async()=>{
   if(path==='/login')return
   if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){setMsg('This app session does not support web push. Please confirm this icon was installed from the Golf V2 test site using Safari > Add to Home Screen.');setShow(true);return}
-  const {data:{user},error:userError}=await supabase.auth.getUser();if(!user){if(userError){setMsg('Notification setup could not verify your sign-in. Sign out and back in, then reopen the app.');setShow(true)}return}
+  // During the first moments after login, the auth session can still be settling.
+  // Do not display an alarming sign-in error from the optional notification prompt.
+  const {data:{session}}=await supabase.auth.getSession();if(!session?.user)return
+  const user=session.user
   const {data:p,error:profileError}=await supabase.from('profiles').select('status').eq('id',user.id).maybeSingle();if(profileError||!p){setMsg('Notification setup could not load your V2 account approval. Please report this message.');setShow(true);return}if(p.status!=='approved')return
   if(Notification.permission==='denied'){setMsg('Notifications are blocked in iPhone settings. Enable them for this Home Screen app, then reopen it.');setShow(true);return}
   const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready
