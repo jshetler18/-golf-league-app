@@ -46,3 +46,7 @@ Vercel connector authorization restored; protected deployment was fetched succes
 
 **Seven (7) days** is the current approved advance-booking restriction. V2 `public.simulator_settings.booking_days_ahead` was restored to **7** after explicit user correction. The booking UI reads this setting and the database booking enforcement function references it. Original production remains at 7. Do not change to 30 without a new explicit request.
 
+
+### V2 notification preflight
+
+The isolated Vercel project currently has the two public Supabase environment variables, but the booking-admin notification route also requires `SUPABASE_SECRET_KEY` and `VAPID_PRIVATE_KEY`. Neither is configured on V2. Notification delivery must be tested after adding V2-scoped credentials and enrolling a new push subscription. Do not copy the original project's private service key or original device subscriptions.
