@@ -62,3 +62,7 @@ Isolated commits `8ace6bd` (push registration missing-secret 503 guard) and `811
 ### V2 push registration least-privilege fallback
 
 Commit `3eefef9` allows approved users to register their own push subscription using their authenticated Supabase client when the V2 `SUPABASE_SECRET_KEY` is unavailable. V2 `push_subscriptions` has owner-scoped authenticated RLS (`user_id = auth.uid()`) and authenticated INSERT/UPDATE/SELECT grants; V2 `profiles` allows own-profile reads. Cross-account endpoint reassignment remains privileged and returns an explicit conflict without a server secret. This enables a future registration test but **does not enable notification delivery**; booking-admin notifications still need `SUPABASE_SECRET_KEY` and the matching `VAPID_PRIVATE_KEY`. Verify end-to-end with signed-in V2 user and browser before declaring functional.
+
+### Isolated V2 VAPID credentials configured (2026-10-24)
+
+Generated a **new V2-only** P-256 VAPID key pair. Private key stored as **sensitive** `VAPID_PRIVATE_KEY` in Vercel project `golf-league-v2-test` Preview environment; `SUPABASE_SECRET_KEY` also verified in Preview. Public key updated in `components/NotificationApprovalPrompt.tsx` and `app/api/push/booking-admin/route.ts` on the isolated branch (`ea031062`). Do not reuse original push subscriptions: V2 has zero registered devices, so a new device registration and real push send test are mandatory. Vercel preview deployment for this commit was queued at time of note. Never put the private key in repository or this document.
