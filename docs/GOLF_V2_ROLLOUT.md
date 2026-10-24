@@ -41,3 +41,7 @@ The initial readiness view falsely flagged 22 personal booking owners and 21 cre
 ### Protected V2 page smoke test (2026-10-24)
 
 Vercel connector authorization restored; protected deployment was fetched successfully. Verified HTTP 200 with no obvious server-error markup for `/login`, `/my-bookings`, `/results`, `/cup`, `/live`, `/messages`, `/teams`, `/rules`, `/history`, and `/admin`. Correct reservation route is `/my-bookings` (not `/bookings`); Recorded Rounds is `/live`. These are unauthenticated HTTP page-response checks, **not** authenticated browser workflows. Remaining: authenticated UI transactions, storage binaries, push registration and cutover synchronization.
+
+### V2 booking policy setting (2026-10-24)
+
+Set **V2 only** `public.simulator_settings.booking_days_ahead` from 7 to **30**, matching the requested 30-day reservation policy. Verified persisted value is 30. The booking UI reads this setting, and the `enforce_booking_rules` database function references it. Original production remains at 7 pending final cutover; explicitly check policy difference when launching.
