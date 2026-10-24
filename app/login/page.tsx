@@ -112,16 +112,11 @@ export default function LoginPage(){
         await supabase.auth.signOut()
         setMessage('This account does not have approved administrator access.')
       }else{
-        const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
-        if(p?.role==='admin' && p?.status==='approved'){
-          window.location.replace('/admin')
-          return
-        }
-        if(p?.status==='approved'){
-          window.location.replace('/')
-          return
-        }
-        await refresh()
+        // Mirror the volunteer login: after Auth succeeds, hand off to the
+        // destination page. That page still enforces its own account permissions.
+        // Do not treat a PostgREST outage as an invalid password.
+        window.location.replace('/')
+        return
       }
     }
     setLoading(false)
