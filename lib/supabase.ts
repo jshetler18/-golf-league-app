@@ -1,11 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
-// Supabase PostgREST can occasionally reject newly issued valid tokens with
-// PGRST303 ("JWT issued at future") because of server-side time skew.
-// Retry only this specific transient response, never other authorization errors.
+// Use the same browser session implementation as the volunteer app.
+// Golf-specific access controls and Supabase project configuration stay intact.
 const resilientFetch: typeof fetch = async (input, init) => {
   const request = new Request(input, init)
   const isRest = new URL(request.url).pathname.startsWith('/rest/v1/')
@@ -18,7 +17,7 @@ const resilientFetch: typeof fetch = async (input, init) => {
   }
 }
 
-export const supabase = createClient(url, key, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-  global: { fetch: resilientFetch }
+export const supabase = createBrowserClient(url, key, {
+  auth: { autoRefreshToken: true, detectSessionInUrl: true },
+  global: { fetch: resilientFetch },
 })
