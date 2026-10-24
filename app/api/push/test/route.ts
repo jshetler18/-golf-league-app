@@ -2,7 +2,7 @@ import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
 export const runtime='nodejs'
-const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+const VAPID_PUBLIC_KEY='BPZqymvEA841isoUA5oz4-PicInDnM34vMvhh5pGO7MhK6Hi6xRYzjG_1mYZYf8ebYtLzk3IH4oT5uNhgOGreYU'
 export async function POST(req:NextRequest){
   try{
     const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'')
