@@ -50,3 +50,7 @@ Vercel connector authorization restored; protected deployment was fetched succes
 ### V2 notification preflight
 
 The isolated Vercel project currently has the two public Supabase environment variables, but the booking-admin notification route also requires `SUPABASE_SECRET_KEY` and `VAPID_PRIVATE_KEY`. Neither is configured on V2. Notification delivery must be tested after adding V2-scoped credentials and enrolling a new push subscription. Do not copy the original project's private service key or original device subscriptions.
+
+### Storage reference audit
+
+Six V2 profile avatar URLs still reference the original Supabase project; all six need to be rewritten to V2 URLs **after** the actual avatar files are transferred and verified. Three score submission records contain relative `image_path` values (not hardcoded absolute original-project URLs); the private scorecard binaries still need migration. The V2 storage buckets exist but objects remain absent. Do not retire original storage until all references are independently verified.
