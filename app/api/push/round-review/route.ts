@@ -36,7 +36,7 @@ export async function POST(req:NextRequest){
   }
 
   if(!priv)return NextResponse.json({ok:true,sent:0,warning:'Push notifications are not configured.'})
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',priv)
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc',priv)
   let sent=0
   for(const s of subs){
     if(!s.p256dh||!s.auth)continue
