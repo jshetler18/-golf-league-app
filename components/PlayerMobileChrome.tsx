@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -10,6 +10,7 @@ import ViewportBottomNav from '@/components/ViewportBottomNav'
 import { HomeIcon, CalendarIcon, MessagesIcon, TeamsIcon } from '@/components/PlayerIcons'
 
 export function PlayerMobileHeader({title}:{title:string}){
+  const router=useRouter()
   const [profile,setProfile]=useState<any>(null)
   const [open,setOpen]=useState(false)
   const wrap=useRef<HTMLDivElement>(null)
@@ -39,7 +40,7 @@ export function PlayerMobileHeader({title}:{title:string}){
   const simOnly=profile?.access_type==='sim_only'
 
   return <header className="player-mobile-header">
-    <button type="button" className="player-mobile-logo player-mobile-back" onClick={()=>{window.location.assign('/')}} aria-label="Go to Home">
+    <button type="button" className="player-mobile-logo player-mobile-back" onClick={()=>router.push('/')} aria-label="Go to Home">
       <span className="player-mobile-back-arrow" aria-hidden="true">‹</span>
       <img src="/logo-golf-league.png" alt="Tom Krise 19th Hole Golf League" />
     </button>
