@@ -3,7 +3,7 @@ import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
 
 export const runtime='nodejs'
-const VAPID_PUBLIC_KEY='BPZqymvEA841isoUA5oz4-PicInDnM34vMvhh5pGO7MhK6Hi6xRYzjG_1mYZYf8ebYtLzk3IH4oT5uNhgOGreYU'
+const VAPID_PUBLIC_KEY='BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc'
 const fmtDate=(iso:string)=>new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'}).format(new Date(iso))
 const fmtTime=(iso:string)=>new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'}).format(new Date(iso))
 
@@ -30,8 +30,8 @@ export async function POST(req:NextRequest){
   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',VAPID_PUBLIC_KEY,priv)
   const name=booker?.full_name||booker?.email||'A player'
   const body=`${name} booked ${fmtDate(b.start_at)} from ${fmtTime(b.start_at)} to ${fmtTime(b.end_at)}.`
-  let sent=0
-  for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title:'Golf Sim Reservation Confirmation',body,url:'/book',tag:`admin-booking-${b.id}`,kind:'admin-booking'}));sent++}catch(e:any){if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
-  return NextResponse.json({ok:true,sent})
+  let sent=0,failed=0
+  for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title:'Golf Sim Reservation Confirmation',body,url:'/book',tag:`admin-booking-${b.id}`,kind:'admin-booking'}));sent++}catch(e:any){failed++;console.error('Admin booking push failed',{bookingId:b.id,statusCode:e?.statusCode,body:e?.body});if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+  return NextResponse.json({ok:true,sent,failed})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to notify administrator.'},{status:500})}
 }
