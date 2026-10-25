@@ -36,7 +36,7 @@ export async function POST(req:NextRequest){
     const supabase=createClient(url,adminKey,{auth:{persistSession:false,autoRefreshToken:false}})
     webpush.setVapidDetails(
       process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',
-      'BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',
+      'BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc',
       vapidPrivate
     )
 
