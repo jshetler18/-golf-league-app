@@ -2681,3 +2681,14 @@ i .captain-mark-v1357{
 .volunteer-crop-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .volunteer-crop-actions button{min-height:49px;padding:11px 17px;font-size:16px;font-weight:700}
 @media(max-width:360px){.volunteer-crop-view{transform:scale(.88);transform-origin:center;margin:-12px auto 5px}.volunteer-crop-dialog{padding:14px}}
+
+/* iPhone home-indicator clearance: keep system gesture bar below navigation labels. */
+@media(max-width:850px){
+  .mobile-bottom,.player-mobile-bottom{
+    height:calc(76px + env(safe-area-inset-bottom, 0px))!important;
+    padding-bottom:env(safe-area-inset-bottom, 0px)!important;
+    box-sizing:border-box!important;
+    background:#fff!important;
+  }
+  .mobile-bottom a,.player-mobile-bottom a{min-height:0}
+}
