@@ -48,14 +48,15 @@ export default function SimReservations(){
   async function load(preserveFeedback=false){
     setLoading(true)
     if(!preserveFeedback)setMessage('')
-    const {data:u}=await supabase.auth.getUser()
-    if(!u.user){setSignedIn(false);setUserId('');setProfile(null);setItems([]);setReservations([]);setLoading(false);return}
-    setSignedIn(true);setUserId(u.user.id)
+    const {data:{session}}=await supabase.auth.getSession()
+    const user=session?.user
+    if(!user){setSignedIn(false);setUserId('');setProfile(null);setItems([]);setReservations([]);setLoading(false);return}
+    setSignedIn(true);setUserId(user.id)
     const from=easternStamp(date,0),to=easternStamp(date,24)
     const [{data:p},{data:calendar,error:calendarError},{data:upcoming,error:upcomingError},{data:settings}]=await Promise.all([
-      supabase.from('profiles').select('status,booking_enabled,role').eq('id',u.user.id).maybeSingle(),
+      supabase.from('profiles').select('status,booking_enabled,role').eq('id',user.id).maybeSingle(),
       supabase.rpc('get_booking_calendar',{p_from:from,p_to:to}),
-      supabase.from('bookings').select('id,start_at,end_at,status').eq('kind','personal').eq('user_id',u.user.id).eq('status','active').gte('end_at',new Date().toISOString()).order('start_at'),
+      supabase.from('bookings').select('id,start_at,end_at,status').eq('kind','personal').eq('user_id',user.id).eq('status','active').gte('end_at',new Date().toISOString()).order('start_at'),
       supabase.from('simulator_settings').select('booking_days_ahead').eq('id',1).maybeSingle()
     ])
     if(settings?.booking_days_ahead)setBookingDaysAhead(settings.booking_days_ahead)
