@@ -53,16 +53,23 @@ export default function SimReservations(){
     if(!user){setSignedIn(false);setUserId('');setProfile(null);setItems([]);setReservations([]);setLoading(false);return}
     setSignedIn(true);setUserId(user.id)
     const from=easternStamp(date,0),to=easternStamp(date,24)
-    const [{data:p},{data:calendar,error:calendarError},{data:upcoming,error:upcomingError},{data:settings}]=await Promise.all([
-      supabase.from('profiles').select('status,booking_enabled,role').eq('id',user.id).maybeSingle(),
-      supabase.rpc('get_booking_calendar',{p_from:from,p_to:to}),
-      supabase.from('bookings').select('id,start_at,end_at,status').eq('kind','personal').eq('user_id',user.id).eq('status','active').gte('end_at',new Date().toISOString()).order('start_at'),
-      supabase.from('simulator_settings').select('booking_days_ahead').eq('id',1).maybeSingle()
-    ])
-    if(settings?.booking_days_ahead)setBookingDaysAhead(settings.booking_days_ahead)
-    setProfile(p as Profile|null);setItems((calendar||[]) as CalendarItem[]);setReservations((upcoming||[]) as Booking[])
-    if(calendarError)setMessage(calendarError.message);else if(upcomingError)setMessage(upcomingError.message)
-    setLoading(false)
+    // The calendar is the critical path. Optional account and settings queries
+    // must not hold the entire reservation screen behind a loading indicator.
+    const profileRequest=supabase.from('profiles').select('status,booking_enabled,role').eq('id',user.id).maybeSingle()
+    const upcomingRequest=supabase.from('bookings').select('id,start_at,end_at,status').eq('kind','personal').eq('user_id',user.id).eq('status','active').gte('end_at',new Date().toISOString()).order('start_at')
+    const settingsRequest=supabase.from('simulator_settings').select('booking_days_ahead').eq('id',1).maybeSingle()
+    void profileRequest.then(({data:p})=>setProfile(p as Profile|null))
+    void upcomingRequest.then(({data:upcoming,error})=>{setReservations((upcoming||[]) as Booking[]);if(error)setMessage(error.message)})
+    void settingsRequest.then(({data:settings})=>{if(settings?.booking_days_ahead)setBookingDaysAhead(settings.booking_days_ahead)})
+    try {
+      const {data:calendar,error:calendarError}=await supabase.rpc('get_booking_calendar',{p_from:from,p_to:to})
+      setItems((calendar||[]) as CalendarItem[])
+      if(calendarError)setMessage(calendarError.message)
+    } catch {
+      setMessage('Unable to load the reservation calendar. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(()=>{const params=new URLSearchParams(window.location.search);const booking=params.get('booking')||'';setFocusId(booking);const reminder=params.get('from')==='reminder';setFromReminder(reminder);if(booking||reminder)setShowReservations(true)},[])
