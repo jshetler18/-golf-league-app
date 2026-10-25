@@ -1,6 +1,7 @@
 'use client'
 
 import {useCallback,useEffect,useState} from 'react'
+import {useRouter} from 'next/navigation'
 import {supabase} from '@/lib/supabase'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 import {RichTextDisplay} from '@/components/RichTextEditor'
@@ -15,6 +16,7 @@ function sentTimestamp(iso:string){
 }
 
 export default function Messages(){
+  const router=useRouter()
   const [rows,setRows]=useState<any[]>([])
   const [read,setRead]=useState<Set<string>>(new Set())
   const [selectedId,setSelectedId]=useState<string|null>(null)
@@ -83,13 +85,13 @@ export default function Messages(){
 
   function showMessage(id:string){
     setSelectedId(id)
-    window.history.replaceState(null,'',`/messages?message=${encodeURIComponent(id)}`)
+    router.replace(`/messages?message=${encodeURIComponent(id)}`,{scroll:false})
     mark(id)
   }
 
   function showAll(){
     setSelectedId(null)
-    window.history.replaceState(null,'','/messages')
+    router.replace('/messages',{scroll:false})
   }
 
   async function mark(id:string){
