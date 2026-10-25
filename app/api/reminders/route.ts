@@ -15,6 +15,67 @@ function easternTimeOnly(iso:string){
   }).format(new Date(iso))
 }
 
+
+async function sendTeamRoundReminders(supabase:any, now:number){
+  const from=new Date(now+50*60_000).toISOString()
+  const to=new Date(now+70*60_000).toISOString()
+  const {data:bookings,error:bookingError}=await supabase.from('bookings')
+    .select('id,team_id,start_at').eq('kind','league').eq('status','active')
+    .not('team_id','is',null).gte('start_at',from).lte('start_at',to)
+  if(bookingError)throw bookingError
+  if(!bookings?.length)return {due:0,sent:0,failed:0}
+  const teamIds=[...new Set(bookings.map((b:any)=>b.team_id))] as string[]
+  const [{data:players,error:playerError},{data:teams,error:teamError}]=await Promise.all([
+    supabase.from('players').select('id,team_id').in('team_id',teamIds).eq('is_active',true),
+    supabase.from('teams').select('id,name').in('id',teamIds)
+  ])
+  if(playerError)throw playerError
+  if(teamError)throw teamError
+  const playerIds=(players||[]).map((p:any)=>p.id)
+  if(!playerIds.length)return {due:bookings.length,sent:0,failed:0}
+  const {data:profiles,error:profileError}=await supabase.from('profiles')
+    .select('id,player_id').in('player_id',playerIds).eq('status','approved').eq('access_type','league')
+  if(profileError)throw profileError
+  const userIds=[...new Set((profiles||[]).map((p:any)=>p.id))] as string[]
+  if(!userIds.length)return {due:bookings.length,sent:0,failed:0}
+  const [{data:subs,error:subError},{data:delivered,error:deliveryError}]=await Promise.all([
+    supabase.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',userIds),
+    supabase.from('team_round_reminder_deliveries').select('booking_id,user_id').in('booking_id',bookings.map((b:any)=>b.id))
+  ])
+  if(subError)throw subError
+  if(deliveryError)throw deliveryError
+  const deliveredSet=new Set((delivered||[]).map((d:any)=>d.booking_id+':'+d.user_id))
+  let sent=0,failed=0
+  for(const booking of bookings){
+    const playerSet=new Set((players||[]).filter((p:any)=>p.team_id===booking.team_id).map((p:any)=>p.id))
+    const teamName=(teams||[]).find((t:any)=>t.id===booking.team_id)?.name||'Your team'
+    const time=easternTimeOnly(booking.start_at)
+    for(const profile of profiles||[]){
+      if(!playerSet.has(profile.player_id)||deliveredSet.has(booking.id+':'+profile.id))continue
+      const userSubs=(subs||[]).filter((s:any)=>s.user_id===profile.id&&s.p256dh&&s.auth)
+      if(!userSubs.length)continue
+      let accepted=0
+      for(const sub of userSubs){
+        try{
+          await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},
+            JSON.stringify({title:'League Round in 1 Hour',body:teamName+' is scheduled to play at '+time+'.',url:'/reservations',tag:'league-round-'+booking.id,kind:'league-reminder'}))
+          sent++;accepted++
+        }catch(err:any){
+          failed++
+          console.error('League round reminder push failed',{bookingId:booking.id,statusCode:err?.statusCode})
+          if(err?.statusCode===404||err?.statusCode===410)await supabase.from('push_subscriptions').delete().eq('id',sub.id)
+        }
+      }
+      if(accepted>0){
+        const {error}=await supabase.from('team_round_reminder_deliveries').insert({booking_id:booking.id,user_id:profile.id})
+        if(error&&error.code!=='23505')throw error
+        deliveredSet.add(booking.id+':'+profile.id)
+      }
+    }
+  }
+  return {due:bookings.length,sent,failed}
+}
+
 export async function POST(req:NextRequest){
   try{
     const secret=process.env.CRON_SECRET
@@ -58,7 +119,8 @@ export async function POST(req:NextRequest){
       for(const booking of (data||[]) as Booking[]) due.push({booking,type})
     }
 
-    if(!due.length) return NextResponse.json({ok:true,due:0,sent:0,failed:0,youtubeLive})
+    const teamRoundReminders=await sendTeamRoundReminders(supabase,now)
+    if(!due.length) return NextResponse.json({ok:true,due:0,sent:0,failed:0,teamRoundReminders,youtubeLive})
 
     const bookingIds=[...new Set(due.map(x=>x.booking.id))]
     const userIds=[...new Set(due.map(x=>x.booking.user_id))]
@@ -108,7 +170,7 @@ export async function POST(req:NextRequest){
       }
     }
 
-    return NextResponse.json({ok:true,due:due.length,processed,sent,failed,youtubeLive})
+    return NextResponse.json({ok:true,due:due.length,processed,sent,failed,teamRoundReminders,youtubeLive})
   }catch(err:any){
     return NextResponse.json({error:err?.message||'Unable to process reservation reminders.'},{status:500})
   }
