@@ -29,7 +29,7 @@ export async function POST(req:NextRequest){
 
     const title=String(announcement.title||'Tom Krise 19th Hole Golf League').slice(0,120)
     const body=String(announcement.body||'You have a new league message.').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,500)
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com', 'BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM', privateKey)
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com', 'BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc', privateKey)
 
     let subscriptions:any[]=[]
     if(announcement.audience==='team'){
