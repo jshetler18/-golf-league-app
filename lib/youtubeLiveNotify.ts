@@ -2,7 +2,7 @@ import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
 import {getYouTubeLiveStatus} from '@/lib/youtubeLive'
 
-const PUBLIC='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+const PUBLIC='BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc'
 
 export async function runYouTubeLiveCheck(){
   const status=await getYouTubeLiveStatus()
