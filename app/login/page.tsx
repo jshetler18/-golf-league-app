@@ -21,10 +21,11 @@ export default function LoginPage(){
   const [profileError,setProfileError]=useState('')
 
   async function refresh(){
-    const { data } = await supabase.auth.getUser()
-    if(!data.user){ setUserEmail(''); setProfile(null); setProfileError(''); return }
-    setUserEmail(data.user.email || '')
-    const { data:p, error:lookupError } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',data.user.id).maybeSingle()
+    const { data } = await supabase.auth.getSession()
+    const user = data.session?.user
+    if(!user){ setUserEmail(''); setProfile(null); setProfileError(''); return }
+    setUserEmail(user.email || '')
+    const { data:p, error:lookupError } = await supabase.from('profiles').select('full_name,email,status,role,booking_enabled').eq('id',user.id).maybeSingle()
     if(lookupError || !p){setProfile(null);setProfileError(lookupError?.message || 'Your account profile could not be found. Please contact the league administrator.');return}
     setProfileError('')
     setProfile(p as Profile)
