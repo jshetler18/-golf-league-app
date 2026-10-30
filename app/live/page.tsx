@@ -116,6 +116,8 @@ export default function LivePage(){
       (shortTeam.length>=3&&searchable.includes(shortTeam))||
       (pluralShort.length>=4&&searchable.includes(pluralShort))
   })
+  const unlinkedScorecards=scorecards.filter(card=>!(archive?.recordings||[]).some(video=>cardsForVideo(video).some(matched=>matched.id===card.id)))
+  const scorecardMonth=(card:ApprovedCard)=>new Date(card.monthStart+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})
   useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
   function clearFilters(){setTeam('all');setSeason('all');setMonth('all');setRound('all');setScoreOrder('all');setActiveVideo('')}
@@ -166,6 +168,18 @@ export default function LivePage(){
             </article>)}
           </div>
         </div>)}
+        {unlinkedScorecards.length>0&&<section className="recorded-season-v1267" aria-label="Scorecards without recordings" style={{marginTop:24}}>
+          <h3>Scorecards Without Recordings</h3>
+          <p className="muted">Approved scorecards for rounds that do not have a matching YouTube recording.</p>
+          <div className="recorded-grid-v1265">
+            {unlinkedScorecards.map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
+              <div className="recorded-card-copy-v1265"><strong>{card.team}</strong><span>{scorecardMonth(card)} · Week {card.weekNumber}</span><span>Approved score: {Number(card.score).toFixed(1)}</span></div>
+              <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
+                {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">{card.imageUrl?<a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a>:<p>Scorecard image is unavailable.</p>}</div>}
+              </div>
+            </article>)}
+          </div>
+        </section>}
         {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Past-season recordings keep the original Raw Score display. Beginning with the 2026–2027 season, recorded rounds show Raw Score, that team’s monthly Handicap, and the Adjusted Score. Match-play recordings show both teams when the matchup can be identified.</div>}
       </section>
     </div>
