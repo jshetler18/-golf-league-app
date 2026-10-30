@@ -88,7 +88,7 @@ export default function Teams(){
   const rows=useMemo(()=>teams.map(team=>({team,players:players.filter(p=>p.team_id===team.id).sort((a,b)=>(a.id===team.captain_player_id?-1:b.id===team.captain_player_id?1:a.full_name.localeCompare(b.full_name)))})),[teams,players])
   const handicapRows=useMemo(()=>{
     if(!publication)return []
-    return [...(publication.snapshot||[])].sort((a,b)=>(b.average??-Infinity)-(a.average??-Infinity)||a.team_name.localeCompare(b.team_name))
+    return [...(publication.snapshot||[])].sort((a,b)=>(a.handicap??Infinity)-(b.handicap??Infinity)||a.team_name.localeCompare(b.team_name))
   },[publication])
 
   if(loading)return <PlayerPage title="Teams & Handicaps"><p>Loading…</p></PlayerPage>
@@ -153,10 +153,10 @@ export default function Teams(){
         {!publication?<div className="card"><h2>Team Handicaps</h2><p className="muted">Team handicaps have not been published yet. This page will update when the league administrator confirms and publishes the handicaps for the upcoming month.</p></div>:<>
         <div className="section-title teams-tab-heading-v1372"><div><div className="eyebrow">{new Date(publication.month_start+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}</div><h2>Team Handicaps</h2><p className="muted">These are the latest handicaps confirmed by the league administrator. This page stays unchanged until the next handicap publication.</p></div><div className="pill">Standard Used to Calculate Handicaps: {Number(publication.handicap_standard||27)}</div></div>
         <div className="card handicap-ranking-table-v1372">
-          <div className="handicap-ranking-head-v1372"><span>Rank</span><span>Team</span><span>Raw Avg.</span><span>Handicap</span></div>
-          {handicapRows.map((row,index)=>{const open=openHandicapTeam===row.team_id;return <div className="handicap-ranking-entry-v1372" key={row.team_id}>
+          <div className="handicap-ranking-head-v1372"><span>Team</span><span>Raw Avg.</span><span>Handicap</span></div>
+          {handicapRows.map((row)=>{const open=openHandicapTeam===row.team_id;return <div className="handicap-ranking-entry-v1372" key={row.team_id}>
             <button className="handicap-ranking-row-v1372" onClick={()=>setOpenHandicapTeam(open?null:row.team_id)} aria-expanded={open}>
-              <span className="handicap-rank-v1372">{row.average==null?'—':index+1}</span><strong>{row.team_name}</strong><span>{row.average==null?'N/A':Math.round(row.average)}</span><span className={(row.handicap||0)>0?'helps-v1372':(row.handicap||0)<0?'hurts-v1372':''}>{row.handicap==null?'N/A':row.handicap>0?`+${row.handicap}`:`${row.handicap}`}</span><i>{open?'⌃':'⌄'}</i>
+              <strong>{row.team_name}</strong><span>{row.average==null?'N/A':Math.round(row.average)}</span><span className={(row.handicap||0)>0?'helps-v1372':(row.handicap||0)<0?'hurts-v1372':''}>{row.handicap==null?'N/A':row.handicap>0?`+${row.handicap}`:`${row.handicap}`}</span><i>{open?'⌃':'⌄'}</i>
             </button>
             {open&&<div className="handicap-ranking-detail-v1372"><p className="muted">{row.method}</p><div className="handicap-average-v1369"><span>Handicap Raw Scoring Average:</span><strong>{row.average==null?'Not Yet Available':Math.round(row.average)}</strong></div><div className="handicap-score-chips-v1369">{(row.recent||[]).map((r,i)=><span className={!r.counted?'not-counted':''} key={`${r.score_month}-${r.round_number}-${i}`}><small>{scoreLabel(r as any)}</small><strong>{Number(r.score).toFixed(1)}</strong><em>{r.counted?'Counted':'Not Counted'}</em></span>)}</div></div>}
           </div>})}
