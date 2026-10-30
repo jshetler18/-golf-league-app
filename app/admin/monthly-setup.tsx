@@ -1,6 +1,7 @@
 'use client'
 import { useEffect,useMemo,useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import HandicapDeliveryReport from './handicap-delivery-report'
 import {calculateHandicap,scoreLabel,type HandicapScore} from '@/lib/handicap'
 
 type Team={id:string;name:string;captain_player_id:string|null}
@@ -270,7 +271,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
          <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><strong>{months.find(m=>m[0]===monthStart)?.[1]} Handicap Status</strong><span className={`badge ${publishedMonthId===monthId?'success':''}`}>{publishedMonthId===monthId?'Published':'Draft'}</span></div>
          <p className="muted">Save Draft as often as needed while you review the month. The player Team Handicaps page remains unchanged until you publish.</p>
          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn" disabled={publishing||!monthId} onClick={saveHandicapDraft}>Save Draft</button><button className="btn primary" disabled={publishing||!monthId} onClick={publishHandicaps}>{publishing?'Working…':publishedMonthId===monthId?`Update & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Confirm & Publish ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button><button className="btn" disabled={publishing||!monthId} onClick={resetMonthHandicaps}>{publishedMonthId===monthId?`Reset Published ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`:`Reset ${months.find(m=>m[0]===monthStart)?.[1]} Handicaps`}</button></div>
-         <p className="muted" style={{marginTop:10}}>Publishing saves all team handicaps, updates the player Handicap page immediately, and sends the handicap notification to players.</p>
+         <p className="muted" style={{marginTop:10}}>Publishing saves all team handicaps, updates the player Handicap page immediately, and sends the handicap notification to players.</p><HandicapDeliveryReport monthId={monthId}/>
        </div>
        <h3>Course Tee Box Key &amp; Yardages</h3><p className="muted">These are the tee boxes and yardages configured for the selected course.</p>
        {assignedProfileId?<div className="course-tee-key-admin-v1367">{teeLevels.filter(l=>monthTees[l.key]?.color&&monthTees[l.key]?.yardage).map(l=>{const tee=monthTees[l.key];return <div className="course-tee-key-row-admin-v1367" key={l.key}><span className="course-tee-key-level-admin-v1367">{l.label}</span><span className="course-tee-key-color-admin-v1367"><span className="course-tee-key-square-admin-v1367" style={{background:tee.color}}/>{tee.color}</span><strong>{Number(tee.yardage).toLocaleString()} yd</strong></div>})}</div>:<p className="muted">Select a course above to view its tee boxes and yardages.</p>}
