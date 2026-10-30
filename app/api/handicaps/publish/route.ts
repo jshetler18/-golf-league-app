@@ -1,4 +1,4 @@
-import {NextRequest,NextResponse} from 'next/server'
+import {NextRequest,NextResponse,after} from 'next/server'
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
 
@@ -29,7 +29,8 @@ export async function POST(req:NextRequest){
   const payload={season_id:seasonId,league_month_id:monthId,month_start:monthStart,handicap_standard:Number(body.standard||27),snapshot,published_at:new Date().toISOString(),published_by:user.id}
   const {error}=await admin.from('handicap_publications').upsert(payload,{onConflict:'league_month_id'})
   if(error)return NextResponse.json({error:error.message},{status:500})
-  let sent=0,failed=0
+  // Publication is already committed. Send optional pushes after responding to avoid a stuck Publish button.
+  after(async()=>{try{
   if(priv){
    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',priv)
    const {data:approved}=await admin.from('profiles').select('id').eq('status','approved').not('player_id','is',null)
@@ -38,8 +39,9 @@ export async function POST(req:NextRequest){
    const monthName=new Date(monthStart+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})
    const title=prior?'Team Handicaps Updated':'New Team Handicaps Set'
    const message=prior?`Team handicaps for ${monthName} have been updated. Tap to view them.`:`New team handicaps for ${monthName} have been set. Tap to view them.`
-   for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}));sent++}catch(e:any){failed++;if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+   for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}));}catch(e:any){if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
   }
-  return NextResponse.json({ok:true,updated:Boolean(prior),sent,failed})
+  }catch(e){console.error('Handicap notification delivery failed',e)}})
+  return NextResponse.json({ok:true,updated:Boolean(prior),sent:0,notificationsQueued:true})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to publish handicaps.'},{status:500})}
 }
