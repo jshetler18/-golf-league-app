@@ -94,7 +94,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
       expires_at:expiresAt,
       created_by:user.id
     }).select('id').single()
-    if(error){setMessage(error.message)}else{
+    if(error){console.error('Announcement save failed',{code:error.code,message:error.message,details:error.details});setMessage(`Announcement was NOT published: ${error.message}${error.code?` (code ${error.code})`:''}`)}else{
       setTitle('');setBody('');setPinned(false);setExpires('')
       let pushNote=''
       if(sendPush&&created?.id){
@@ -134,7 +134,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const now=Date.now()
   return <section className="admin-announcements-section">
     <div className="section-title"><div><h2>Messages & Announcements</h2><p className="muted">Send a message to everyone or only to one league team. Team messages are visible only to accounts linked to that team.</p></div></div>
-    {message&&<p className="message">{message}</p>}
+    {message&&<p className="message" role="alert" aria-live="assertive" style={{whiteSpace:'pre-wrap',border:'1px solid #a7b7a9',padding:'12px',borderRadius:'8px'}}>{message}</p>}
     <div className="admin-announcement-grid">
       <div className="card">
         <h3>Post Announcement</h3>
