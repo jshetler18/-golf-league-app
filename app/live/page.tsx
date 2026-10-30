@@ -163,8 +163,8 @@ export default function LivePage(){
           <div className="recorded-grid-v1265">
             {unlinkedScorecards.filter(card=>{const y=new Date(card.monthStart+'T12:00:00').getFullYear();return seasonName===`${y}–${y+1}`||seasonName===`${y}-${y+1}`}).map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
               <button className="recorded-thumb-v1267" onClick={()=>toggleScorecard(card.id)} aria-label={`View ${card.team} scorecard`} style={{width:'100%',aspectRatio:'16 / 9',overflow:'hidden',background:'#e8edf0'}}>
-                {card.imageUrl?<img src={card.imageUrl} alt={`${card.team} scorecard preview`} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span className="recorded-thumb-fallback-v1267">Scorecard Only</span>}
-                <span className="recorded-play-v1267">View</span>
+                <span className="recorded-thumb-fallback-v1267" style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',fontSize:'clamp(18px,4vw,28px)',fontWeight:700,textAlign:'center',color:'#56616e',background:'#e8edf0'}}>No Video Found</span>
+                
               </button>
               <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
                 <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span><small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1} · Scorecard Only</small></div>
