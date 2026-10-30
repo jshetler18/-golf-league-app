@@ -38,6 +38,11 @@ export default function LivePage(){
   const [scorecards,setScorecards]=useState<ApprovedCard[]>([])
   const [scorecardError,setScorecardError]=useState('')
   const [openScorecard,setOpenScorecard]=useState<string>('')
+  const [scorecardLoading,setScorecardLoading]=useState(false)
+  const [scorecardProgress,setScorecardProgress]=useState(0)
+  const [scorecardImageError,setScorecardImageError]=useState(false)
+  useEffect(()=>{if(!scorecardLoading)return;const timer=window.setInterval(()=>setScorecardProgress(p=>Math.min(90,p+Math.max(1,Math.round((90-p)/7)))),240);return()=>window.clearInterval(timer)},[scorecardLoading])
+  function toggleScorecard(id:string){if(openScorecard===id){setOpenScorecard('');setScorecardLoading(false);return}setOpenScorecard(id);setScorecardProgress(8);setScorecardImageError(false);setScorecardLoading(true)}
 
   const loadLive=useCallback(async()=>{
     try{const res=await fetch('/api/youtube/live',{cache:'no-store'});setStatus(await res.json())}
@@ -156,10 +161,21 @@ export default function LivePage(){
         {grouped.map(([seasonName,videos])=><div className="recorded-season-v1267" key={seasonName}>
           <h3>{seasonName==='Other Recordings'?seasonName:`${seasonName} Season`}</h3>
           <div className="recorded-grid-v1265">
-            {unlinkedScorecards.filter(card=>seasonName===`${new Date(card.monthStart+"T12:00:00").getFullYear()}–${new Date(card.monthStart+"T12:00:00").getFullYear()+1}`||seasonName===`${new Date(card.monthStart+"T12:00:00").getFullYear()}-${new Date(card.monthStart+"T12:00:00").getFullYear()+1}`).map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
-              <div className="recorded-card-copy-v1265"><strong>{card.team}</strong><span>{scorecardMonth(card)} · Week {card.weekNumber}</span><span>Approved score: {Number(card.score).toFixed(1)}</span></div>
-              <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
-                {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">{card.imageUrl?<a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a>:<p>Scorecard image is unavailable.</p>}</div>}
+            {unlinkedScorecards.filter(card=>{const y=new Date(card.monthStart+'T12:00:00').getFullYear();return seasonName===`${y}–${y+1}`||seasonName===`${y}-${y+1}`}).map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
+              <button className="recorded-thumb-v1267" onClick={()=>toggleScorecard(card.id)} aria-label={`View ${card.team} scorecard`} style={{width:'100%',aspectRatio:'16 / 9',overflow:'hidden',background:'#e8edf0'}}>
+                {card.imageUrl?<img src={card.imageUrl} alt={`${card.team} scorecard preview`} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span className="recorded-thumb-fallback-v1267">Scorecard Only</span>}
+                <span className="recorded-play-v1267">View</span>
+              </button>
+              <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
+                <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span><small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1} · Scorecard Only</small></div>
+                <div className="recorded-inline-score-v1268"><small>ADJUSTED SCORE</small><strong>{Number(card.score).toFixed(1)}</strong></div>
+              </div>
+              <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>toggleScorecard(card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
+                {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">
+                  {scorecardLoading&&<div role="status" style={{padding:'12px 0'}}><strong>Loading Scorecard… {scorecardProgress}%</strong><div className="recorded-archive-progress-track-v1316" style={{marginTop:8}}><i style={{width:`${scorecardProgress}%`}}/></div></div>}
+                  {card.imageUrl?<a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`} onLoad={()=>{setScorecardLoading(false);setScorecardProgress(100)}} onError={()=>{setScorecardLoading(false);setScorecardImageError(true)}} style={{display:scorecardLoading?'none':'block'}}/></a>:<p>Scorecard image unavailable.</p>}
+                  {scorecardImageError&&<p role="alert">The scorecard image could not load. Please try again.</p>}
+                </div>}
               </div>
             </article>)}
             {videos.map(video=><article className="recorded-card-v1265" key={video.videoId}>
@@ -173,7 +189,7 @@ export default function LivePage(){
                 <div className="recorded-card-copy-main-v1268"><strong>{video.matchupTeams&&video.matchupTeams.length>=2?`${video.matchupTeams[0]} vs ${video.matchupTeams[1]}`:(video.team||video.title)}</strong>{video.month&&video.year?<><span>{video.month} {video.year}</span>{video.championshipRound?<span>Championship Round</span>:video.roundNumber&&<span>Round {video.roundNumber}</span>}</>:<>{(video.roundText||video.team)&&<span>{video.championshipRound?'Championship Round':(video.roundText||video.title)}</span>}</>}{video.season&&<small>Season {video.season}</small>}</div>
                 {video.matchupScores&&video.matchupScores.length>=2?<div className="recorded-matchup-scores-v1321">{orderedMatchupScores(video).map(score=><div className={`recorded-matchup-score-card-v1321 ${video.showAdjustedScore?'is-current-v1327':'is-past-v1327'}`} key={score.team}><strong className="recorded-matchup-team-v1321">{score.team}</strong>{video.showAdjustedScore?<div className="recorded-score-breakdown-v1321"><div><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof score.handicap==='number'?(Number.isInteger(score.handicap)?score.handicap:score.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof score.adjustedScore==='number'?(Number.isInteger(score.adjustedScore)?score.adjustedScore:score.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-past-raw-score-v1326"><small>RAW SCORE</small><strong>{Number.isInteger(score.rawScore)?score.rawScore:score.rawScore.toFixed(1)}</strong></div>}</div>)}</div>:typeof video.rawScore==='number'&&Number.isFinite(video.rawScore)&&(video.showAdjustedScore?<div className="recorded-score-breakdown-v1316"><div><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div><div><small>HANDICAP</small><strong>{typeof video.handicap==='number'?(Number.isInteger(video.handicap)?video.handicap:video.handicap.toFixed(1)):'—'}</strong></div><div><small>ADJUSTED</small><strong>{typeof video.adjustedScore==='number'?(Number.isInteger(video.adjustedScore)?video.adjustedScore:video.adjustedScore.toFixed(1)):'—'}</strong></div></div>:<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number.isInteger(video.rawScore)?video.rawScore:video.rawScore.toFixed(1)}</strong></div>)}
               </div>
-              {cardsForVideo(video).length>0&&<div className="recorded-scorecard-actions-v1296">{(()=>{const matchingCards=cardsForVideo(video),showTeamNames=matchingCards.length>1;return matchingCards.map(card=><div id={`scorecard-${card.id}`} className="recorded-scorecard-item-v1296" key={card.id}><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>{showTeamNames?`${card.team} – View Scorecard`:'View Scorecard'}</button>{openScorecard===card.id&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a><small>Tap the image to open it full screen and zoom.</small></div>}</div>)})()}</div>}
+              {cardsForVideo(video).length>0&&<div className="recorded-scorecard-actions-v1296">{(()=>{const matchingCards=cardsForVideo(video),showTeamNames=matchingCards.length>1;return matchingCards.map(card=><div id={`scorecard-${card.id}`} className="recorded-scorecard-item-v1296" key={card.id}><button className="recorded-scorecard-button-v1296" onClick={()=>toggleScorecard(card.id)}>{showTeamNames?`${card.team} – View Scorecard`:'View Scorecard'}</button>{openScorecard===card.id&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a><small>Tap the image to open it full screen and zoom.</small></div>}</div>)})()}</div>}
             </article>)}
           </div>
         </div>)}
