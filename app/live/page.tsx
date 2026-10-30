@@ -167,7 +167,7 @@ export default function LivePage(){
                 
               </button>
               <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
-                <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span><small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1} · Scorecard Only</small></div>
+                <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span><small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1}</small></div>
                 <div className="recorded-inline-score-v1268"><small>ADJUSTED SCORE</small><strong>{Number(card.score).toFixed(1)}</strong></div>
               </div>
               <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>toggleScorecard(card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
