@@ -9,7 +9,10 @@ function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).r
 export default function NotificationApprovalPrompt(){
  const path=usePathname();const [show,setShow]=useState(false),[busy,setBusy]=useState(false),[msg,setMsg]=useState('')
  useEffect(()=>{(async()=>{
-  if(path==='/login')return
+  if(path==='/login'||path==='/admin'||path?.startsWith('/admin/')){setShow(false);return}
+  // Safari tabs on iPad cannot receive web push; prompt only in installed Home Screen apps.
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||(navigator as any).standalone===true
+  if(!standalone){setShow(false);return}
   if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){setMsg('This app session does not support web push. Please confirm this icon was installed from the Golf V2 test site using Safari > Add to Home Screen.');setShow(true);return}
   // During the first moments after login, the auth session can still be settling.
   // Do not display an alarming sign-in error from the optional notification prompt.
