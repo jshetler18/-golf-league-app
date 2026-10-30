@@ -54,16 +54,18 @@ export async function POST(req:NextRequest){
     }
 
     let sent=0, failed=0
-    for(const sub of subscriptions){
-      if(!sub.p256dh||!sub.auth)continue
+    const sendOne=async(sub:any)=>{
+      if(!sub.p256dh||!sub.auth)return
       try{
-        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:`/messages?message=${encodeURIComponent(announcementId)}`,tag:`announcement-${announcementId}`,kind:'announcement'}))
+        await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:`/messages?message=${encodeURIComponent(announcementId)}`,tag:`announcement-${announcementId}`,kind:'announcement'}),{timeout:4000})
         sent++
       }catch(err:any){
         failed++
+        console.error('Announcement push rejected',{statusCode:err?.statusCode,message:err?.message})
         if(err?.statusCode===404||err?.statusCode===410)await supabase.from('push_subscriptions').delete().eq('id',sub.id)
       }
     }
+    for(let i=0;i<subscriptions.length;i+=5){await Promise.allSettled(subscriptions.slice(i,i+5).map(sendOne))}
     return NextResponse.json({ok:true,sent,failed,target:announcement.audience})
   }catch(err:any){return NextResponse.json({error:err?.message||'Unable to send push notifications.'},{status:500})}
 }
