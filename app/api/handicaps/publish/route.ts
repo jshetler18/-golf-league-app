@@ -34,7 +34,7 @@ export async function POST(req:NextRequest){
   // Publication is already committed. Send optional pushes after responding to avoid a stuck Publish button.
   after(async()=>{let accepted=0,failed=0,missing=0,publisherAccepted=0,publisherFailed=0;try{
   if(priv){
-   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',priv)
+   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BM_yHAEkMmTuvc5_3KBvmQ1roeGxqyT8N8YJnpSzU19qwHRnUgHRsgRbQo62tqld6dh4kABoUMFf3HG0jf8Glnc',priv)
    const {data:approved}=await admin.from('profiles').select('id').eq('status','approved').not('player_id','is',null)
    const ids=(approved||[]).map((p:any)=>p.id)
    const {data:subs}=ids.length?await admin.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',ids):{data:[] as any[]}
