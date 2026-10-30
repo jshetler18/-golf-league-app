@@ -44,7 +44,12 @@ export async function POST(req:NextRequest){
    const monthName=new Date(monthStart+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})
    const title=prior?'Team Handicaps Updated':'New Team Handicaps Set'
    const message=prior?`Team handicaps for ${monthName} have been updated. Tap to view them.`:`New team handicaps for ${monthName} have been set. Tap to view them.`
-   for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}));accepted++;if(s.user_id===user.id)publisherAccepted++}catch(e:any){failed++;if(s.user_id===user.id)publisherFailed++;if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+   // Bound each network call and send concurrently; one unresponsive endpoint must not block reporting.
+   const sendOne=async(s:any)=>{if(!s.p256dh||!s.auth)return;try{
+     await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}),{timeout:4000});
+     accepted++;if(s.user_id===user.id)publisherAccepted++
+   }catch(e:any){failed++;if(s.user_id===user.id)publisherFailed++;console.error('Handicap push rejected',e?.statusCode||e?.message||e);if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+   for(let i=0;i<(subs||[]).length;i+=5){await Promise.allSettled((subs||[]).slice(i,i+5).map(sendOne))}
   }
   if(report?.id)await admin.from('handicap_notification_reports').update({status:'completed',accepted,failed,missing_keys:missing,publisher_accepted:publisherAccepted,publisher_failed:publisherFailed,completed_at:new Date().toISOString()}).eq('id',report.id)
   }catch(e){console.error('Handicap notification delivery failed',e);if(report?.id)await admin.from('handicap_notification_reports').update({status:'failed',accepted,failed,missing_keys:missing,publisher_accepted:publisherAccepted,publisher_failed:publisherFailed,error:String(e),completed_at:new Date().toISOString()}).eq('id',report.id)}})
