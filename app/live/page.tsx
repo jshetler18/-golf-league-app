@@ -36,13 +36,14 @@ export default function LivePage(){
   const [team,setTeam]=useState('all'),[season,setSeason]=useState('all'),[month,setMonth]=useState('all'),[round,setRound]=useState('all'),[scoreOrder,setScoreOrder]=useState('all')
   const [activeVideo,setActiveVideo]=useState<string>('')
   const [scorecards,setScorecards]=useState<ApprovedCard[]>([])
+  const [scorecardError,setScorecardError]=useState('')
   const [openScorecard,setOpenScorecard]=useState<string>('')
 
   const loadLive=useCallback(async()=>{
     try{const res=await fetch('/api/youtube/live',{cache:'no-store'});setStatus(await res.json())}
     catch{setStatus({configured:true,isLive:false,error:'Unable to check the livestream right now.'})}
   },[])
-  const loadScorecards=useCallback(async()=>{try{const res=await fetch('/api/round-scorecards/approved',{cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
+  const loadScorecards=useCallback(async()=>{try{const res=await fetch('/api/round-scorecards/approved',{cache:'no-store'});const j=await res.json();if(!res.ok||j.error)throw new Error(j.error||'Scorecards could not be loaded');setScorecards(j.items||[]);setScorecardError('')}catch(e:any){setScorecardError(e?.message||'Unable to load approved scorecards')}},[])
   const loadArchive=useCallback(async()=>{
     setArchiveLoading(true);setArchiveProgress(8)
     const timer=window.setInterval(()=>setArchiveProgress(p=>Math.min(88,p+(p<45?9:p<70?5:2))),220)
@@ -116,7 +117,7 @@ export default function LivePage(){
       (shortTeam.length>=3&&searchable.includes(shortTeam))||
       (pluralShort.length>=4&&searchable.includes(pluralShort))
   })
-  const unlinkedScorecards=scorecards.filter(card=>!(archive?.recordings||[]).some(video=>cardsForVideo(video).some(matched=>matched.id===card.id)))
+  const unlinkedScorecards=scorecards.filter(card=>card.archiveVideoId?!(archive?.recordings||[]).some(video=>video.videoId===card.archiveVideoId):!(archive?.recordings||[]).some(video=>cardsForVideo(video).some(matched=>matched.id===card.id)))
   const scorecardMonth=(card:ApprovedCard)=>new Date(card.monthStart+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})
   useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
@@ -134,6 +135,7 @@ export default function LivePage(){
         <span className="recorded-offline-dot-v1265"/><div><strong>No live broadcasts at this time</strong><small>Past recorded rounds are available below.</small></div>
       </section>}
 
+      {scorecardError&&<p role="alert" className="message">Unable to load approved scorecards: {scorecardError}</p>}
       <section className="recorded-archive-v1265">
         <div className="recorded-section-head-v1265"><div><h2>Round Archive</h2><p>Find a recorded round by team, season, month, round, or raw score.</p></div>{hasFilters&&<button onClick={clearFilters}>Clear Filters</button>}</div>        <div className="recorded-filters-v1265">
           <label>Team<select value={team} onChange={e=>{setTeam(e.target.value);setActiveVideo('')}}><option value="all">All Teams</option>{archive?.filters.teams.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
