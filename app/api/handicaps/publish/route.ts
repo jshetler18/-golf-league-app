@@ -29,19 +29,25 @@ export async function POST(req:NextRequest){
   const payload={season_id:seasonId,league_month_id:monthId,month_start:monthStart,handicap_standard:Number(body.standard||27),snapshot,published_at:new Date().toISOString(),published_by:user.id}
   const {error}=await admin.from('handicap_publications').upsert(payload,{onConflict:'league_month_id'})
   if(error)return NextResponse.json({error:error.message},{status:500})
+  const {data:report,error:reportError}=await admin.from('handicap_notification_reports').insert({league_month_id:monthId,status:'queued'}).select('id').single()
+  if(reportError)console.error('Unable to create handicap delivery report',reportError)
   // Publication is already committed. Send optional pushes after responding to avoid a stuck Publish button.
-  after(async()=>{try{
+  after(async()=>{let accepted=0,failed=0,missing=0,publisherAccepted=0,publisherFailed=0;try{
   if(priv){
    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',priv)
    const {data:approved}=await admin.from('profiles').select('id').eq('status','approved').not('player_id','is',null)
    const ids=(approved||[]).map((p:any)=>p.id)
    const {data:subs}=ids.length?await admin.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',ids):{data:[] as any[]}
+   const valid=(subs||[]).filter((s:any)=>s.p256dh&&s.auth)
+   if(report?.id)await admin.from('handicap_notification_reports').update({status:'sending',eligible_users:ids.length,subscribed_users:new Set((subs||[]).map((s:any)=>s.user_id)).size,devices:(subs||[]).length,missing_keys:(subs||[]).length-valid.length,publisher_registered:(subs||[]).some((s:any)=>s.user_id===user.id)}).eq('id',report.id)
+   missing=(subs||[]).length-valid.length
    const monthName=new Date(monthStart+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})
    const title=prior?'Team Handicaps Updated':'New Team Handicaps Set'
    const message=prior?`Team handicaps for ${monthName} have been updated. Tap to view them.`:`New team handicaps for ${monthName} have been set. Tap to view them.`
-   for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}));}catch(e:any){if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
+   for(const s of subs||[]){if(!s.p256dh||!s.auth)continue;try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body:message,url:'/teams?tab=handicaps',tag:`handicaps-${monthId}`,kind:'handicaps'}));accepted++;if(s.user_id===user.id)publisherAccepted++}catch(e:any){failed++;if(s.user_id===user.id)publisherFailed++;if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id)}}
   }
-  }catch(e){console.error('Handicap notification delivery failed',e)}})
-  return NextResponse.json({ok:true,updated:Boolean(prior),sent:0,notificationsQueued:true})
+  if(report?.id)await admin.from('handicap_notification_reports').update({status:'completed',accepted,failed,missing_keys:missing,publisher_accepted:publisherAccepted,publisher_failed:publisherFailed,completed_at:new Date().toISOString()}).eq('id',report.id)
+  }catch(e){console.error('Handicap notification delivery failed',e);if(report?.id)await admin.from('handicap_notification_reports').update({status:'failed',accepted,failed,missing_keys:missing,publisher_accepted:publisherAccepted,publisher_failed:publisherFailed,error:String(e),completed_at:new Date().toISOString()}).eq('id',report.id)}})
+  return NextResponse.json({ok:true,updated:Boolean(prior),sent:0,notificationsQueued:Boolean(report?.id)})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to publish handicaps.'},{status:500})}
 }
