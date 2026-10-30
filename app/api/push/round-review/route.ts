@@ -16,9 +16,10 @@ export async function POST(req:NextRequest){
   const admin=createClient(url,secret,{auth:{persistSession:false}})
   const {submissionId,action,reason}=await req.json()
   if(!['approved','denied'].includes(action))return NextResponse.json({error:'Invalid review action.'},{status:400})
-  const {data:r}=await admin.from('round_score_submissions').select('id,submitted_by,official_total,week_number,league_months(month_start),teams(name)').eq('id',submissionId).single()
+  const {data:r}=await admin.from('round_score_submissions').select('id,submitted_by,official_total,week_number,status,league_months(month_start),teams(name)').eq('id',submissionId).single()
   if(!r)return NextResponse.json({error:'Submission not found.'},{status:404})
 
+  if((action==='approved'&& (r as any).status!=='approved')||(action==='denied'&&(r as any).status!=='rejected'))return NextResponse.json({error:'Scorecard review status does not match notification action.'},{status:409})
   const team=(r as any).teams?.name||'A team'
   const score=Number((r as any).official_total||0).toFixed(1)
   let title='',body='',subs:any[]=[]
@@ -42,7 +43,7 @@ export async function POST(req:NextRequest){
     if(!s.p256dh||!s.auth)continue
     try{
       await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({
-        title,body,url:action==='approved'?`/live?submission=${r.id}#scorecard-${r.id}`:'/submit-score',tag:`round-review-${r.id}-${action}`,kind:'round-review'
+        title,body,url:action==='approved'?`/live#scorecard-${r.id}`:'/submit-score',tag:`round-review-${r.id}-${action}`,kind:'round-review'
       }))
       sent++
     }catch(e:any){
