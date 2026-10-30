@@ -2692,3 +2692,14 @@ i .captain-mark-v1357{
   }
   .mobile-bottom a,.player-mobile-bottom a{min-height:0}
 }
+
+/* Tablet admin: show the same navigation as desktop instead of hiding it below 1181px. */
+@media (min-width:700px) and (max-width:1180px){
+  .desktop-home-header-v13113.admin-static-nav-v13134{display:block!important;width:calc(100% - 32px);margin:16px auto;padding:16px;border:1px solid #dde5e0;border-radius:18px;background:#fff}
+  .admin-static-nav-v13134>.desktop-home-mainrow-v13121{display:flex!important;align-items:center;justify-content:space-between;gap:16px}
+  .admin-static-nav-v13134>.admin-header-content-v13121{display:block!important;width:100%;margin-top:14px}
+  .admin-static-nav-v13134 .admin-header-columns-v13122{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .admin-static-nav-v13134 .admin-header-column-v13122{min-width:0}
+  .admin-static-nav-v13134 .admin-header-links-v13122{display:flex;flex-direction:column;gap:8px}
+  .admin-static-nav-v13134 .admin-home-link-v13123{display:flex;align-items:center;gap:6px;min-width:0}
+}
