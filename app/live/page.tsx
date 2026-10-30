@@ -69,6 +69,7 @@ export default function LivePage(){
   },[archive,status?.videoId,team,season,month,round,scoreOrder])
   const grouped=useMemo(()=>{
     const map=new Map<string,Recording[]>()
+    for(const card of scorecards){if(card.archiveVideoId)continue;const y=new Date(card.monthStart+"T12:00:00").getFullYear();if(Number.isFinite(y)){const key=`${y}–${y+1}`;if(!map.has(key))map.set(key,[])}}
     for(const video of filtered){
       const key=video.season||'Other Recordings'
       if(!map.has(key))map.set(key,[])
@@ -79,7 +80,7 @@ export default function LivePage(){
       if(b==='Other Recordings')return -1
       return b.localeCompare(a)
     })
-  },[filtered])
+  },[filtered,scorecards])
   const cardsForVideo=(video:Recording)=>scorecards.filter(c=>{
     // Past scorecards uploaded in v13.87+ are linked directly to the selected YouTube recording.
     // This avoids relying on historical title/date/team parsing for old Week 4 matchups.
@@ -155,6 +156,12 @@ export default function LivePage(){
         {grouped.map(([seasonName,videos])=><div className="recorded-season-v1267" key={seasonName}>
           <h3>{seasonName==='Other Recordings'?seasonName:`${seasonName} Season`}</h3>
           <div className="recorded-grid-v1265">
+            {unlinkedScorecards.filter(card=>seasonName===`${new Date(card.monthStart+"T12:00:00").getFullYear()}–${new Date(card.monthStart+"T12:00:00").getFullYear()+1}`||seasonName===`${new Date(card.monthStart+"T12:00:00").getFullYear()}-${new Date(card.monthStart+"T12:00:00").getFullYear()+1}`).map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
+              <div className="recorded-card-copy-v1265"><strong>{card.team}</strong><span>{scorecardMonth(card)} · Week {card.weekNumber}</span><span>Approved score: {Number(card.score).toFixed(1)}</span></div>
+              <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
+                {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">{card.imageUrl?<a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a>:<p>Scorecard image is unavailable.</p>}</div>}
+              </div>
+            </article>)}
             {videos.map(video=><article className="recorded-card-v1265" key={video.videoId}>
               {activeVideo===video.videoId?<div className="recorded-video-v1265 recorded-active-video-v1267"><iframe src={`https://www.youtube.com/embed/${encodeURIComponent(video.videoId)}?playsinline=1&rel=0&autoplay=1`} title={`${video.team||'Recorded round'} ${video.roundText||''}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>:
               <button className="recorded-thumb-v1267" onClick={()=>setActiveVideo(video.videoId)} aria-label={`Play ${video.team||video.title} ${video.roundText||''}`}>
@@ -170,18 +177,6 @@ export default function LivePage(){
             </article>)}
           </div>
         </div>)}
-        {unlinkedScorecards.length>0&&<section className="recorded-season-v1267" aria-label="Scorecards without recordings" style={{marginTop:24}}>
-          <h3>Scorecards Without Recordings</h3>
-          <p className="muted">Approved scorecards for rounds that do not have a matching YouTube recording.</p>
-          <div className="recorded-grid-v1265">
-            {unlinkedScorecards.map(card=><article className="recorded-card-v1265" id={`scorecard-${card.id}`} key={card.id}>
-              <div className="recorded-card-copy-v1265"><strong>{card.team}</strong><span>{scorecardMonth(card)} · Week {card.weekNumber}</span><span>Approved score: {Number(card.score).toFixed(1)}</span></div>
-              <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>setOpenScorecard(openScorecard===card.id?'':card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
-                {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">{card.imageUrl?<a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`}/></a>:<p>Scorecard image is unavailable.</p>}</div>}
-              </div>
-            </article>)}
-          </div>
-        </section>}
         {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Past-season recordings keep the original Raw Score display. Beginning with the 2026–2027 season, recorded rounds show Raw Score, that team’s monthly Handicap, and the Adjusted Score. Match-play recordings show both teams when the matchup can be identified.</div>}
       </section>
     </div>
