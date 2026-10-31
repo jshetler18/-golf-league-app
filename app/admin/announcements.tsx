@@ -120,9 +120,11 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
 
   async function remove(id:string,title:string){
     if(!window.confirm(`Delete “${title}”? This will remove it from player Messages.`))return
-    const {error}=await supabase.from('announcements').delete().eq('id',id)
-    setMessage(error?error.message:'Announcement deleted.')
-    if(!error)load()
+    const {data,error}=await supabase.from('announcements').delete().eq('id',id).select('id')
+    if(error){setMessage('Could not delete announcement: '+error.message);return}
+    if(!data?.length){setMessage('Announcement was not deleted. Please verify your admin access.');return}
+    setMessage('Announcement deleted.')
+    await load()
   }
 
   const readerMaps=useMemo(()=>{
