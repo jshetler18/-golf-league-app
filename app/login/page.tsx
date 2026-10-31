@@ -117,7 +117,7 @@ export default function LoginPage(){
       }else{
         const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
         if(p?.role==='admin' && p?.status==='approved'){
-          router.replace('/admin')
+          router.replace('/')
           return
         }
         if(p?.status==='approved'){
