@@ -105,7 +105,7 @@ export default function Messages(){
       {rows.length?rows.map(m=>{
         const expanded=selectedId===m.id
         const unread=!read.has(m.id)
-        return <div key={m.id} className={'message-card '+(unread?'unread':'')} style={{display:'block',width:'100%',textAlign:'left',padding:0,overflow:'hidden'}}>
+        return <div key={m.id} className={'message-card '+(unread?'unread':'')+(expanded?' message-card-expanded':'')} style={{display:'block',width:'100%',textAlign:'left',padding:0,overflow:'hidden',border:expanded?'4px solid #248b0c':undefined,boxShadow:expanded?'0 0 0 2px rgba(36,139,12,.15)':undefined}}>
           <button type="button" onClick={()=>showMessage(m.id)} aria-expanded={expanded} aria-controls={`message-body-${m.id}`} style={{display:'flex',alignItems:'center',gap:12,width:'100%',textAlign:'left',padding:'16px',background:'transparent',border:0,color:'inherit',cursor:'pointer'}}>
             {unread&&<span aria-label="Unread" title="Unread" style={{width:10,height:10,minWidth:10,borderRadius:'50%',background:'#e53935'}}/>}
             <span style={{flex:1,minWidth:0}}>
