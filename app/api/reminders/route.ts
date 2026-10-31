@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
-import { runYouTubeLiveCheck } from '@/lib/youtubeLiveNotify'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,13 +19,6 @@ export async function POST(req:NextRequest){
     const secret=process.env.CRON_SECRET
     const auth=req.headers.get('authorization')||''
     if(!secret || auth!==`Bearer ${secret}`) return NextResponse.json({error:'Unauthorized'},{status:401})
-
-    let youtubeLive:any
-    try{
-      youtubeLive=await runYouTubeLiveCheck()
-    }catch(error:any){
-      youtubeLive={ok:false,error:error?.message||'Unable to check YouTube livestream.'}
-    }
 
     const url=process.env.NEXT_PUBLIC_SUPABASE_URL
     const adminKey=process.env.SUPABASE_SECRET_KEY
@@ -58,7 +50,7 @@ export async function POST(req:NextRequest){
       for(const booking of (data||[]) as Booking[]) due.push({booking,type})
     }
 
-    if(!due.length) return NextResponse.json({ok:true,due:0,sent:0,failed:0,youtubeLive})
+    if(!due.length) return NextResponse.json({ok:true,due:0,sent:0,failed:0})
 
     const bookingIds=[...new Set(due.map(x=>x.booking.id))]
     const userIds=[...new Set(due.map(x=>x.booking.user_id))]
@@ -108,7 +100,7 @@ export async function POST(req:NextRequest){
       }
     }
 
-    return NextResponse.json({ok:true,due:due.length,processed,sent,failed,youtubeLive})
+    return NextResponse.json({ok:true,due:due.length,processed,sent,failed})
   }catch(err:any){
     return NextResponse.json({error:err?.message||'Unable to process reservation reminders.'},{status:500})
   }
