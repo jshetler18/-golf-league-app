@@ -1,9 +1,10 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
+import {getVapidPublicKey} from '@/lib/vapid'
 
 export const runtime='nodejs'
-const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+
 
 export async function POST(req:NextRequest){
   try{
@@ -51,7 +52,7 @@ export async function POST(req:NextRequest){
     const title='Scorecard Ready for Approval'
     const body=`${team}'s ${month} Week ${r.week_number} scorecard was submitted by ${submitterName} and is ready for review.`
 
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',VAPID_PUBLIC_KEY,priv)
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',getVapidPublicKey(),priv)
     const usable=(subs||[]).filter((s:any)=>s.p256dh&&s.auth)
     const results=await Promise.allSettled(usable.map(async(s:any)=>{
       try{
