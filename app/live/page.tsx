@@ -51,7 +51,7 @@ export default function LivePage(){
     finally{window.clearInterval(timer);window.setTimeout(()=>setArchiveLoading(false),180)}
   },[])
 
-  useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,60000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
+  useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,15000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
 
   const filtered=useMemo(()=>{
     const items=(archive?.recordings||[]).filter(x=>x.videoId!==status?.videoId)
