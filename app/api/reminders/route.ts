@@ -1,3 +1,4 @@
+import {getVapidPublicKey} from '@/lib/vapid'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
@@ -28,7 +29,7 @@ export async function POST(req:NextRequest){
     const supabase=createClient(url,adminKey,{auth:{persistSession:false,autoRefreshToken:false}})
     webpush.setVapidDetails(
       process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',
-      'BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',
+      getVapidPublicKey(),
       vapidPrivate
     )
 
