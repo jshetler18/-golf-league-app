@@ -29,7 +29,7 @@ export function RichTextEditor({value,onChange,placeholder='Start typing…'}:Pr
       <button type="button" onClick={link} title="Add link">Link</button>
       <button type="button" onClick={()=>cmd('removeFormat')} title="Clear formatting">Clear</button>
     </div>
-    <div ref={ref} className="rich-edit-area-v1237" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onInput={e=>onChange(cleanEditorHtml(e.currentTarget.innerHTML))} onPaste={e=>{e.preventDefault();const text=e.clipboardData.getData('text/plain').replace(/\u00a0/g,' ');document.execCommand('insertText',false,text)}} />
+    <div ref={ref} className="rich-edit-area-v1237" style={{fontWeight:400,fontStyle:"normal"}} contentEditable suppressContentEditableWarning data-placeholder={placeholder} onInput={e=>onChange(cleanEditorHtml(e.currentTarget.innerHTML))} onPaste={e=>{e.preventDefault();const text=e.clipboardData.getData('text/plain').replace(/\u00a0/g,' ');document.execCommand('insertText',false,text)}} />
   </div>
 }
 
