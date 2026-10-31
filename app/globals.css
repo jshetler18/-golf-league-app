@@ -2732,3 +2732,10 @@ i .captain-mark-v1357{
 .rich-tiptap-v1237 .tiptap a{color:#167609;text-decoration:underline}
 .rich-tiptap-v1237 .tiptap:empty:before,.rich-tiptap-v1237 .tiptap p.is-editor-empty:first-child:before{content:attr(data-placeholder);color:#8a948e;pointer-events:none;float:left;height:0}
 .rich-toolbar-v1237 button[aria-pressed="true"]{background:#e6f2e8;border-color:#8cbd98}
+
+/* Explicit regular body text inside Tiptap; bold only for actual strong marks. */
+.rich-editor-v1237 .rich-tiptap-v1237 .tiptap,
+.rich-editor-v1237 .rich-tiptap-v1237 .tiptap p,
+.rich-editor-v1237 .rich-tiptap-v1237 .tiptap li{font-weight:400!important}
+.rich-editor-v1237 .rich-tiptap-v1237 .tiptap strong,
+.rich-editor-v1237 .rich-tiptap-v1237 .tiptap b{font-weight:700!important}
