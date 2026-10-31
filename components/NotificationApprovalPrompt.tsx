@@ -9,7 +9,7 @@ function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).r
 export default function NotificationApprovalPrompt(){
  const path=usePathname();const [show,setShow]=useState(false),[busy,setBusy]=useState(false),[msg,setMsg]=useState('')
  useEffect(()=>{(async()=>{
-  if(path==='/login'||path==='/admin'||path?.startsWith('/admin/')){setShow(false);return}
+  if(path==='/login'||path==='/admin'||path?.startsWith('/admin/')||path==='/tv'||path?.startsWith('/tv/')){setShow(false);return}
   // Safari tabs on iPad cannot receive web push; prompt only in installed Home Screen apps.
   const standalone=window.matchMedia('(display-mode: standalone)').matches||(navigator as any).standalone===true
   if(!standalone){setShow(false);return}
