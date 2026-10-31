@@ -98,7 +98,7 @@ export default function SimReservations(){
       <div style={{minWidth:0,textAlign:'center'}}>
         <label htmlFor="booking-date-input" style={{display:'block',marginBottom:6}}>Date</label>
         <div style={{position:'relative',width:'100%',height:46,overflow:'hidden',border:'1px solid #cfd8d2',borderRadius:10,background:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <span aria-hidden="true" style={{fontSize:16,color:'#15251b',whiteSpace:'nowrap',pointerEvents:'none'}}>{new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(new Date(`${date}T12:00:00`))}</span>
+          <span aria-hidden="true" style={{fontSize:16,color:'#15251b',whiteSpace:'nowrap',pointerEvents:'none'}}>{new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(new Date(`${date}T12:00:00`))}</span>
           <input id="booking-date-input" aria-label="Select reservation date" type="date" min={today} max={maxDate} value={date} onChange={e=>{const next=e.target.value;if(next){setDate(next);if(next>maxDate)setBookingWindowDenied(true)}}} style={{position:'absolute',inset:0,width:'100%',height:'100%',minWidth:0,maxWidth:'100%',margin:0,padding:0,opacity:0,cursor:'pointer',boxSizing:'border-box'}}/>
         </div>
       </div>
