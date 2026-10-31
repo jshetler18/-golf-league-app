@@ -1,6 +1,7 @@
 'use client'
 
 import {useCallback,useEffect,useState} from 'react'
+import {useRouter} from 'next/navigation'
 import {supabase} from '@/lib/supabase'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 import {RichTextDisplay} from '@/components/RichTextEditor'
@@ -15,6 +16,7 @@ function sentTimestamp(iso:string){
 }
 
 export default function Messages(){
+  const router=useRouter()
   const [rows,setRows]=useState<any[]>([])
   const [read,setRead]=useState<Set<string>>(new Set())
   const [selectedId,setSelectedId]=useState<string|null>(null)
@@ -82,14 +84,10 @@ export default function Messages(){
   },[selectedId,rows,read])
 
   function showMessage(id:string){
-    setSelectedId(id)
-    window.history.replaceState(null,'',`/messages?message=${encodeURIComponent(id)}`)
-    mark(id)
-  }
-
-  function showAll(){
-    setSelectedId(null)
-    window.history.replaceState(null,'','/messages')
+    const next=selectedId===id?null:id
+    setSelectedId(next)
+    router.replace(next?`/messages?message=${encodeURIComponent(next)}`:'/messages',{scroll:false})
+    if(next)mark(next)
   }
 
   async function mark(id:string){
@@ -101,7 +99,29 @@ export default function Messages(){
     window.dispatchEvent(new Event('league-unread-changed'))
   }
 
-  const selected=selectedId?rows.find(m=>m.id===selectedId):null
-
-  return <PlayerPage title="Messages"><div className="simple-mobile-page"><h1>Messages</h1>{selected?<div className="message-detail"><button type="button" className="message-back" onClick={showAll}>← All Messages</button><div className="message-card message-card-open"><div><strong>{selected.title}</strong>{selected.audience==='team'&&<span className="message-audience-pill">Team Message</span>}</div><RichTextDisplay value={selected.body}/><small>{sentTimestamp(selected.created_at)}</small></div></div>:<><p className="muted">League messages and announcements.</p><div className="message-list">{rows.length?rows.map(m=><button key={m.id} onClick={()=>showMessage(m.id)} className={'message-card '+(!read.has(m.id)?'unread':'')}><div><strong>{m.title}</strong>{m.audience==='team'&&<span className="message-audience-pill">Team Message</span>}{!read.has(m.id)&&<span className="new-dot">New</span>}</div><RichTextDisplay value={m.body}/><small>{sentTimestamp(m.created_at)}</small></button>):<div className="card">No messages yet.</div>}</div></>}</div></PlayerPage>
+  return <PlayerPage title="Messages"><div className="simple-mobile-page">
+    <h1>Messages</h1>
+    <p className="muted">League messages and announcements.</p>
+    <div className="message-list" style={{display:'flex',flexDirection:'column',gap:10}}>
+      {rows.length?rows.map(m=>{
+        const expanded=selectedId===m.id
+        const unread=!read.has(m.id)
+        return <div key={m.id} className={'message-card '+(unread?'unread':'')} style={{display:'block',width:'100%',textAlign:'left',padding:0,overflow:'hidden'}}>
+          <button type="button" onClick={()=>showMessage(m.id)} aria-expanded={expanded} aria-controls={`message-body-${m.id}`} style={{display:'flex',alignItems:'center',gap:12,width:'100%',textAlign:'left',padding:'16px',background:'transparent',border:0,color:'inherit',cursor:'pointer'}}>
+            {unread&&<span aria-label="Unread" title="Unread" style={{width:10,height:10,minWidth:10,borderRadius:'50%',background:'#e53935'}}/>}
+            <span style={{flex:1,minWidth:0}}>
+              <strong style={{display:'block',fontSize:'1.12rem',fontWeight:750,lineHeight:1.3}}>{m.title}</strong>
+              {(m.audience==='team'||m.audience==='captains')&&<span className="message-audience-pill">{m.audience==='captains'?'Team Captains':'Team Message'}</span>}
+              <small style={{display:'block',marginTop:6,fontSize:'.78rem',opacity:.75}}>{sentTimestamp(m.created_at)}</small>
+              <small style={{display:'block',marginTop:3,fontSize:'.78rem',opacity:.75}}>From: Joe Shetler</small>
+            </span>
+            <span aria-hidden="true" style={{fontSize:20,transform:expanded?'rotate(180deg)':'none',transition:'transform .15s'}}>⌄</span>
+          </button>
+          {expanded&&<div id={`message-body-${m.id}`} style={{padding:'0 16px 18px',borderTop:'1px solid rgba(128,128,128,.2)'}}>
+            <div style={{paddingTop:14}}><RichTextDisplay value={m.body}/></div>
+          </div>}
+        </div>
+      }):<div className="card">No messages yet.</div>}
+    </div>
+  </div></PlayerPage>
 }
