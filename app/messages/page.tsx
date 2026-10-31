@@ -100,8 +100,7 @@ export default function Messages(){
   }
 
   return <PlayerPage title="Messages"><div className="simple-mobile-page">
-    <h1>Messages</h1>
-    <p className="muted">League messages and announcements.</p>
+    <h1 style={{fontWeight:800}}>Message</h1>
     <div className="message-list" style={{display:'flex',flexDirection:'column',gap:10}}>
       {rows.length?rows.map(m=>{
         const expanded=selectedId===m.id
