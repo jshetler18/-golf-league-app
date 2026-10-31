@@ -82,7 +82,7 @@ export default function SimReservations(){
   if(signedIn===false&&!loading)return <PlayerPage title="Sim Reservations"><section className="hero"><div className="eyebrow">Simulator Calendar</div><h1>Sim Reservations</h1><p>Sign in to see availability and make a reservation.</p></section><div className="card"><h2>Sign in required</h2><p>Only approved users can reserve simulator time.</p><Link className="btn" href="/login">Sign In / Create Account</Link></div></PlayerPage>
 
   return <PlayerPage title="Sim Reservations">
-    <section className="hero"><h1>Sim Reservations</h1><p>View your upcoming reservations or reserve simulator time.</p></section>
+    
     <section className="card sim-reservation-summary-v1307">
       <div><div className="sim-reservations-title-v1330">Your Reservations</div><div className="sim-reservation-count-v1331">{reservations.length===0?'You don’t have any upcoming reservations.':`You have ${reservations.length} upcoming reservation${reservations.length===1?'':'s'}.`}</div></div>
       {reservations.length>0&&<button type="button" className="btn secondary" onClick={()=>setShowReservations(v=>!v)}>{showReservations?'Hide My Reservations':'View My Reservations'}</button>}
