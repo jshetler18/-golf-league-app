@@ -1,9 +1,9 @@
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
-import {createECDH} from 'node:crypto'
+import {getVapidPublicKey} from '@/lib/vapid'
 import {getYouTubeLiveStatus} from '@/lib/youtubeLive'
 
-const PUBLIC='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
+const PUBLIC=getVapidPublicKey()
 
 export async function runYouTubeLiveCheck(){
   const status=await getYouTubeLiveStatus()
@@ -45,11 +45,6 @@ export async function runYouTubeLiveCheck(){
     if(subsError)throw subsError
     subscriptions=subs||[]
   }
-
-  const keyCheck=createECDH('prime256v1')
-  keyCheck.setPrivateKey(Buffer.from(privateKey,'base64url'))
-  const vapidKeyMatches=keyCheck.getPublicKey('base64url','uncompressed')===PUBLIC
-  if(!vapidKeyMatches)return {ok:false,configured:true,isLive:true,reason:'VAPID_PUBLIC_PRIVATE_MISMATCH',sent:0}
 
   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',PUBLIC,privateKey)
   const title=status.liveHeadline||'A League Round is now LIVE!'
