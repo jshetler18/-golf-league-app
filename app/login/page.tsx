@@ -32,7 +32,7 @@ export default function LoginPage(){
     setProfileError('')
     setProfile(p as Profile)
     if(p?.status==='approved'){
-      router.replace(p?.role==='admin'?'/admin':'/')
+      router.replace('/')
       return
     }
   }
@@ -109,7 +109,7 @@ export default function LoginPage(){
         const { data:p, error:lookupError } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
         if(lookupError || !p){setMessage('Unable to verify account access: '+(lookupError?.message || 'Profile not found'));setLoading(false);return}
         if(p?.role==='admin' && p?.status==='approved'){
-          router.replace('/admin')
+          router.replace('/')
           return
         }
         await supabase.auth.signOut()
@@ -139,7 +139,7 @@ export default function LoginPage(){
         <div className="auth-app-heading-v1230"><h1>{profile?.full_name || 'Your Account'}</h1><p>Simulator and league member access</p></div>
         <div className="card auth-card auth-app-card-v1230">
           <div className="auth-account-status-v1230"><span className={`status ${profile?.status || 'error'}`}>{profile?.status || 'Profile Unavailable'}</span><h2>Signed In</h2><p>{userEmail}</p>{profileError&&<p role="alert" className="message">Unable to verify account status: {profileError}. Please retry or contact the league administrator.</p>}<p className="muted">Booking access: <strong>{profile?.booking_enabled ? 'Enabled' : 'Not enabled yet'}</strong></p>{profile?.status==='pending'&&<><p>Your account is waiting for administrator approval.</p><p className="muted">This page checks automatically. Once your account is approved, you’ll be taken directly to the home screen.</p></>}</div>
-          <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}{profileError&&<button className="btn" onClick={refresh}>Retry</button>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
+          <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href="/">Go to Home</Link>}{profileError&&<button className="btn" onClick={refresh}>Retry</button>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
         <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':'Request access to the 19th Hole Golf League app.'}</p></div>
