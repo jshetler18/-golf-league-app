@@ -2720,3 +2720,6 @@ i .captain-mark-v1357{
   .admin-static-nav-v13134 .admin-header-links-v13122{display:flex!important;flex-direction:column;gap:8px}
   .admin-static-nav-v13134 .admin-home-link-v13123{display:flex!important;align-items:center;gap:8px}
 }
+
+/* Touchscreens must not leave the rich-text Bold control looking pressed from a sticky hover state. */
+@media (hover:none){.rich-toolbar-v1237 button:hover{background:#fff}}
