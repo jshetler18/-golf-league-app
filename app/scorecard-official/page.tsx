@@ -84,9 +84,9 @@ export default function ScorecardOfficialPage(){
    return <article className="card scorecard-official-card-v1298" key={r.id}>
     <div className="submission-head"><div><h2>{r.teams?.name}</h2><small className="submission-submitter-v1307">Submitted by {r.submitted_by_name}</small><p>{month} · Week {r.week_number}</p>{r.league_months?.course_name&&<small className="submission-course-v1308">{r.league_months.course_name}</small>}</div><span className="submission-status pending">pending</span></div>
     <div className="scorecard-official-score-summary-v1299">
-     <div><span>Submitted Score</span><strong>{Number(r.official_total).toFixed(1)}</strong><small>total with handicap</small></div>
-     <div><span>Monthly Team Handicap</span><strong>{Number(r.monthly_handicap)>=0?'+':''}{Number(r.monthly_handicap||0).toFixed(1)}</strong><small>{month}</small></div>
      <div><span>Score Before Handicap</span><strong>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)}</strong><small>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)} {Number(r.monthly_handicap||0)>=0?'+':'−'} {Math.abs(Number(r.monthly_handicap||0)).toFixed(1)} = {Number(r.official_total).toFixed(1)}</small></div>
+     <div><span>Monthly Team Handicap</span><strong>{Number(r.monthly_handicap)>=0?'+':''}{Number(r.monthly_handicap||0).toFixed(1)}</strong><small>{month}</small></div>
+     <div><span>Submitted Score</span><strong>{Number(r.official_total).toFixed(1)}</strong><small>total with handicap</small></div>
     </div>
     {r.image_url?<a className="admin-scorecard-image-link" href={r.image_url} target="_blank" rel="noreferrer"><img src={r.image_url} alt={`${r.teams?.name||'Team'} scorecard`}/><span>Tap scorecard to open full size</span></a>:<p className="message">Scorecard image is unavailable.</p>}
     <div className="scorecard-official-actions-v1298"><button className="btn" disabled={busyIds.has(r.id)} onClick={()=>review(r,'approved')}>✓ Approve Score & Scorecard</button><button className="btn danger" disabled={busyIds.has(r.id)} onClick={()=>review(r,'denied')}>Deny</button></div>
