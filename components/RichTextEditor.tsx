@@ -1,45 +1,52 @@
 'use client'
 
 import {useEffect,useRef} from 'react'
+import {EditorContent,useEditor} from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
 type Props={value:string;onChange:(value:string)=>void;placeholder?:string}
 
 export function RichTextEditor({value,onChange,placeholder='Start typing…'}:Props){
-  const ref=useRef<HTMLDivElement>(null)
-  const cleanEditorHtml=(html:string)=>normalizeRichText(html)
-  // Keep React state from rewriting contentEditable while the user is typing.
-  // Replacing innerHTML on each keystroke makes mobile browsers lose the caret
-  // position (most noticeably when the space bar is pressed).
+  const latest=useRef(value)
+  const editor=useEditor({
+    extensions:[StarterKit],
+    content:value||'',
+    immediatelyRender:false,
+    editorProps:{attributes:{class:'rich-edit-area-v1237', 'aria-label':'Message'}},
+    onUpdate:({editor})=>{
+      const html=normalizeRichText(editor.getHTML())
+      latest.current=html
+      onChange(html)
+    },
+  })
   useEffect(()=>{
-    const editor=ref.current
+    if(!editor||value===latest.current)return
+    // Do not reset the editor on keystrokes or while the user is moving the caret.
+    if(editor.isFocused)return
+    editor.commands.setContent(value||'',{emitUpdate:false})
+    latest.current=value
+  },[editor,value])
+  function link(){
     if(!editor)return
-    if(document.activeElement===editor)return
-    if(editor.innerHTML!==value)editor.innerHTML=value
-  },[value])
-  function cmd(command:string,arg?:string){ref.current?.focus();document.execCommand(command,false,arg);onChange(cleanEditorHtml(ref.current?.innerHTML||''))}
-  function initializePlainText(){
-    const editor=ref.current
-    if(!editor||editor.textContent?.length)return
-    // Reset a stale browser typing style without altering selected existing text.
-    const selection=window.getSelection()
-    if(!selection||!selection.isCollapsed)return
-    if(document.queryCommandState('bold'))document.execCommand('bold',false)
-    if(document.queryCommandState('italic'))document.execCommand('italic',false)
-    if(document.queryCommandState('underline'))document.execCommand('underline',false)
+    const previous=editor.getAttributes('link').href||''
+    const url=window.prompt('Enter a web address (https://…)',previous)?.trim()
+    if(url===undefined)return
+    if(!url){editor.chain().focus().unsetLink().run();return}
+    if(!/^https?:\/\//i.test(url)&&!/^mailto:/i.test(url)){window.alert('Enter a full https:// web address.');return}
+    editor.chain().focus().extendMarkRange('link').setLink({href:url}).run()
   }
-  function link(){const url=window.prompt('Enter a web address (https://…)')?.trim();if(url)cmd('createLink',url)}
   return <div className="rich-editor-v1237">
     <div className="rich-toolbar-v1237" role="toolbar" aria-label="Formatting tools">
-      <button type="button" onPointerDown={e=>e.preventDefault()} onClick={()=>cmd('bold')} title="Bold"><strong>B</strong></button>
-      <button type="button" onPointerDown={e=>e.preventDefault()} onClick={()=>cmd('italic')} title="Italic"><em>I</em></button>
-      <button type="button" onPointerDown={e=>e.preventDefault()} onClick={()=>cmd('underline')} title="Underline"><u>U</u></button>
-      <button type="button" onClick={()=>cmd('formatBlock','h3')} title="Heading">Heading</button>
-      <button type="button" onClick={()=>cmd('insertUnorderedList')} title="Bulleted list">• List</button>
-      <button type="button" onClick={()=>cmd('insertOrderedList')} title="Numbered list">1. List</button>
-      <button type="button" onClick={link} title="Add link">Link</button>
-      <button type="button" onClick={()=>cmd('removeFormat')} title="Clear formatting">Clear</button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleBold().run()} aria-pressed={editor?.isActive('bold')||false} title="Bold"><strong>B</strong></button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleItalic().run()} aria-pressed={editor?.isActive('italic')||false} title="Italic"><em>I</em></button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleUnderline().run()} aria-pressed={editor?.isActive('underline')||false} title="Underline"><u>U</u></button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleHeading({level:3}).run()} title="Heading">Heading</button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleBulletList().run()} title="Bulleted list">• List</button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().toggleOrderedList().run()} title="Numbered list">1. List</button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={link} title="Add link">Link</button>
+      <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().unsetAllMarks().clearNodes().run()} title="Clear formatting">Clear</button>
     </div>
-    <div ref={ref} className="rich-edit-area-v1237" style={{fontWeight:400,fontStyle:"normal"}} contentEditable suppressContentEditableWarning data-placeholder={placeholder} onFocus={initializePlainText} onBeforeInput={e=>{if((e.nativeEvent as InputEvent).inputType==='formatBold'){e.preventDefault();return}initializePlainText()}} onInput={e=>onChange(cleanEditorHtml(e.currentTarget.innerHTML))} onPaste={e=>{e.preventDefault();const text=e.clipboardData.getData('text/plain').replace(/\u00a0/g,' ');document.execCommand('insertText',false,text)}} />
+    <div className="rich-tiptap-v1237" data-placeholder={placeholder}><EditorContent editor={editor}/></div>
   </div>
 }
 
