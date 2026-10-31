@@ -48,6 +48,14 @@ export default function TVLeaderboard(){
  const [flash,setFlash]=useState<string|null>(null)
  const [scoreCap,setScoreCap]=useState(30)
 
+ // Periodically reload the full TV page so deployed styles and code are picked up.
+ useEffect(()=>{
+  const timer=window.setInterval(()=>{
+   if(document.visibilityState==='visible'&&navigator.onLine)window.location.reload()
+  },15*60*1000)
+  return()=>window.clearInterval(timer)
+ },[])
+
  useEffect(()=>{
   (async()=>{
 
