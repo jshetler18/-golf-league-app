@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
+import {getVapidPublicKey} from '@/lib/vapid'
 export const runtime='nodejs'
 
 export async function POST(req:NextRequest){
@@ -36,7 +37,7 @@ export async function POST(req:NextRequest){
   }
 
   if(!priv)return NextResponse.json({ok:true,sent:0,warning:'Push notifications are not configured.'})
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com','BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM',priv)
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',getVapidPublicKey(),priv)
   let sent=0
   for(const s of subs){
     if(!s.p256dh||!s.auth)continue
