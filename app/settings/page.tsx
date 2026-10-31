@@ -1,5 +1,5 @@
-import {ensurePushSubscription} from '@/lib/pushClient'
 'use client'
+import {ensurePushSubscription} from '@/lib/pushClient'
 import {useEffect,useState} from 'react';import {supabase} from '@/lib/supabase'; import {PlayerPage} from '@/components/PlayerMobileChrome'
 function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(b64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 async function registerPush(sub:PushSubscription){const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error('Please sign in again.');const j=sub.toJSON();const res=await fetch('/api/push/register',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth})});const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Unable to register notifications.')}
