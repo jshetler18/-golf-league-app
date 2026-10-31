@@ -16,7 +16,8 @@ type Announcement={
   created_at:string
 }
 type Reader={user_id:string;read_at:string;name:string}
-type ApprovedPlayer={id:string;name:string}
+type ApprovedPlayer={id:string;name:string;player_id?:string|null;access_type?:string|null}
+type TeamRecipient={id:string;team_id:string|null}
 
 export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [title,setTitle]=useState('')
@@ -31,6 +32,8 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [saving,setSaving]=useState(false)
   const [readers,setReaders]=useState<Record<string,Reader[]>>({})
   const [approvedPlayers,setApprovedPlayers]=useState<ApprovedPlayer[]>([])
+  const [teamRecipients,setTeamRecipients]=useState<TeamRecipient[]>([])
+  const [captainPlayerIds,setCaptainPlayerIds]=useState<string[]>([])
   const [viewerProfiles,setViewerProfiles]=useState<Record<string,ApprovedPlayer>>({})
   const [openReaders,setOpenReaders]=useState<string|null>(null)
 
@@ -44,7 +47,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
         .limit(20),
       supabase
         .from('profiles')
-        .select('id,full_name,email')
+        .select('id,full_name,email,player_id,access_type')
         .eq('status','approved')
         .order('full_name')
     ])
@@ -52,7 +55,14 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
     if(profileError){setMessage(profileError.message);return}
     const announcements=(data||[]) as Announcement[]
     setRows(announcements)
-    const eligible=(profiles||[]).map(p=>({id:p.id,name:p.full_name||p.email||'Player'}))
+    const eligible=(profiles||[]).filter(p=>p.access_type!=='sim_only').map(p=>({id:p.id,name:p.full_name||p.email||'Player',player_id:p.player_id,access_type:p.access_type}))
+    const [{data:playerRows,error:playersError},{data:captainRows,error:captainsError}]=await Promise.all([
+      supabase.from('players').select('id,team_id'),
+      supabase.from('teams').select('captain_player_id').eq('is_active',true)
+    ])
+    if(playersError||captainsError){setMessage(playersError?.message||captainsError?.message||'Unable to load recipient counts');return}
+    setTeamRecipients((playerRows||[]) as TeamRecipient[])
+    setCaptainPlayerIds((captainRows||[]).map(t=>t.captain_player_id).filter((id):id is string=>!!id))
     setApprovedPlayers(eligible)
     const ids=announcements.map(a=>a.id)
     if(!ids.length){setReaders({});return}
@@ -157,11 +167,15 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
             const expired=!!a.expires_at&&new Date(a.expires_at).getTime()<now
             const teamName=a.team_id?teams.find(t=>t.id===a.team_id)?.name:null
             const readMap=readerMaps[a.id]||{}
-            const viewedCount=Object.keys(readMap).length
-            const rosterMap=new Map(approvedPlayers.map(p=>[p.id,p]))
-            for(const id of Object.keys(readMap))if(!rosterMap.has(id))rosterMap.set(id,viewerProfiles[id]||{id,name:readMap[id].name||'Player'})
-            const statsPlayers=[...rosterMap.values()]
-            const totalCount=Math.max(statsPlayers.length,viewedCount)
+            const teamByPlayer=new Map(teamRecipients.map(p=>[p.id,p.team_id]))
+            const captains=new Set(captainPlayerIds)
+            const statsPlayers=approvedPlayers.filter(p=>
+              a.audience==='everyone' ||
+              (a.audience==='team' && !!p.player_id && teamByPlayer.get(p.player_id)===a.team_id) ||
+              (a.audience==='captains' && !!p.player_id && captains.has(p.player_id))
+            )
+            const viewedCount=statsPlayers.filter(p=>!!readMap[p.id]).length
+            const totalCount=statsPlayers.length
             return <div className="admin-announcement-item" key={a.id}>
               <div className="admin-announcement-copy">
                 <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='captains'?'Team Captains':a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
