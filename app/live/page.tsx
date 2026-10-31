@@ -122,7 +122,7 @@ export default function LivePage(){
 
   return <PlayerPage title="">
     <div className="simple-mobile-page recorded-page-v1265">
-      <div className="live-title-row-v1260"><h1>Recorded Rounds</h1>{status?.isLive&&<span className="live-pulse-badge-v1260"><i/>LIVE</span>}</div>
+      <div className="live-title-row-v1260"><h1>Recorded Rounds</h1></div>
 
       {!status&&<section className="card live-offline-card-v1260"><p>Checking the channel…</p></section>}
       {status?.isLive&&status.videoId?<section className="live-player-card-v1260 recorded-live-card-v1265">
