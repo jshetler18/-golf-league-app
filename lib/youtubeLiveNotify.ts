@@ -48,20 +48,23 @@ export async function runYouTubeLiveCheck(){
   webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',PUBLIC,privateKey)
   const title=status.liveHeadline||'A League Round is now LIVE!'
   const body=status.liveSubtext||'Tap to watch'
-  let sent=0,failed=0
-  for(const sub of subscriptions){
-    if(!sub.p256dh||!sub.auth)continue
+  // Send concurrently: sequential network timeouts can exceed the cron request limit.
+  // Keep each subscription's failure isolated so healthy devices still receive a push.
+  const results=await Promise.all(subscriptions.filter(sub=>sub.p256dh&&sub.auth).map(async sub=>{
     try{
-      await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:'/live',tag:`youtube-live-${status.videoId}`}))
-      sent++
+      await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title,body,url:'/live',tag:`youtube-live-${status.videoId}`}),{timeout:8000})
+      return {sent:true}
     }catch(error:any){
-      failed++
       if(error?.statusCode===404||error?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',sub.id)
+      return {sent:false,statusCode:error?.statusCode||null,reason:String(error?.message||'Unknown push failure').slice(0,150)}
     }
-  }
+  }))
+  const sent=results.filter(x=>x.sent).length
+  const failed=results.length-sent
+  const failureReasons=[...new Set(results.filter(x=>!x.sent).map(x=>`${x.statusCode||'network'}: ${x.reason}`))].slice(0,3)
   if(sent>0||subscriptions.length===0){
     const {error:updateError}=await admin.from('youtube_live_notifications').update({notified_at:new Date().toISOString(),sent_count:sent}).eq('video_id',status.videoId)
     if(updateError)throw updateError
   }
-  return {ok:true,configured:true,isLive:true,videoId:status.videoId,sent,failed}
+  return {ok:true,configured:true,isLive:true,videoId:status.videoId,sent,failed,failureReasons}
 }
