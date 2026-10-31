@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import { FormEvent, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -10,6 +11,7 @@ const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6Jd
 function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(b64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 
 export default function LoginPage(){
+  const router=useRouter()
   const [userEmail,setUserEmail]=useState('')
   const [profile,setProfile]=useState<Profile|null>(null)
   const [mode,setMode]=useState<Mode>('signin')
@@ -30,7 +32,7 @@ export default function LoginPage(){
     setProfileError('')
     setProfile(p as Profile)
     if(p?.status==='approved'){
-      window.location.replace(p?.role==='admin'?'/admin':'/')
+      router.replace(p?.role==='admin'?'/admin':'/')
       return
     }
   }
@@ -107,7 +109,7 @@ export default function LoginPage(){
         const { data:p, error:lookupError } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
         if(lookupError || !p){setMessage('Unable to verify account access: '+(lookupError?.message || 'Profile not found'));setLoading(false);return}
         if(p?.role==='admin' && p?.status==='approved'){
-          window.location.href='/admin'
+          router.replace('/admin')
           return
         }
         await supabase.auth.signOut()
@@ -115,11 +117,11 @@ export default function LoginPage(){
       }else{
         const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
         if(p?.role==='admin' && p?.status==='approved'){
-          window.location.replace('/admin')
+          router.replace('/admin')
           return
         }
         if(p?.status==='approved'){
-          window.location.replace('/')
+          router.replace('/')
           return
         }
         await refresh()
