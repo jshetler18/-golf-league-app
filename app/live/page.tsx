@@ -6,7 +6,7 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
 type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;handicap?:number;adjustedScore?:number;showAdjustedScore?:boolean;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
-type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
+type ApprovedCard={id:string;team:string;weekNumber:number;score:number;rawScore?:number;handicap?:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
 
 function orderedMatchupScores(video:Recording){
   const scores=video.matchupScores||[]
@@ -167,8 +167,8 @@ export default function LivePage(){
                 
               </button>
               <div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268">
-                <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span><small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1}</small></div>
-                <div className="recorded-inline-score-v1268"><small>ADJUSTED SCORE</small><strong>{Number(card.score).toFixed(1)}</strong></div>
+                <div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{scorecardMonth(card)}</span><span>Round {card.weekNumber}</span>{new Date(card.monthStart+"T12:00:00").getFullYear()>=2026&&typeof card.handicap==="number"&&<span>{card.handicap>=0?"+":""}{Number(card.handicap).toFixed(1).replace(/\.0$/,"")} Team Handicap</span>}<small>Season {new Date(card.monthStart+'T12:00:00').getFullYear()}-{new Date(card.monthStart+'T12:00:00').getFullYear()+1}</small></div>
+                <div style={{display:"flex",flexDirection:"column",gap:8,alignItems:"stretch"}}>{new Date(card.monthStart+"T12:00:00").getFullYear()>=2026&&typeof card.rawScore==="number"&&<div className="recorded-inline-score-v1268"><small>RAW SCORE</small><strong>{Number(card.rawScore).toFixed(1)}</strong></div>}<div className="recorded-inline-score-v1268"><small>ADJUSTED SCORE</small><strong>{Number(card.score).toFixed(1)}</strong></div></div>
               </div>
               <div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>toggleScorecard(card.id)}>{openScorecard===card.id?'Hide Scorecard':'View Scorecard'}</button>
                 {openScorecard===card.id&&<div className="recorded-scorecard-image-v1296">
