@@ -16,6 +16,6 @@ export async function ensurePushSubscription(reg:ServiceWorkerRegistration):Prom
    sub=null
   }
  }
- if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key})
+ if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(key)})
  return sub
 }
