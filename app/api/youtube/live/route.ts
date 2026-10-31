@@ -13,9 +13,9 @@ export async function GET(){
     const {data,error}=await admin.from('youtube_live_state').select('*').eq('id',1).maybeSingle()
     if(error)throw error
     if(!data)return NextResponse.json({configured:true,isLive:false},{headers:{'Cache-Control':'no-store, max-age=0'}})
-    // A stale positive state must never leave a LIVE banner stuck on screen if
-    // the cron checker stops. Two and a half minutes allows normal 1-minute checks.
-    const fresh=Date.now()-new Date(data.checked_at).getTime()<150000
+    // Tolerate short checker or YouTube outages while avoiding an indefinitely stuck LIVE banner.
+    // Five minutes permits several missed one-minute checks before declaring status stale.
+    const fresh=Date.now()-new Date(data.checked_at).getTime()<300000
     return NextResponse.json({
       configured:true,isLive:fresh&&!!data.is_live,
       videoId:data.video_id||undefined,title:data.title||undefined,description:data.description||undefined,
