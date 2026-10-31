@@ -228,7 +228,10 @@ export async function GET(){
       const videoId=item?.contentDetails?.videoId||item?.snippet?.resourceId?.videoId
       if(!videoId)continue
       const detail=detailsById.get(videoId)
-      const snippet=detail?.snippet||item?.snippet||{}
+      // Deleted/private videos may linger in a cached uploads playlist. Only show
+      // videos that YouTube's current video-details endpoint still returns.
+      if(!detail)continue
+      const snippet=detail.snippet||{}
       if(snippet?.liveBroadcastContent==='live'||snippet?.liveBroadcastContent==='upcoming')continue
 
       const title=String(snippet?.title||'Recorded Round')
