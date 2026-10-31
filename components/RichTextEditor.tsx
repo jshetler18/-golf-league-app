@@ -17,17 +17,6 @@ export function RichTextEditor({value,onChange,placeholder='Start typing…'}:Pr
     if(editor.innerHTML!==value)editor.innerHTML=value
   },[value])
   function cmd(command:string,arg?:string){ref.current?.focus();document.execCommand(command,false,arg);onChange(cleanEditorHtml(ref.current?.innerHTML||''))}
-  // iOS Safari can retain an inline bold typing state across contentEditable focus.
-  // Clear it only in an empty editor, never when selecting or editing existing text.
-  function resetEmptyFormatting(){
-    const editor=ref.current
-    if(!editor||editor.textContent?.trim())return
-    const selection=window.getSelection()
-    if(!selection?.isCollapsed)return
-    if(document.queryCommandState('bold'))document.execCommand('bold',false)
-    if(document.queryCommandState('italic'))document.execCommand('italic',false)
-    if(document.queryCommandState('underline'))document.execCommand('underline',false)
-  }
   function link(){const url=window.prompt('Enter a web address (https://…)')?.trim();if(url)cmd('createLink',url)}
   return <div className="rich-editor-v1237">
     <div className="rich-toolbar-v1237" role="toolbar" aria-label="Formatting tools">
@@ -40,7 +29,7 @@ export function RichTextEditor({value,onChange,placeholder='Start typing…'}:Pr
       <button type="button" onClick={link} title="Add link">Link</button>
       <button type="button" onClick={()=>cmd('removeFormat')} title="Clear formatting">Clear</button>
     </div>
-    <div ref={ref} className="rich-edit-area-v1237" style={{fontWeight:400,fontStyle:"normal"}} contentEditable suppressContentEditableWarning data-placeholder={placeholder} onFocus={resetEmptyFormatting} onBeforeInput={resetEmptyFormatting} onInput={e=>onChange(cleanEditorHtml(e.currentTarget.innerHTML))} onPaste={e=>{e.preventDefault();const text=e.clipboardData.getData('text/plain').replace(/\u00a0/g,' ');document.execCommand('insertText',false,text)}} />
+    <div ref={ref} className="rich-edit-area-v1237" style={{fontWeight:400,fontStyle:"normal"}} contentEditable suppressContentEditableWarning data-placeholder={placeholder} onInput={e=>onChange(cleanEditorHtml(e.currentTarget.innerHTML))} onPaste={e=>{e.preventDefault();const text=e.clipboardData.getData('text/plain').replace(/\u00a0/g,' ');document.execCommand('insertText',false,text)}} />
   </div>
 }
 
