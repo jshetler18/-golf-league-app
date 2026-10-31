@@ -84,7 +84,7 @@ export default function SimReservations(){
   return <PlayerPage title="Sim Reservations">
     
     <section className="card sim-reservation-summary-v1307">
-      <div><div className="sim-reservations-title-v1330">Your Reservations</div><div className="sim-reservation-count-v1331">{reservations.length===0?'You don’t have any upcoming reservations.':`You have ${reservations.length} upcoming reservation${reservations.length===1?'':'s'}.`}</div></div>
+      <div><div className="sim-reservations-title-v1330" style={{color:"#000000"}}>Your Reservations</div><div className="sim-reservation-count-v1331">{reservations.length===0?'You don’t have any upcoming reservations.':`You have ${reservations.length} upcoming reservation${reservations.length===1?'':'s'}.`}</div></div>
       {reservations.length>0&&<button type="button" className="btn secondary" onClick={()=>setShowReservations(v=>!v)}>{showReservations?'Hide My Reservations':'View My Reservations'}</button>}
     </section>
     {fromReminder&&focusId&&<div className="reminder-cancel-note"><strong>Reservation Reminder</strong><span>Your reservation is shown below. You can cancel it here if your plans changed.</span></div>}
