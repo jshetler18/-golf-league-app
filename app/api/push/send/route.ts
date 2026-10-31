@@ -47,6 +47,20 @@ export async function POST(req:NextRequest){
           subscriptions=subs||[]
         }
       }
+    }else if(announcement.audience==='captains'){
+      const {data:captainTeams,error:captainError}=await supabase.from('teams').select('captain_player_id').eq('is_active',true).not('captain_player_id','is',null)
+      if(captainError)return NextResponse.json({error:captainError.message},{status:500})
+      const captainIds=[...new Set((captainTeams||[]).map(t=>t.captain_player_id).filter(Boolean))]
+      if(captainIds.length){
+        const {data:linked,error:linkedError}=await supabase.from('profiles').select('id').in('player_id',captainIds).eq('status','approved')
+        if(linkedError)return NextResponse.json({error:linkedError.message},{status:500})
+        const userIds=(linked||[]).map(p=>p.id)
+        if(userIds.length){
+          const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth').in('user_id',userIds)
+          if(subError)return NextResponse.json({error:subError.message},{status:500})
+          subscriptions=subs||[]
+        }
+      }
     }else{
       const {data:subs,error:subError}=await supabase.from('push_subscriptions').select('id,user_id,endpoint,p256dh,auth')
       if(subError)return NextResponse.json({error:subError.message},{status:500})
