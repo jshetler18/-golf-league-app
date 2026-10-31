@@ -1,6 +1,6 @@
 'use client'
 
-import {useCallback,useEffect,useState} from 'react'
+import {useCallback,useEffect,useRef,useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {supabase} from '@/lib/supabase'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
@@ -20,6 +20,8 @@ export default function Messages(){
   const [rows,setRows]=useState<any[]>([])
   const [read,setRead]=useState<Set<string>>(new Set())
   const [selectedId,setSelectedId]=useState<string|null>(null)
+  const [firstOpenIds,setFirstOpenIds]=useState<Set<string>>(new Set())
+  const initializedReads=useRef(false)
 
   const load=useCallback(async()=>{
     const {data:{user}}=await supabase.auth.getUser()
@@ -32,7 +34,14 @@ export default function Messages(){
     ])
 
     if(!aError)setRows(a||[])
-    if(!rError)setRead(new Set((r||[]).map(x=>x.announcement_id)))
+    if(!rError){
+      const readIds=new Set((r||[]).map(x=>x.announcement_id))
+      if(!initializedReads.current&&!aError){
+        setFirstOpenIds(new Set((a||[]).filter(m=>!readIds.has(m.id)).map(m=>m.id)))
+        initializedReads.current=true
+      }
+      setRead(readIds)
+    }
   },[])
 
   async function markAllVisibleRead(){
@@ -85,6 +94,8 @@ export default function Messages(){
 
   function showMessage(id:string){
     const next=selectedId===id?null:id
+    if(selectedId&&selectedId!==id)setFirstOpenIds(prev=>{const copy=new Set(prev);copy.delete(selectedId);return copy})
+    if(!next)setFirstOpenIds(prev=>{const copy=new Set(prev);copy.delete(id);return copy})
     setSelectedId(next)
     router.replace(next?`/messages?message=${encodeURIComponent(next)}`:'/messages',{scroll:false})
     if(next)mark(next)
@@ -105,7 +116,8 @@ export default function Messages(){
       {rows.length?rows.map(m=>{
         const expanded=selectedId===m.id
         const unread=!read.has(m.id)
-        return <div key={m.id} className={'message-card '+(unread?'unread':'')+(expanded?' message-card-expanded':'')} style={{display:'block',width:'100%',textAlign:'left',padding:0,overflow:'hidden',border:expanded?'4px solid #248b0c':undefined,boxShadow:expanded?'0 0 0 2px rgba(36,139,12,.15)':undefined}}>
+        const firstOpen=firstOpenIds.has(m.id)
+        return <div key={m.id} className={'message-card '+(unread?'unread':'')+(expanded?' message-card-expanded':'')} style={{display:'block',width:'100%',textAlign:'left',padding:0,overflow:'hidden',border:expanded?`4px solid ${firstOpen?'#248b0c':'#626a70'}`:undefined,boxShadow:expanded?`0 0 0 2px ${firstOpen?'rgba(36,139,12,.15)':'rgba(98,106,112,.14)'}`:undefined}}>
           <button type="button" onClick={()=>showMessage(m.id)} aria-expanded={expanded} aria-controls={`message-body-${m.id}`} style={{display:'flex',alignItems:'center',gap:12,width:'100%',textAlign:'left',padding:'16px',background:'transparent',border:0,color:'inherit',cursor:'pointer'}}>
             {unread&&<span aria-label="Unread" title="Unread" style={{width:10,height:10,minWidth:10,borderRadius:'50%',background:'#e53935'}}/>}
             <span style={{flex:1,minWidth:0}}>
