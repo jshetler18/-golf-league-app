@@ -84,7 +84,7 @@ export default function ScorecardOfficialPage(){
    return <article className="card scorecard-official-card-v1298" key={r.id}>
     <div className="submission-head"><div><h2>{r.teams?.name}</h2><small className="submission-submitter-v1307">Submitted by {r.submitted_by_name}</small><p>{month} · Week {r.week_number}</p>{r.league_months?.course_name&&<small className="submission-course-v1308">{r.league_months.course_name}</small>}</div><span className="submission-status pending">pending</span></div>
     <div className="scorecard-official-score-summary-v1299">
-     <div><span>Score Before Handicap</span><strong>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)}</strong><small>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)} {Number(r.monthly_handicap||0)>=0?'+':'−'} {Math.abs(Number(r.monthly_handicap||0)).toFixed(1)} = {Number(r.official_total).toFixed(1)}</small></div>
+     <div><span>Raw Score Before Handicap</span><strong>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)}</strong><small>{(Number(r.official_total)-Number(r.monthly_handicap||0)).toFixed(1)} {Number(r.monthly_handicap||0)>=0?'+':'−'} {Math.abs(Number(r.monthly_handicap||0)).toFixed(1)} = {Number(r.official_total).toFixed(1)}</small></div>
      <div><span>Monthly Team Handicap</span><strong>{Number(r.monthly_handicap)>=0?'+':''}{Number(r.monthly_handicap||0).toFixed(1)}</strong><small>{month}</small></div>
      <div><span>Submitted Score</span><strong>{Number(r.official_total).toFixed(1)}</strong><small>total with handicap</small></div>
     </div>
