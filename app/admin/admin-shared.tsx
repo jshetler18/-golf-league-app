@@ -4,7 +4,7 @@ import {supabase} from '@/lib/supabase'
 
 export function useAdminGuard(){
   const [admin,setAdmin]=useState(false),[ready,setReady]=useState(false)
-  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){setReady(true);return}const {data}=await supabase.from('profiles').select('role,status').eq('id',user.id).maybeSingle();setAdmin(data?.role==='admin'&&data?.status==='approved');setReady(true)})()},[])
+  useEffect(()=>{let active=true;(async()=>{try{const {data:{session}}=await supabase.auth.getSession();let user=session?.user;if(!user){const response=await supabase.auth.getUser();user=response.data.user||undefined}if(!user)return;const {data}=await supabase.from('profiles').select('role,status').eq('id',user.id).maybeSingle();if(active)setAdmin(data?.role==='admin'&&data?.status==='approved')}catch(error){console.error('Admin access verification failed',error)}finally{if(active)setReady(true)}})();return()=>{active=false}},[])
   return {admin,ready}
 }
 
