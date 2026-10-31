@@ -2686,3 +2686,9 @@ i .captain-mark-v1357{
 .tv-approved-row:not(.tv-approved-head)>span:nth-child(4),
 .tv-approved-row:not(.tv-approved-head)>span:nth-child(5),
 .tv-approved-row:not(.tv-approved-head)>span:nth-child(6){font-size:clamp(23px,2.2vw,43px)}
+
+/* Keep iOS native date input inside its grid column; never cover navigation arrows. */
+.player-page-content .booking-date-nav{max-width:360px!important;grid-template-columns:42px minmax(0,1fr) 42px!important;column-gap:12px!important}
+.player-page-content .booking-date-nav .booking-date-field{min-width:0!important;max-width:100%!important;width:100%!important}
+.player-page-content .booking-date-nav input[type="date"]{display:block;min-width:0!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important}
+.player-page-content .booking-date-nav>button{width:42px!important;min-width:42px!important;max-width:42px!important;position:relative;z-index:1}
