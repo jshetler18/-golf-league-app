@@ -9,7 +9,7 @@ type Announcement={
   id:string
   title:string
   body:string
-  audience:'everyone'|'team'
+  audience:'everyone'|'team'|'captains'
   team_id:string|null
   is_pinned:boolean
   expires_at:string|null
@@ -21,7 +21,7 @@ type ApprovedPlayer={id:string;name:string}
 export default function AdminAnnouncements({teams}:{teams:Team[]}){
   const [title,setTitle]=useState('')
   const [body,setBody]=useState('')
-  const [audience,setAudience]=useState<'everyone'|'team'>('everyone')
+  const [audience,setAudience]=useState<'everyone'|'team'|'captains'>('everyone')
   const [teamId,setTeamId]=useState('')
   const [pinned,setPinned]=useState(false)
   const [sendPush,setSendPush]=useState(true)
@@ -111,7 +111,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
           }catch{pushNote=' Announcement posted, but the phone alert could not be sent.'}
         }
       }
-      const target=audience==='team'?(teams.find(t=>t.id===targetTeamId)?.name||'selected team'):'all players'
+      const target=audience==='captains'?'team captains':audience==='team'?(teams.find(t=>t.id===targetTeamId)?.name||'selected team'):'all players'
       setMessage(`Announcement published to ${target}.`+pushNote)
       await load()
     }
@@ -141,11 +141,11 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
       <div className="card">
         <h3>Post Announcement</h3>
         <form onSubmit={publish} className="form-grid single">
-          <label className="field">Send To<select value={audience==='everyone'?'everyone':teamId} onChange={e=>{const v=e.target.value;if(v==='everyone')setAudience('everyone');else{setAudience('team');setTeamId(v)}}}><option value="everyone">Everyone</option>{teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+          <label className="field">Send To<select value={audience==='everyone'?'everyone':audience==='captains'?'captains':teamId} onChange={e=>{const v=e.target.value;if(v==='everyone'||v==='captains')setAudience(v);else{setAudience('team');setTeamId(v)}}}><option value="everyone">Everyone</option><option value="captains">Team Captains</option>{teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           <label className="field">Title<input maxLength={120} required placeholder="Example: Simulator Closed Thursday" value={title} onChange={e=>setTitle(e.target.value)}/></label>
           <label className="field">Message<RichTextEditor value={body} onChange={setBody} placeholder="Enter the message players should see…"/></label>
           <label className="field">Expiration Date <span className="muted">(optional)</span><input type="date" value={expires} onChange={e=>setExpires(e.target.value)}/></label>
-          <label className="admin-check"><input type="checkbox" checked={sendPush} onChange={e=>setSendPush(e.target.checked)}/><span><strong>Send phone notification</strong><small>{audience==='team'?'Alerts only registered devices for players linked to the selected team.':'Alerts players who have enabled notifications on their device.'}</small></span></label>
+          <label className="admin-check"><input type="checkbox" checked={sendPush} onChange={e=>setSendPush(e.target.checked)}/><span><strong>Send phone notification</strong><small>{audience==='team'?'Alerts only registered devices for players linked to the selected team.':audience==='captains'?'Alerts registered devices for players designated as team captains.':'Alerts players who have enabled notifications on their device.'}</small></span></label>
           <label className="admin-check"><input type="checkbox" checked={pinned} onChange={e=>setPinned(e.target.checked)}/><span><strong>Pin this message</strong><small>Pinned messages stay at the top of the player Messages page.</small></span></label>
           <button className="btn" disabled={saving}>{saving?'Publishing…':'Publish Announcement'}</button>
         </form>
@@ -164,7 +164,7 @@ export default function AdminAnnouncements({teams}:{teams:Team[]}){
             const totalCount=Math.max(statsPlayers.length,viewedCount)
             return <div className="admin-announcement-item" key={a.id}>
               <div className="admin-announcement-copy">
-                <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
+                <div className="admin-announcement-title"><strong>{a.title}</strong><span className="admin-announcement-pill audience">{a.audience==='captains'?'Team Captains':a.audience==='team'?(teamName||'Team'):'Everyone'}</span>{a.is_pinned&&<span className="admin-announcement-pill">Pinned</span>}{expired&&<span className="admin-announcement-pill expired">Expired</span>}</div>
                 <RichTextDisplay value={a.body} className="admin-announcement-body-v1237"/>
                 <small>Posted {new Date(a.created_at).toLocaleDateString()}{a.expires_at?` · Expires ${new Date(a.expires_at).toLocaleDateString()}`:''}</small>
                 <div className="announcement-read-tools-v1237">
