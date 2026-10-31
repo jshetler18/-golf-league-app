@@ -2723,3 +2723,12 @@ i .captain-mark-v1357{
 
 /* Touchscreens must not leave the rich-text Bold control looking pressed from a sticky hover state. */
 @media (hover:none){.rich-toolbar-v1237 button:hover{background:#fff}}
+
+/* Tiptap message composer: preserve the existing toolbar and editor dimensions. */
+.rich-tiptap-v1237 .tiptap{min-height:150px;padding:12px 13px;outline:none;line-height:1.5;font-weight:400;font-style:normal;color:var(--text)}
+.rich-tiptap-v1237 .tiptap p{margin:0 0 .5em}
+.rich-tiptap-v1237 .tiptap p:last-child{margin-bottom:0}
+.rich-tiptap-v1237 .tiptap ul,.rich-tiptap-v1237 .tiptap ol{padding-left:1.5em}
+.rich-tiptap-v1237 .tiptap a{color:#167609;text-decoration:underline}
+.rich-tiptap-v1237 .tiptap:empty:before,.rich-tiptap-v1237 .tiptap p.is-editor-empty:first-child:before{content:attr(data-placeholder);color:#8a948e;pointer-events:none;float:left;height:0}
+.rich-toolbar-v1237 button[aria-pressed="true"]{background:#e6f2e8;border-color:#8cbd98}
