@@ -96,7 +96,7 @@ export default function Messages(){
             {unread&&<span aria-label="Unread" title="Unread" style={{width:10,height:10,minWidth:10,borderRadius:'50%',background:'#e53935'}}/>}
             <span style={{flex:1,minWidth:0}}>
               <strong style={{display:'block',fontSize:'1.12rem',fontWeight:750,lineHeight:1.3}}>{m.title}</strong>
-              {m.audience==='team'&&<span className="message-audience-pill">Team Message</span>}
+              {(m.audience==='team'||m.audience==='captains')&&<span className="message-audience-pill">{m.audience==='captains'?'Team Captains':'Team Message'}</span>}
               <small style={{display:'block',marginTop:6,fontSize:'.78rem',opacity:.75}}>{sentTimestamp(m.created_at)}</small>
               <small style={{display:'block',marginTop:3,fontSize:'.78rem',opacity:.75}}>From: Joe Shetler</small>
             </span>
