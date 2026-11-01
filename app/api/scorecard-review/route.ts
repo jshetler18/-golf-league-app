@@ -29,28 +29,7 @@ async function notifyCupCompletion(admin:any,monthId:string){
   // The unique month key prevents repeat notifications on retries or subsequent approvals.
   const {error:claimError}=await admin.from('cup_completion_notifications').insert({league_month_id:monthId})
   if(claimError){if(claimError.code!=='23505')console.error('Cup notification claim failed',claimError);return}
-  const priv=process.env.VAPID_PRIVATE_KEY
-  if(!priv){console.error('Cup completion notification: missing VAPID private key');return}
-  const monthName=new Date(month.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long'})
-  const title='Cup Standings Updated'
-  const body=`${monthName} head-to-head matchups are complete! Final Cup points and ranking changes are ready. Tap to view Cup Standings.`
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',getVapidPublicKey(),priv)
-  const {data:subs,error:subsError}=await admin.from('push_subscriptions').select('*')
-  if(subsError){console.error('Cup completion subscription lookup failed',subsError);return}
-  const results=await Promise.allSettled((subs||[]).filter((x:any)=>x.endpoint&&x.p256dh&&x.auth).map(async(x:any)=>{
-    try{
-      await webpush.sendNotification({endpoint:x.endpoint,keys:{p256dh:x.p256dh,auth:x.auth}},JSON.stringify({
-        title,body,url:'/cup',tag:`cup-complete-${monthId}`,kind:'cup-complete'
-      }))
-      return 1
-    }catch(e:any){
-      console.error('Cup completion push failed',{monthId,statusCode:e?.statusCode})
-      if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',x.id)
-      return 0
-    }
-  }))
-  const sent=results.reduce((n:number,x:any)=>n+(x.status==='fulfilled'?Number(x.value):0),0)
-  await admin.from('cup_completion_notifications').update({sent_count:sent}).eq('league_month_id',monthId)
+  // The database queue schedules delivery two minutes after final approval.
 }
 async function sendPush(admin:any,r:any,action:'approved'|'denied',reason:string){const priv=process.env.VAPID_PRIVATE_KEY;if(!priv)return 0;const team=r.teams?.name||'A team',score=Number(r.official_total||0).toFixed(1);let title='',body='',subs:any[]=[];if(action==='approved'){const month=new Date(r.league_months.month_start+'T12:00:00').toLocaleString('en-US',{month:'long'});title='Round Complete';body=`${team} has completed their ${month} Week ${r.week_number} round with a score of ${score}.`;const {data}=await admin.from('push_subscriptions').select('*');subs=data||[]}else{title='Scorecard Needs Correction';body=`Your scorecard was denied. ${reason.trim()}`;const {data}=await admin.from('push_subscriptions').select('*').eq('user_id',r.submitted_by);subs=data||[]}webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',getVapidPublicKey(),priv);const usable=subs.filter((s:any)=>s.p256dh&&s.auth);const results=await Promise.allSettled(usable.map(async(s:any)=>{try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body,url:action==='approved'?`/live?submission=${r.id}#scorecard-${r.id}`:'/submit-score',tag:`round-review-${r.id}-${action}`,kind:'round-review'}));return 1}catch(e:any){console.error('Scorecard review push failed',{submissionId:r.id,action,statusCode:e?.statusCode,body:e?.body});if(e?.statusCode===404||e?.statusCode===410)await admin.from('push_subscriptions').delete().eq('id',s.id);return 0}}));return results.reduce((total:any,result:any)=>total+(result.status==='fulfilled'?Number(result.value||0):0),0)}
 export async function GET(req:NextRequest){try{const access=await authorize(req);if(access.error)return access.error;const {admin}=access as any;const {data,error}=await admin.from('round_score_submissions').select('id,league_month_id,team_id,week_number,submitted_by,image_path,official_total,status,created_at,teams(name),league_months(month_start,course_name)').eq('status','pending').order('created_at',{ascending:true});if(error)return NextResponse.json({error:error.message},{status:400});const rows=await Promise.all((data||[]).map(async(r:any)=>{const [{data:signed},{data:p},{data:h}]=await Promise.all([r.image_path?admin.storage.from('round-scorecards').createSignedUrl(r.image_path,900):Promise.resolve({data:null} as any),admin.from('profiles').select('full_name,email').eq('id',r.submitted_by).maybeSingle(),admin.from('monthly_team_handicaps').select('handicap_points').eq('league_month_id',r.league_month_id).eq('team_id',r.team_id).maybeSingle()]);return {...r,image_url:signed?.signedUrl||'',submitted_by_name:p?.full_name||p?.email||'Player',monthly_handicap:Number(h?.handicap_points||0)}}));return NextResponse.json({rows})}catch(e:any){return NextResponse.json({error:e?.message||'Unable to load submissions.'},{status:500})}}
