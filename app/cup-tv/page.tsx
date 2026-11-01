@@ -661,8 +661,8 @@ export default function CupTV() {
           position: absolute;
           top: 0.5vh;
           right: 0;
-          width: 22vw;
-          padding: 0.35vw 0.65vw;
+          width: 24vw;
+          padding: 0.65vw 0.85vw;
           border: 1px solid rgba(143, 224, 24, 0.85);
           border-radius: 1vw;
           background: rgba(0, 37, 59, 0.95);
