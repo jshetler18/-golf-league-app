@@ -519,7 +519,7 @@ export default function CupTV() {
         </div>
 
         <div className="cup-tv-update-bubble" role="note">
-          Updates at the end of each month after all head-to-head matchups have been completed
+          Cup standings update as monthly head-to-head results are approved. Ranking changes appear after all matchups are completed.
         </div>
 
       </header>
