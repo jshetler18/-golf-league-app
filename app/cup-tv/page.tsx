@@ -667,7 +667,7 @@ export default function CupTV() {
           border-radius: 1vw;
           background: rgba(0, 37, 59, 0.95);
           color: #ffffff;
-          font-size: clamp(12.5px, 1.62vw, 22px);
+          font-size: clamp(12px, 1.25vw, 22px);
           font-weight: 700;
           line-height: 1.15;
           text-align: center;
