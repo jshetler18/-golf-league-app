@@ -772,7 +772,7 @@ export default function CupTV() {
 
           color: white;
 
-          font-size: 1.35vw;
+          font-size: 1.7vw;
 
           font-weight: 900;
 
@@ -858,7 +858,7 @@ export default function CupTV() {
         }
 
         .cup-tv-points {
-          font-size: 1.7vw;
+          font-size: 1.85vw;
 
           font-weight: 800;
 
@@ -969,7 +969,7 @@ export default function CupTV() {
           }
 
           .cup-tv-points {
-            font-size: 1.6vw;
+            font-size: 1.7vw;
           }
 
           .cup-tv-total b {
