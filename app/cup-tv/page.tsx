@@ -518,6 +518,10 @@ export default function CupTV() {
 
         </div>
 
+        <div className="cup-tv-update-bubble" role="note">
+          Updates at the end of each month after all head-to-head matchups have been completed
+        </div>
+
       </header>
 
       <section className="cup-tv-table">
@@ -651,6 +655,23 @@ export default function CupTV() {
           width: 12vw;
           height: 15vh;
           object-fit: contain;
+        }
+
+        .cup-tv-update-bubble {
+          position: absolute;
+          top: 2vh;
+          right: 0.5vw;
+          width: 18vw;
+          padding: 0.75vw 1vw;
+          border: 1px solid rgba(143, 224, 24, 0.85);
+          border-radius: 1vw;
+          background: rgba(0, 37, 59, 0.95);
+          color: #ffffff;
+          font-size: clamp(11px, 1.05vw, 22px);
+          font-weight: 700;
+          line-height: 1.25;
+          text-align: center;
+          box-sizing: border-box;
         }
 
         .cup-tv-title {
