@@ -4,6 +4,7 @@ import webpush from 'web-push'
 import {getVapidPublicKey} from '@/lib/vapid'
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
+// Triggered by Supabase cron after the two-minute notification queue delay.
 export async function POST(req:NextRequest){
  if(!process.env.CUP_PUSH_WORKER_TOKEN||req.headers.get('authorization')!==`Bearer ${process.env.CUP_PUSH_WORKER_TOKEN}`)return NextResponse.json({error:'Unauthorized'},{status:401})
  try{
