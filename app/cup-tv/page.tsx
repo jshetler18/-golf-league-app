@@ -659,17 +659,17 @@ export default function CupTV() {
 
         .cup-tv-update-bubble {
           position: absolute;
-          top: 2vh;
-          right: 0.5vw;
-          width: 18vw;
-          padding: 0.75vw 1vw;
+          top: 0.5vh;
+          right: 0;
+          width: 22vw;
+          padding: 0.35vw 0.65vw;
           border: 1px solid rgba(143, 224, 24, 0.85);
           border-radius: 1vw;
           background: rgba(0, 37, 59, 0.95);
           color: #ffffff;
-          font-size: clamp(11px, 1.05vw, 22px);
+          font-size: clamp(12px, 1.12vw, 22px);
           font-weight: 700;
-          line-height: 1.25;
+          line-height: 1.15;
           text-align: center;
           box-sizing: border-box;
         }
