@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type Profile = { full_name:string; email:string|null; status:string; role:string; booking_enabled:boolean }
-type Mode = 'signin'|'signup'|'admin'
+type Mode = 'signin'|'signup'|'admin'|'reset'
 const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
 function keyBytes(s:string){const pad='='.repeat((4-s.length%4)%4),b64=(s+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(b64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 
@@ -127,6 +127,15 @@ export default function LoginPage(){
     setLoading(false)
   }
 
+  async function sendPasswordReset(e:FormEvent){
+    e.preventDefault();setLoading(true);setMessage('')
+    const address=email.trim().toLowerCase()
+    const {error}=await supabase.auth.resetPasswordForEmail(address,{redirectTo:`${window.location.origin}/reset-password`})
+    setLoading(false)
+    if(error){setMessage('Unable to send password reset email: '+error.message);return}
+    setMessage('If this email is registered, a password reset link will arrive shortly. Check your spam folder too.')
+  }
+
   async function signOut(){ await supabase.auth.signOut(); setProfile(null); setUserEmail(''); setMessage('You have been signed out.') }
 
   return <div className="auth-app-shell-v1230">
@@ -139,16 +148,18 @@ export default function LoginPage(){
           <div className="auth-app-actions-v1230">{profile?.status==='approved'&&<Link className="btn" href={profile?.role==='admin'?'/admin':'/'}>{profile?.role==='admin'?'Go to Admin':'Go to Home'}</Link>}{profileError&&<button className="btn" onClick={refresh}>Retry</button>}<button className="btn secondary" onClick={signOut}>Log Out</button></div>
         </div>
       </>:<>
-        <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':'Request access to the 19th Hole Golf League app.'}</p></div>
+        <div className="auth-app-heading-v1230"><h1>{mode==='signin'?'Welcome Back':mode==='admin'?'Admin Login':mode==='reset'?'Reset Your Password':'Create Your Account'}</h1><p>{mode==='signin'?'Sign in to the 19th Hole Golf League app.':mode==='admin'?'Sign in with an approved administrator account.':mode==='reset'?'Enter your account email to receive a secure password reset link.':'Request access to the 19th Hole Golf League app.'}</p></div>
         <div className="card auth-card auth-app-card-v1230">
-          <div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setMessage('')}}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setMessage('')}}>Create Account</button></div>
+          {mode!=='reset'&&<div className="segmented"><button className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setMessage('')}}>Sign In</button><button className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setMessage('')}}>Create Account</button></div>}
           {mode==='admin'&&<button type="button" className="auth-back-player-v1231" onClick={()=>{setMode('signin');setMessage('')}}>← Back to Player Sign In</button>}
-          <form onSubmit={submit} className="form-grid single">
+          <form onSubmit={mode==='reset'?sendPasswordReset:submit} className="form-grid single">
             {mode==='signup' && <label className="field">Full name<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} /></label>}
             <label className="field">Email<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} /></label>
-            <label className="field">Password<input type="password" required minLength={4} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} /></label>
-            <button className="btn auth-primary-v1230" disabled={loading}>{loading?'Please wait…':mode==='signup'?'Request Access':mode==='admin'?'Enter Admin':'Sign In'}</button>
+            {mode!=='reset'&&<label className="field">Password<input type="password" required minLength={4} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} /></label>}
+            <button className="btn auth-primary-v1230" disabled={loading}>{loading?'Please wait…':mode==='reset'?'Send Reset Link':mode==='signup'?'Request Access':mode==='admin'?'Enter Admin':'Sign In'}</button>
           </form>
+          {mode==='reset'&&<button type="button" className="btn secondary" onClick={()=>{setMode('signin');setMessage('')}}>Back to Sign In</button>}
+          {mode==='signin'&&<button type="button" className="btn secondary" onClick={()=>{setMode('reset');setMessage('')}}>Forgot Password?</button>}
           {mode==='signin'&&<button type="button" className="btn secondary admin-login-choice-v1231" onClick={()=>{setMode('admin');setMessage('')}}>Admin Login</button>}
         </div>
       </>}
