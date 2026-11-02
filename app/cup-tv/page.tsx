@@ -30,6 +30,7 @@ export default function CupTV() {
   const [loading, setLoading] = useState(true)
 
   const load = async () => {
+    try {
     const { data: season } = await supabase
       .from('seasons')
       .select('id')
@@ -96,7 +97,11 @@ export default function CupTV() {
       setPoints([])
     }
 
-    setLoading(false)
+    } catch (error) {
+      console.error('Cup TV load failed', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -105,10 +110,17 @@ export default function CupTV() {
     const initialLoad = async () => {
       if (alive) {
         await load()
+        window.clearTimeout(startupWatchdog)
       }
     }
 
     initialLoad()
+
+    // TV browsers may stall a request after waking from sleep.
+    // Recover by reloading the page if initial data never resolves.
+    const startupWatchdog = window.setTimeout(() => {
+      if (alive) window.location.reload()
+    }, 20000)
 
     const channel = supabase
       .channel('cup-tv-live')
@@ -145,6 +157,7 @@ export default function CupTV() {
     return () => {
       alive = false
 
+      window.clearTimeout(startupWatchdog)
       window.clearInterval(refreshTimer)
 
       window.removeEventListener(
