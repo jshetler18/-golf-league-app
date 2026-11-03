@@ -19,8 +19,11 @@ type Recording={
   roundText?:string
   season?:string
   rawScore?:number
+  handicap?:number
+  adjustedScore?:number
+  showAdjustedScore?:boolean
   matchupTeams?:string[]
-  matchupScores?:{team:string;rawScore:number}[]
+  matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[]
   championshipRound?:boolean
 }
 
@@ -49,7 +52,7 @@ function looseMonthYear(text:string){
 }
 
 
-type RawScoreRow={team:string;ym:string;roundNumber:number;rawScore:number}
+type RawScoreRow={team:string;ym:string;roundNumber:number;rawScore:number;handicap?:number;adjustedScore?:number}
 type MatchupRow={ym:string;teamA:string;teamB:string}
 
 function normalizeTeam(value:string){
@@ -84,26 +87,36 @@ async function getRawScoreRows(){
       .select('canonical_team_name,score_month,round_number,raw_score')
       .not('round_number','is',null)
     if(error)return rows
+    const {data:approved}=await supabase.from('round_score_submissions').select('team_id,league_month_id,week_number,raw_stableford,bonus_points,handicap_points,official_total,approved_at').eq('status','approved').order('approved_at',{ascending:false})
+    const [{data:teams},{data:months}]=await Promise.all([supabase.from('teams').select('id,name'),supabase.from('league_months').select('id,month_start')])
+    const teamById=new Map((teams||[]).map(x=>[x.id,normalizeTeam(x.name)]))
+    const monthById=new Map((months||[]).map(x=>[x.id,String(x.month_start).slice(0,7)]))
+    for(const row of approved||[]){
+      const team=teamById.get(row.team_id),ym=monthById.get(row.league_month_id),roundNumber=Number(row.week_number)
+      const rawScore=Number(row.raw_stableford||0)+Number(row.bonus_points||0)
+      const handicap=Number(row.handicap_points||0),adjustedScore=Number(row.official_total)
+      if(team&&ym&&Number.isFinite(rawScore)&&Number.isFinite(adjustedScore))rows.push({team,ym,roundNumber,rawScore,handicap,adjustedScore})
+    }
     for(const row of data||[]){
       const team=normalizeTeam(String((row as any).canonical_team_name||''))
       const scoreMonth=String((row as any).score_month||'')
       const roundNumber=Number((row as any).round_number)
       const rawScore=Number((row as any).raw_score)
       if(!team||!/^\d{4}-\d{2}/.test(scoreMonth)||!Number.isFinite(roundNumber)||!Number.isFinite(rawScore))continue
-      rows.push({team,ym:scoreMonth.slice(0,7),roundNumber,rawScore})
+      if(!rows.some(r=>r.team===team&&r.ym===scoreMonth.slice(0,7)&&r.roundNumber===roundNumber))rows.push({team,ym:scoreMonth.slice(0,7),roundNumber,rawScore})
     }
   }catch{}
   return rows
 }
 
-function findRawScore(rows:RawScoreRow[],team:string|undefined,month:string|undefined,year:number|undefined,roundNumber:number|undefined){
+function findScore(rows:RawScoreRow[],team:string|undefined,month:string|undefined,year:number|undefined,roundNumber:number|undefined){
   if(!team||!month||!year||!roundNumber)return undefined
   const monthIndex=FULL_MONTHS.indexOf(month)+1
   if(monthIndex<1)return undefined
   const normalizedTeam=normalizeTeam(team)
   const ym=`${year}-${String(monthIndex).padStart(2,'0')}`
   const exact=rows.find(row=>row.team===normalizedTeam&&row.ym===ym&&row.roundNumber===roundNumber)
-  return exact?.rawScore
+  return exact
 }
 
 
@@ -257,9 +270,10 @@ export async function GET(){
       const season=month&&year?seasonForMonthYear(month,year):undefined
       const roundText=month&&year&&roundNumber?`${month} ${year} Round ${roundNumber}`:(month&&year?`${month} ${year}`:undefined)
       const archiveTeam=canonicalArchiveTeam(strict.matchedTeam)
-      const rawScore=findRawScore(rawScoreRows,archiveTeam,month,year,roundNumber)
+      const score=findScore(rawScoreRows,archiveTeam,month,year,roundNumber)
+      const showAdjustedScore=season==='2026-2027'||(year!==undefined&&year>=2027)
       const matchupTeams=matchupTeamsForVideo(text,teamNames,matchupRows,month,year,roundNumber,archiveTeam)
-      const matchupScores=matchupTeams.map(team=>({team,rawScore:findRawScore(rawScoreRows,team,month,year,roundNumber)})).filter((x):x is {team:string;rawScore:number}=>typeof x.rawScore==='number'&&Number.isFinite(x.rawScore))
+      const matchupScores=matchupTeams.map(team=>({team,...findScore(rawScoreRows,team,month,year,roundNumber)})).filter((x):x is {team:string;rawScore:number;handicap?:number;adjustedScore?:number}=>typeof x.rawScore==='number'&&Number.isFinite(x.rawScore))
 
       recordings.push({
         videoId,
@@ -274,7 +288,10 @@ export async function GET(){
         roundNumber,
         roundText,
         season,
-        rawScore,
+        rawScore:score?.rawScore,
+        handicap:score?.handicap,
+        adjustedScore:score?.adjustedScore,
+        showAdjustedScore,
         matchupTeams:matchupTeams.length>=2?matchupTeams.slice(0,2):undefined,
         matchupScores:matchupScores.length>=2?matchupScores:undefined,
         championshipRound
