@@ -121,10 +121,13 @@ export default function MyTeam(){
 
   const selectedMonth=useMemo(()=>{
     if(!months.length)return null
-    const today=new Date(); today.setHours(0,0,0,0)
-    const upcoming=months.find(m=>new Date(m.month_start+'T12:00:00')>=today)
-    if(upcoming)return upcoming
-    return months[months.length-1]
+    // Compare month keys, not the first day of each month against today's date.
+    // Otherwise November 2 incorrectly selects December 1 as the next upcoming month.
+    const currentMonth=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit'}).format(new Date())
+    const current=months.find(m=>m.month_start.slice(0,7)===currentMonth)
+    if(current)return current
+    const past=months.filter(m=>m.month_start.slice(0,7)<currentMonth)
+    return past.length?past[past.length-1]:months[0]
   },[months])
 
   const monthInfo=useMemo(()=>{
