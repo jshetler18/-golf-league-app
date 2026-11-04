@@ -6,7 +6,7 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
 type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;handicap?:number;adjustedScore?:number;showAdjustedScore?:boolean;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
-type ApprovedCard={id:string;team:string;weekNumber:number;score:number;rawScore:number;handicap:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
+type ApprovedCard={id:string;team:string;weekNumber:number;score:number;rawScore:number;handicap:number;monthStart:string;archiveVideoId?:string;approvedAt?:string;imageUrl:string}
 
 function monthLabelForCard(value:string){return new Date(value+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}
 
@@ -70,7 +70,20 @@ export default function LivePage(){
   const filtered=useMemo(()=>{
     const items=(archive?.recordings||[]).filter(x=>!(status?.isLive&&x.videoId===status.videoId))
     const matches=items.filter(x=>(team==='all'||x.team===team||x.matchupTeams?.includes(team)||x.matchupScores?.some(s=>s.team===team))&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
-    if(scoreOrder==='all')return matches
+    if(scoreOrder==='all'){
+      const approvalTime=(video:Recording)=>{
+        const matched=scorecards.filter(c=>{
+          if(c.archiveVideoId&&c.archiveVideoId===video.videoId)return true
+          const d=new Date(c.monthStart+'T12:00:00')
+          const monthName=d.toLocaleString('en-US',{month:'long'})
+          const normalize=(value:string)=>value.toLowerCase().replace(/^team\\s+/,'').trim()
+          return video.year===d.getFullYear()&&video.month===monthName&&video.roundNumber===c.weekNumber&&[video.team,...(video.matchupTeams||[])].some(t=>t&&normalize(t)===normalize(c.team))
+        })
+        const latest=Math.max(0,...matched.map(c=>Date.parse(c.approvedAt||'')||0))
+        return latest||Date.parse(video.publishedAt||'')||0
+      }
+      return [...matches].sort((a,b)=>approvalTime(b)-approvalTime(a))
+    }
     return [...matches].sort((a,b)=>{
       const aScore=typeof a.rawScore==='number'&&Number.isFinite(a.rawScore)?a.rawScore:null
       const bScore=typeof b.rawScore==='number'&&Number.isFinite(b.rawScore)?b.rawScore:null
@@ -79,7 +92,7 @@ export default function LivePage(){
       if(bScore===null)return -1
       return scoreOrder==='high' ? bScore-aScore : aScore-bScore
     })
-  },[archive,status?.videoId,team,season,month,round,scoreOrder])
+  },[archive,scorecards,status?.videoId,team,season,month,round,scoreOrder])
   const grouped=useMemo(()=>{
     const map=new Map<string,Recording[]>()
     for(const video of filtered){
