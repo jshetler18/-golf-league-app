@@ -2692,3 +2692,8 @@ i .captain-mark-v1357{
 .player-page-content .booking-date-nav .booking-date-field{min-width:0!important;max-width:100%!important;width:100%!important}
 .player-page-content .booking-date-nav input[type="date"]{display:block;min-width:0!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important}
 .player-page-content .booking-date-nav>button{width:42px!important;min-width:42px!important;max-width:42px!important;position:relative;z-index:1}
+
+/* Clearer separation for individual recorded round and matchup scorecards. */
+.recorded-page-v1265 .recorded-card-v1265{border:1.5px solid #aeb8b1!important}
+.recorded-page-v1265 .recorded-matchup-score-card-v1321{border:1.5px solid #9ba9a0!important}
+.recorded-page-v1265 .recorded-score-breakdown-v1316{border:1.5px solid #a6b2a9;border-radius:10px}
