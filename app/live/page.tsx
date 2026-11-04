@@ -6,7 +6,9 @@ import {PlayerPage} from '@/components/PlayerMobileChrome'
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
 type Recording={videoId:string;title:string;thumbnail?:string;publishedAt?:string;duration?:string;team?:string;month?:string;year?:number;roundNumber?:number;roundText?:string;season?:string;rawScore?:number;handicap?:number;adjustedScore?:number;showAdjustedScore?:boolean;matchupTeams?:string[];matchupScores?:{team:string;rawScore:number;handicap?:number;adjustedScore?:number}[];championshipRound?:boolean}
 type ArchiveResponse={configured:boolean;recordings:Recording[];filters:{teams:string[];seasons:string[];months:string[];rounds:number[]};error?:string}
-type ApprovedCard={id:string;team:string;weekNumber:number;score:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
+type ApprovedCard={id:string;team:string;weekNumber:number;score:number;rawScore:number;handicap:number;monthStart:string;archiveVideoId?:string;imageUrl:string}
+
+function monthLabelForCard(value:string){return new Date(value+'T12:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}
 
 function handicapLabel(value:number|undefined){
   if(typeof value!=='number'||!Number.isFinite(value))return '—'
@@ -128,6 +130,13 @@ export default function LivePage(){
       (shortTeam.length>=3&&searchable.includes(shortTeam))||
       (pluralShort.length>=4&&searchable.includes(pluralShort))
   })
+  const pendingScorecards=useMemo(()=>scorecards.filter(c=>{
+    if(c.monthStart<'2026-11-01')return false
+    const d=new Date(c.monthStart+'T12:00:00'),monthName=d.toLocaleString('en-US',{month:'long'})
+    const normalize=(name:string)=>name.toLowerCase().replace(/^team\\s+/,'').trim()
+    const archived=(archive?.recordings||[]).some(v=>(!!c.archiveVideoId&&v.videoId===c.archiveVideoId)||(v.year===d.getFullYear()&&v.month===monthName&&v.roundNumber===c.weekNumber&&[v.team,...(v.matchupTeams||[])].some(t=>t&&normalize(t)===normalize(c.team))))
+    return !archived&&(team==='all'||normalize(team)===normalize(c.team))&&(season==='all'||season===`${d.getFullYear()}-${d.getFullYear()+1}`||season===`${d.getFullYear()-1}-${d.getFullYear()}`)&&(month==='all'||month===monthName)&&(round==='all'||round===String(c.weekNumber))
+  }),[scorecards,archive,team,season,month,round])
   useEffect(()=>{if(!scorecards.length)return;const id=new URLSearchParams(window.location.search).get('submission');if(!id)return;const timer=setTimeout(()=>document.getElementById(`scorecard-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),250);return()=>clearTimeout(timer)},[scorecards,archive])
   const hasFilters=team!=='all'||season!=='all'||month!=='all'||round!=='all'||scoreOrder!=='all'
   function clearFilters(){setTeam('all');setSeason('all');setMonth('all');setRound('all');setScoreOrder('all');setActiveVideo('')}
@@ -160,6 +169,7 @@ export default function LivePage(){
         {archive?.error&&<div className="recorded-empty-v1265">{archive.error}</div>}
         {archive&&!archive.error&&filtered.length===0&&<div className="recorded-empty-v1265">{hasFilters?'No recorded rounds match those filters.':'No recorded rounds have been identified yet.'}</div>}
 
+        {pendingScorecards.length>0&&<div className="recorded-season-v1267"><h3>Approved Rounds — Video Processing</h3><div className="recorded-grid-v1265">{pendingScorecards.map(card=><article className="recorded-card-v1265" key={card.id} id={`scorecard-${card.id}`}><div className="recorded-thumb-v1267" style={{display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:8,background:'#e9eee9',color:'#365744',minHeight:170}}><strong>Video Processing</strong><small>Recording will appear automatically when available</small></div><div className="recorded-card-copy-v1265 recorded-card-copy-score-v1268"><div className="recorded-card-copy-main-v1268"><strong>{card.team}</strong><span>{monthLabelForCard(card.monthStart)} — Round {card.weekNumber}</span></div><div className="recorded-score-breakdown-v1316"><div><small>RAW SCORE</small><strong>{card.rawScore}</strong></div><div><small>HANDICAP</small><strong>{handicapLabel(card.handicap)}</strong></div><div><small>ADJUSTED</small><strong>{card.score}</strong></div></div></div><div className="recorded-scorecard-actions-v1296"><button className="recorded-scorecard-button-v1296" onClick={()=>{setScorecardImageLoaded(false);setOpenScorecard(openScorecard===card.id?'':card.id)}}>View Scorecard</button>{openScorecard===card.id&&card.imageUrl&&<div className="recorded-scorecard-image-v1296"><a href={card.imageUrl} target="_blank" rel="noreferrer"><img src={card.imageUrl} alt={`${card.team} scorecard`} style={{width:'100%'}}/></a></div>}</div></article>)}</div></div>}
         {grouped.map(([seasonName,videos])=><div className="recorded-season-v1267" key={seasonName}>
           <h3>{seasonName==='Other Recordings'?seasonName:`${seasonName} Season`}</h3>
           <div className="recorded-grid-v1265">
