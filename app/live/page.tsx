@@ -1,6 +1,6 @@
 'use client'
 
-import {useCallback,useEffect,useMemo,useState} from 'react'
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {PlayerPage} from '@/components/PlayerMobileChrome'
 
 type LiveStatus={configured:boolean;isLive:boolean;videoId?:string;title?:string;liveHeadline?:string;liveSubtext?:string;error?:string}
@@ -40,6 +40,7 @@ function durationText(value?:string){
 
 export default function LivePage(){
   const [status,setStatus]=useState<LiveStatus|null>(null)
+  const previousLive=useRef<boolean|null>(null)
   const [archive,setArchive]=useState<ArchiveResponse|null>(null)
   const [archiveLoading,setArchiveLoading]=useState(true)
   const [archiveProgress,setArchiveProgress]=useState(8)
@@ -50,7 +51,7 @@ export default function LivePage(){
   const [scorecardImageLoaded,setScorecardImageLoaded]=useState(false)
 
   const loadLive=useCallback(async()=>{
-    try{const res=await fetch('/api/youtube/live',{cache:'no-store'});setStatus(await res.json())}
+    try{const res=await fetch('/api/youtube/live',{cache:'no-store'});const next:LiveStatus=await res.json();setStatus(next);if(previousLive.current===true&&!next.isLive){void loadArchive();void loadScorecards()}previousLive.current=next.isLive}
     catch{setStatus({configured:true,isLive:false,error:'Unable to check the livestream right now.'})}
   },[])
   const loadScorecards=useCallback(async()=>{try{const res=await fetch('/api/round-scorecards/approved',{cache:'no-store'});const j=await res.json();setScorecards(j.items||[])}catch{}},[])
@@ -62,10 +63,10 @@ export default function LivePage(){
     finally{window.clearInterval(timer);window.setTimeout(()=>setArchiveLoading(false),180)}
   },[])
 
-  useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,15000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
+  useEffect(()=>{loadLive();loadArchive();loadScorecards();const timer=window.setInterval(loadLive,15000);const archiveTimer=window.setInterval(()=>{loadArchive();loadScorecards()},120000);const visible=()=>{if(document.visibilityState==='visible'){loadLive();loadArchive();loadScorecards()}};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);window.clearInterval(archiveTimer);document.removeEventListener('visibilitychange',visible)}},[loadLive,loadArchive,loadScorecards])
 
   const filtered=useMemo(()=>{
-    const items=(archive?.recordings||[]).filter(x=>x.videoId!==status?.videoId)
+    const items=(archive?.recordings||[]).filter(x=>!(status?.isLive&&x.videoId===status.videoId))
     const matches=items.filter(x=>(team==='all'||x.team===team||x.matchupTeams?.includes(team)||x.matchupScores?.some(s=>s.team===team))&&(season==='all'||x.season===season)&&(month==='all'||x.month===month)&&(round==='all'||String(x.roundNumber)===round))
     if(scoreOrder==='all')return matches
     return [...matches].sort((a,b)=>{
