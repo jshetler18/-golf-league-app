@@ -198,7 +198,7 @@ function dateParts(value?:string){
 export async function GET(){
   try{
     const {configured,key,channel}=await getYouTubeChannelWithUploads()
-    if(!configured)return NextResponse.json({configured:false,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]}},{headers:{'Cache-Control':'public, s-maxage=300, stale-while-revalidate=600'}})
+    if(!configured)return NextResponse.json({configured:false,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]}},{headers:{'Cache-Control':'public, s-maxage=30, stale-while-revalidate=30'}})
     const uploads=channel?.contentDetails?.relatedPlaylists?.uploads
     if(!uploads)throw new Error('The YouTube uploads playlist could not be found.')
 
@@ -213,7 +213,7 @@ export async function GET(){
       url.searchParams.set('maxResults','50')
       url.searchParams.set('key',key)
       if(pageToken)url.searchParams.set('pageToken',pageToken)
-      const res=await fetch(url,{next:{revalidate:300}})
+      const res=await fetch(url,{next:{revalidate:30}})
       if(!res.ok)throw new Error(`YouTube recording lookup failed (${res.status}).`)
       const json=await res.json()
       playlistItems.push(...(json?.items||[]))
@@ -228,7 +228,7 @@ export async function GET(){
       url.searchParams.set('part','snippet,contentDetails,liveStreamingDetails,status')
       url.searchParams.set('id',batch.join(','))
       url.searchParams.set('key',key)
-      const res=await fetch(url,{next:{revalidate:300}})
+      const res=await fetch(url,{next:{revalidate:30}})
       if(!res.ok)continue
       const json=await res.json()
       for(const item of json?.items||[])detailsById.set(item.id,item)
@@ -307,7 +307,7 @@ export async function GET(){
     const months=unique(recordings.map(x=>x.month)).map(String).sort((a,b)=>(monthOrder.get(a)??99)-(monthOrder.get(b)??99))
     const rounds=unique(recordings.map(x=>x.roundNumber)).map(Number).sort((a,b)=>a-b)
 
-    return NextResponse.json({configured:true,recordings,filters:{teams,seasons,months,rounds}},{headers:{'Cache-Control':'public, s-maxage=300, stale-while-revalidate=600'}})
+    return NextResponse.json({configured:true,recordings,filters:{teams,seasons,months,rounds}},{headers:{'Cache-Control':'public, s-maxage=30, stale-while-revalidate=30'}})
   }catch(error:any){
     return NextResponse.json({configured:true,recordings:[],filters:{teams:[],seasons:[],months:[],rounds:[]},error:error?.message||'Unable to load recorded rounds.'},{status:502,headers:{'Cache-Control':'no-store'}})
   }
