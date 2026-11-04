@@ -12,7 +12,7 @@ export async function GET(){
   for(const r of rows||[]){
     let imageUrl=''
     if((r as any).image_path){const {data}=await admin.storage.from('round-scorecards').createSignedUrl((r as any).image_path,3600);imageUrl=data?.signedUrl||''}
-    items.push({id:r.id,team:(r as any).teams?.name||'',weekNumber:r.week_number,score:Number(r.official_total),rawScore:Number((r as any).raw_stableford||0)+Number((r as any).bonus_points||0),handicap:Number((r as any).handicap_points||0),monthStart:(r as any).league_months?.month_start||'',archiveVideoId:(r as any).archive_video_id||'',imageUrl})
+    items.push({id:r.id,team:(r as any).teams?.name||'',weekNumber:r.week_number,score:Number(r.official_total),rawScore:Number((r as any).raw_stableford||0)+Number((r as any).bonus_points||0),handicap:Number((r as any).handicap_points||0),monthStart:(r as any).league_months?.month_start||'',archiveVideoId:(r as any).archive_video_id||'',approvedAt:(r as any).approved_at||'',imageUrl})
   }
   return NextResponse.json({items},{headers:{'Cache-Control':'no-store, max-age=0'}})
  }catch(e:any){return NextResponse.json({error:e?.message||'Unable to load scorecards.'},{status:500})}
