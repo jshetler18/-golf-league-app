@@ -419,8 +419,8 @@ export default function TVLeaderboard(){
     const firstIndex=
      list.findIndex(
       x=>
-       x.total===
-        row.total
+       Math.round(x.total*10)===
+        Math.round(row.total*10)
      )
 
     return{
