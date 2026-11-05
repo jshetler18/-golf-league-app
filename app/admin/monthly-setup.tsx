@@ -57,7 +57,26 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
    ])
    const std=Number(s?.handicap_standard||27);setHandicapStandard(std);setStandardDraft(String(std))
    const by:Record<string,HandicapScore[]>={}
-   ;(r||[]).forEach((x:any)=>{const k=String(x.canonical_team_name||'').trim().toLowerCase();(by[k]??=[]).push({score:Number(x.raw_score),season_label:x.season_label,score_month:x.score_month,round_number:x.round_number})})
+   ;(r||[]).forEach((x:any)=>{const k=String(x.canonical_team_name||'').trim().toLowerCase();if(['team smolnik','team shingler'].includes(k)&&String(x.score_month).slice(0,7)<'2026-11')return;(by[k]??=[]).push({score:Number(x.raw_score),season_label:x.season_label,score_month:x.score_month,round_number:x.round_number})})
+   // The two rebuilt teams start fresh in November 2026. Include approved new-season
+   // submissions directly, even before the historical score table is synchronized.
+   const {data:rebuiltTeams}=await supabase.from('teams').select('id,name').eq('season_id',seasonId).in('name',['Team Smolnik','Team Shingler'])
+   if(rebuiltTeams?.length){
+     const ids=rebuiltTeams.map(t=>t.id)
+     const {data:approved}=await supabase.from('round_score_submissions').select('team_id,league_month_id,week_number,raw_stableford,bonus_points').in('team_id',ids).eq('status','approved')
+     const monthIds=[...new Set((approved||[]).map(x=>x.league_month_id))]
+     const {data:leagueMonths}=monthIds.length?await supabase.from('league_months').select('id,month_start').in('id',monthIds):{data:[]}
+     const monthById=new Map((leagueMonths||[]).map(m=>[m.id,String(m.month_start).slice(0,10)]))
+     const teamById=new Map(rebuiltTeams.map(t=>[t.id,t.name.toLowerCase()]))
+     for(const score of approved||[]){
+       const k=teamById.get(score.team_id),ym=monthById.get(score.league_month_id)
+       if(!k||!ym||ym<'2026-11-01')continue
+       const entries=by[k]??=[]
+       const existing=entries.find(x=>x.score_month.slice(0,7)===ym.slice(0,7)&&Number(x.round_number)===Number(score.week_number))
+       const row={score:Number(score.raw_stableford||0)+Number(score.bonus_points||0),score_month:ym,round_number:Number(score.week_number),season_label:'2026-2027'}
+       if(existing)Object.assign(existing,row);else entries.push(row)
+     }
+   }
    setRawHistory(by)
  })()},[seasonId])
  async function saveHandicapStandard(){const n=Number(standardDraft);if(!Number.isFinite(n)||n<=0){setMsg('Enter a valid handicap standard.');return};const {error}=await supabase.from('seasons').update({handicap_standard:n}).eq('id',seasonId);if(error){setMsg(error.message);return};setHandicapStandard(n);setMsg(`Handicap standard updated to ${n}. All recommendations have been recalculated.`)}
