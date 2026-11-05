@@ -73,7 +73,7 @@ export default function MonthlySetup({seasonId,teams,players}:{seasonId:string;t
        if(!k||!ym||ym<'2026-11-01')continue
        const entries=by[k]??=[]
        const existing=entries.find(x=>x.score_month.slice(0,7)===ym.slice(0,7)&&Number(x.round_number)===Number(score.week_number))
-       const row={score:Number(score.raw_stableford||0)+Number(score.bonus_points||0),score_month:ym,round_number:Number(score.week_number),season_label:'2026-2027'}
+       const row={score:Number(score.raw_stableford||0),score_month:ym,round_number:Number(score.week_number),season_label:'2026-2027'}
        if(existing)Object.assign(existing,row);else entries.push(row)
      }
    }
