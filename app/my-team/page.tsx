@@ -192,7 +192,7 @@ export default function MyTeam(){
     </div>
 
     <div className="card my-team-raw-score-card">
-      {(()=>{const calc=calculateHandicap(rawRows.filter(r=>r.canonical_team_name.trim().toLowerCase()===team.name.trim().toLowerCase()).map(r=>({score:Number(r.raw_score),season_label:r.season_label,score_month:r.score_month,round_number:r.round_number})),handicapStandard);return <div className="handicap-history-v1369 my-team-handicap-performance-v1370">
+      {(()=>{const calc=calculateHandicap(rawRows.filter(r=>r.canonical_team_name.trim().toLowerCase()===team.name.trim().toLowerCase()&&(!['team smolnik','team shingler'].includes(team.name.trim().toLowerCase())||r.score_month.slice(0,7)>='2026-11')).map(r=>({score:Number(r.raw_score),season_label:r.season_label,score_month:r.score_month,round_number:r.round_number})),handicapStandard);return <div className="handicap-history-v1369 my-team-handicap-performance-v1370">
         <div className="eyebrow">Handicap Performance</div>
         <h3>{calc.available>=12?'Best 10 of Last 12 Raw Scores':'Recent Raw Scores'}</h3>
         <p className="muted">{calc.method}</p>
