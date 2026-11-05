@@ -4,7 +4,8 @@ export type HandicapCalc={available:number;recent:HandicapScore[];counted:Handic
 const dateValue=(r:HandicapScore)=>new Date(`${r.score_month.slice(0,10)}T12:00:00`).getTime()+(Number(r.round_number||0)*1000)
 
 export function calculateHandicap(rows:HandicapScore[],standard:number):HandicapCalc{
- const recent=[...rows].filter(r=>Number.isFinite(Number(r.score))).sort((a,b)=>dateValue(b)-dateValue(a)).slice(0,12)
+ // Bonus-hole birdie fractions count toward weekly standings, never handicaps.
+ const recent=rows.map(r=>({...r,score:Math.trunc(Number(r.score))})).filter(r=>Number.isFinite(r.score)).sort((a,b)=>dateValue(b)-dateValue(a)).slice(0,12)
  const n=recent.length
  if(n<3)return{available:n,recent,counted:recent,excluded:[],average:null,recommended:null,method:'At least 3 rounds are needed.'}
  let drops=n>=8?2:n>=5?1:0
