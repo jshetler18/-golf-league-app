@@ -103,25 +103,16 @@ export default function LoginPage(){
       if(error){
         setMessage(error.message)
       }else if(mode==='admin'){
-        const { data:p, error:lookupError } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
-        if(lookupError || !p){setMessage('Unable to verify account access: '+(lookupError?.message || 'Profile not found'));setLoading(false);return}
-        if(p?.role==='admin' && p?.status==='approved'){
-          window.location.href='/admin'
-          return
-        }
-        await supabase.auth.signOut()
-        setMessage('This account does not have approved administrator access.')
+        // As in the volunteer app, successful Auth sign-in hands off to the
+        // destination; the admin guard validates approval and role there.
+        window.location.replace('/admin')
+        return
       }else{
-        const { data:p } = await supabase.from('profiles').select('role,status').eq('id',data.user.id).maybeSingle()
-        if(p?.role==='admin' && p?.status==='approved'){
-          window.location.replace('/admin')
-          return
-        }
-        if(p?.status==='approved'){
-          window.location.replace('/')
-          return
-        }
-        await refresh()
+        // Mirror the volunteer login: after Auth succeeds, hand off to the
+        // destination page. That page still enforces its own account permissions.
+        // Do not treat a PostgREST outage as an invalid password.
+        window.location.replace('/')
+        return
       }
     }
     setLoading(false)
