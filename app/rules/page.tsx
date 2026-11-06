@@ -21,6 +21,8 @@ type LeagueMonth={
   wind:string
   greens:string
   fairways:string
+  game_mode:string
+  course_type:string
   realism:string
   mulligans:boolean
   pins_week_1:string|null
@@ -106,7 +108,7 @@ export default function Rules(){
     if(!season?.id){setSettingsLoading(false);return}
     setScoreCap(Number(season.standings_score_cap||30))
     const [{data:monthRows},{data:teamRows},{data:playerRows}]=await Promise.all([
-      supabase.from('league_months').select('id,month_start,course_name,course_location,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,realism,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start'),
+      supabase.from('league_months').select('id,month_start,course_name,course_location,bonus_hole_1,bonus_hole_2,bonus_birdie_value,elevation_ft,stimp_options,gimmie_feet,wind,greens,fairways,game_mode,course_type,realism,mulligans,pins_week_1,pins_week_2,pins_week_3,pins_week_4').eq('season_id',season.id).order('month_start'),
       supabase.from('teams').select('id,name,captain_player_id').eq('season_id',season.id).eq('is_active',true).order('name'),
       supabase.from('players').select('id,full_name,team_id').eq('season_id',season.id).eq('is_active',true).order('full_name')
     ])
@@ -220,6 +222,8 @@ export default function Rules(){
                   <div><small>STIMP</small><strong>{selected.stimp_options?.length?selected.stimp_options.join(' or '):'Not set'}</strong></div>
                   <div><small>GIMMIES</small><strong>{selected.gimmie_feet} ft</strong></div>
                   <div><small>WIND</small><strong>{selected.wind||'Not set'}</strong></div>
+                  <div><small>GAME MODE</small><strong>{selected.game_mode||'Scramble'}</strong></div>
+                  <div><small>COURSE TYPE</small><strong>{selected.course_type||'Parkland Soft, Bentgrass'}</strong></div>
                   <div><small>GREENS</small><strong>{selected.greens||'Not set'}</strong></div>
                   <div><small>FAIRWAYS</small><strong>{selected.fairways||'Not set'}</strong></div>
                   <div><small>MULLIGANS</small><strong>{selected.mulligans?'On':'Off'}</strong></div>
