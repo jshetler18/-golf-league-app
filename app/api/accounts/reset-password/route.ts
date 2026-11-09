@@ -21,7 +21,7 @@ export async function POST(req:NextRequest){
   const profileId=String(body?.profileId||'')
   const password=String(body?.password||'')
   if(!/^[0-9a-f-]{36}$/i.test(profileId))return NextResponse.json({error:'Invalid account.'},{status:400})
-  if(password.length<12||password.length>128)return NextResponse.json({error:'Temporary password must be 12–128 characters.'},{status:400})
+  if(password.length<4||password.length>128)return NextResponse.json({error:'Temporary password must be 4–128 characters.'},{status:400})
   if(profileId===user.id)return NextResponse.json({error:'Use My Profile to change your own password.'},{status:400})
   const {data:target}=await admin.from('profiles').select('id,role,status').eq('id',profileId).maybeSingle()
   if(!target||target.role==='admin')return NextResponse.json({error:'Only non-admin member passwords can be reset here.'},{status:403})
