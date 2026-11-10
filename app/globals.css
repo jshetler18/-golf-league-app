@@ -2696,3 +2696,18 @@ i .captain-mark-v1357{
 /* Clearer separation for individual recorded round and matchup scorecards. */
 .recorded-page-v1265 .recorded-card-v1265{border:1.5px solid #aeb8b1!important}
 .recorded-page-v1265 .recorded-matchup-score-card-v1321{border:1.5px solid #9ba9a0!important}
+
+/* v14.01 — phone Monthly Standings only; TV leaderboard remains untouched.
+   Fractional columns fill the available width, so horizontal scrolling is never needed. */
+@media(max-width:620px){
+ .results-leaderboard{width:100%;max-width:100%;overflow-x:hidden}
+ .results-grid{width:100%;min-width:0;box-sizing:border-box;grid-template-columns:minmax(0,34fr) minmax(0,92fr) minmax(0,30fr) repeat(4,minmax(0,42fr)) minmax(0,49fr)}
+ .results-grid.header>span,.results-grid.row>span{min-width:0;box-sizing:border-box}
+ .results-grid.header>span:nth-child(n+4):nth-child(-n+7),.results-grid.row>span:nth-child(n+4):nth-child(-n+7){padding-left:3px;padding-right:3px}
+ .results-grid.header>span:nth-child(3),.results-grid.row>span:nth-child(3){padding-left:0;padding-right:1px}
+ .results-grid.row .team-cell{padding-right:1px}
+}
+@media(max-width:390px){
+ .results-grid{grid-template-columns:minmax(0,33fr) minmax(0,84fr) minmax(0,29fr) repeat(4,minmax(0,40fr)) minmax(0,47fr)}
+ .results-grid.header>span:nth-child(n+4):nth-child(-n+7),.results-grid.row>span:nth-child(n+4):nth-child(-n+7){padding-left:2px;padding-right:2px}
+}
