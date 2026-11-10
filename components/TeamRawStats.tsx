@@ -58,7 +58,7 @@ export function TeamRawStats({rows,teamName,currentSeason}:{rows:RawRow[];teamNa
           const isLow=allLow?.value===r.raw_score
           return <div className="past-score-row" key={`${r.season_label}-${r.score_month}-${i}`}>
             <span className="past-score-date">{monthYear(r.score_month)}</span>
-            <span className="past-score-breakdown"><strong className={`past-score-value${isHigh?' is-high':isLow?' is-low':''}`}>{num(r.raw_score)}</strong><small>{Math.round(r.raw_score*10)%10>0?`+0.${Math.round(r.raw_score*10)%10} bonus holes`:'No bonus birdies'}</small></span>
+            <span className="past-score-breakdown"><strong className={`past-score-value${isHigh?' is-high':isLow?' is-low':''}`}>{num(r.raw_score)}</strong>{Math.round(r.raw_score*10)%10>0&&<small>{`+0.${Math.round(r.raw_score*10)%10} bonus holes`}</small>}</span>
           </div>
         }):<div className="past-score-empty">No past scores yet.</div>}
       </div>
