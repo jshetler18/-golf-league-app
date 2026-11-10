@@ -2711,3 +2711,7 @@ i .captain-mark-v1357{
  .results-grid{grid-template-columns:minmax(0,33fr) minmax(0,84fr) minmax(0,29fr) repeat(4,minmax(0,40fr)) minmax(0,47fr)}
  .results-grid.header>span:nth-child(n+4):nth-child(-n+7),.results-grid.row>span:nth-child(n+4):nth-child(-n+7){padding-left:2px;padding-right:2px}
 }
+
+/* Monthly app leaderboard: team label above surname, without widening columns. */
+.results-grid.row .team-cell>strong{display:flex;flex-direction:column;align-items:flex-start;line-height:1.12;min-width:0}
+.results-grid.row .team-cell>strong>span{display:block;max-width:100%;overflow-wrap:anywhere}
