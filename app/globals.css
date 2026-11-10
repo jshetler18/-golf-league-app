@@ -2715,3 +2715,8 @@ i .captain-mark-v1357{
 /* Monthly app leaderboard: team label above surname, without widening columns. */
 .results-grid.row .team-cell>strong{display:flex;flex-direction:column;align-items:flex-start;line-height:1.12;min-width:0}
 .results-grid.row .team-cell>strong>span{display:block;max-width:100%;overflow-wrap:anywhere}
+
+/* Bonus-hole breakdown in handicap chips and expanded score history. */
+.handicap-score-chips-v1369>span>small:nth-of-type(2){display:block;font-size:10px;color:var(--muted);line-height:1.25}
+.past-score-breakdown{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.past-score-breakdown small{font-size:10px;color:var(--muted);font-weight:650;white-space:nowrap}
