@@ -11,7 +11,7 @@ type Player={id:string;full_name:string;team_id:string|null;official_tee_color:s
 type PlayerAvatar={player_id:string;avatar_url:string|null}
 type Team={id:string;name:string;season_id:string;captain_player_id:string|null}
 type Month={id:string;month_start:string;course_name:string}
-type Score={league_month_id:string;team_id:string;week_number:number;official_total:number|null;status:string}
+type Score={league_month_id:string;team_id:string;week_number:number;official_total:number|null;raw_stableford:number|null;status:string}
 type Handicap={league_month_id:string;team_id:string;handicap_points:number}
 type CupPoint={league_month_id:string;team_id:string;points:number}
 type Matchup={league_month_id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null;high_points_awarded:number|null;low_points_awarded:number|null}
@@ -106,7 +106,7 @@ export default function MyTeam(){
     const monthIds=(monthData||[]).map(m=>m.id)
     if(monthIds.length){
       const [{data:scoreData},{data:handicapData},{data:cupData},{data:matchData}]=await Promise.all([
-        supabase.from('weekly_scores').select('league_month_id,team_id,week_number,official_total,status').in('league_month_id',monthIds).eq('status','approved'),
+        supabase.from('weekly_scores').select('league_month_id,team_id,week_number,official_total,raw_stableford,status').in('league_month_id',monthIds).eq('status','approved'),
         supabase.from('monthly_team_handicaps').select('league_month_id,team_id,handicap_points').in('league_month_id',monthIds),
         supabase.from('cup_points').select('league_month_id,team_id,points').in('league_month_id',monthIds),
         supabase.from('week4_matchups').select('league_month_id,seed_high,seed_low,team_high_id,team_low_id,winner_team_id,high_points_awarded,low_points_awarded').in('league_month_id',monthIds)
@@ -172,7 +172,7 @@ export default function MyTeam(){
     <div className="my-team-grid">
       <div className="card">
         <div className="section-title compact"><div><div className="eyebrow">Current month</div><h2>{selectedMonth?monthLabel(selectedMonth.month_start):'League Month'}</h2></div></div>
-        {selectedMonth?<><p className="my-team-course">⛳ <strong>{selectedMonth.course_name}</strong></p><div className="my-team-rounds">{[1,2,3,4].map(w=>{const s=monthInfo?.myScores.find(x=>x.week_number===w);return <div key={w}><small>Week {w}</small><strong>{scoreText(s?.official_total==null?null:Math.min(Number(s.official_total),scoreCap))}</strong></div>})}</div></>:<p className="muted">Monthly setup has not been entered yet.</p>}
+        {selectedMonth?<><p className="my-team-course">⛳ <strong>{selectedMonth.course_name}</strong></p><div style={{marginTop:12}}><h3 style={{fontSize:"1rem",marginBottom:10}}>Current Month Team Scores</h3><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontVariantNumeric:"tabular-nums"}}><thead><tr><th scope="col" style={{textAlign:"left",padding:"8px 4px",borderBottom:"1px solid var(--border, #d1d5db)"}}>Week</th><th scope="col" style={{textAlign:"center",padding:"8px 4px",borderBottom:"1px solid var(--border, #d1d5db)"}}>Raw Score</th><th scope="col" style={{textAlign:"center",padding:"8px 4px",borderBottom:"1px solid var(--border, #d1d5db)"}}>Adjusted Score</th></tr></thead><tbody>{[1,2,3,4].map(w=>{const s=monthInfo?.myScores.find(x=>x.week_number===w);return <tr key={w}><th scope="row" style={{textAlign:"left",padding:"10px 4px",fontWeight:500,borderBottom:"1px solid var(--border, #e5e7eb)"}}>Week {w}</th><td style={{textAlign:"center",padding:"10px 4px",borderBottom:"1px solid var(--border, #e5e7eb)"}}>{scoreText(s?.raw_stableford)}</td><td style={{textAlign:"center",padding:"10px 4px",fontWeight:700,borderBottom:"1px solid var(--border, #e5e7eb)"}}>{scoreText(s?.official_total)}</td></tr>})}</tbody></table></div></div></>:<p className="muted">Monthly setup has not been entered yet.</p>}
         <Link href="/results" className="my-team-link">View Monthly Standings ›</Link>
       </div>
 
