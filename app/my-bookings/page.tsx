@@ -100,7 +100,15 @@ export default function SimReservations(){
       void load(true).catch(e=>console.error('Reservation refresh failed',e))
       void (async()=>{try{
         const {data:{session}}=await supabase.auth.getSession()
-        if(session?.access_token&&created?.id)await fetch('/api/push/booking-admin',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({bookingId:created.id})})
+        if(session?.access_token&&created?.id){
+          for(let attempt=0;attempt<2;attempt++){
+            const res=await fetch('/api/push/booking-admin',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({bookingId:created.id})})
+            if(res.ok)break
+            const detail=await res.json().catch(()=>({}))
+            console.error('Admin booking notification delivery failed',{status:res.status,detail,attempt:attempt+1})
+            if(attempt===1||res.status===401||res.status===403||res.status===404)break
+          }
+        }
       }catch(e){console.error('Booking notification failed',e)}})()
     }catch(e:any){
       sound?.close()
