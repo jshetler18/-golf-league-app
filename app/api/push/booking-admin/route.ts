@@ -1,9 +1,9 @@
+import {getVapidPublicKey} from '@/lib/vapid'
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@supabase/supabase-js'
 import webpush from 'web-push'
 
 export const runtime='nodejs'
-const VAPID_PUBLIC_KEY='BNfpFrTXfBnim6gbXvWm8XknDPLqY16Wo0eKalryPEcUKZ5M6v-8J6JdLyp_vaPzEhaxxfGp1vwJZNgxtdiQtMM'
 const fmtDate=(iso:string)=>new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'}).format(new Date(iso))
 const fmtTime=(iso:string)=>new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'}).format(new Date(iso))
 
@@ -27,7 +27,7 @@ export async function POST(req:NextRequest){
   if(!ids.length)return NextResponse.json({error:'No administrator notification recipients configured.'},{status:503})
   if(!priv)return NextResponse.json({error:'Push notification server is not configured.'},{status:503})
   const {data:subs}=await admin.from('push_subscriptions').select('id,endpoint,p256dh,auth').in('user_id',ids)
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',VAPID_PUBLIC_KEY,priv)
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'https://www.lvvgolfsim.com',getVapidPublicKey(),priv)
   const name=booker?.full_name||booker?.email||'A player'
   const body=`${name} booked ${fmtDate(b.start_at)} from ${fmtTime(b.start_at)} to ${fmtTime(b.end_at)}.`
   let sent=0,failed=0
