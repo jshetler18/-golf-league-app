@@ -15,10 +15,10 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  const completeWeek3=teams.length===10&&teams.every(t=>[1,2,3].every(w=>scores.some(s=>s.team_id===t.id&&s.week_number===w)))
  const pairs=Array.from({length:5},(_,i)=>matchups.find(m=>m.seed_high===i*2+1)||{id:'provisional-'+i,seed_high:i*2+1,seed_low:i*2+2,team_high_id:ranking[i*2]?.id||'',team_low_id:ranking[i*2+1]?.id||'',winner_team_id:null,high_points_awarded:null,low_points_awarded:null})
  const fmt=(v:number|null)=>v==null?'—':v.toFixed(1)
- const row=(id:string,other:string,seed:number,pts:number,winner:string|null,completed:boolean)=>{
+ const row=(id:string,other:string,seed:number,pts:number,winner:string|null,completed:boolean,awarded:number|null)=>{
   const diff=Math.max(0,handicap(id)-handicap(other))
   const v=score(id)
-  return <div className="w4team" key={id}><div className="w4name"><span className="w4seed">{seed} SEED</span><strong>{byId(id)}</strong>{diff>0&&<b className="w4help">(+{diff})</b>}</div><div className="w4numbers"><span className="w4score"><em>SCORE:</em><b>{completed&&winner===id&&<span className="w4trophy">🏆</span>}{fmt(v)}</b></span><span className="w4points"><em>CUP PTS</em><b>{completed?(winner===id?Math.max(pts,0):pts).toLocaleString():pts.toLocaleString()}</b></span></div></div>
+  return <div className="w4team" key={id}><div className="w4name"><span className="w4seed">{seed} SEED</span><strong>{byId(id)}</strong>{diff>0&&<b className="w4help">(+{diff})</b>}</div><div className="w4numbers"><span className="w4score"><em>SCORE:</em><b>{completed&&winner===id&&<span className="w4trophy">🏆</span>}{fmt(v)}</b></span><span className="w4points"><em>CUP PTS</em><b>{completed&&awarded!=null?awarded.toLocaleString():'—'}</b></span></div></div>
  }
  return <main className="w4screen"><style>{`
  .w4screen{height:100vh;overflow:hidden;box-sizing:border-box;padding:1vh .7vw 2vh;background:radial-gradient(ellipse at 50% 35%,#073454 0%,#001b2e 75%);color:white;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;gap:1.5vh}
@@ -53,8 +53,8 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4pending{position:absolute;bottom:.4vh;right:1vw;font-size:1vw;color:#f8e99b}
  `}</style>
  <header className="w4header"><img src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png" alt="Tom Krise 19th Hole Golf League"/><span className="w4bar"/><h1>{month.toUpperCase()} WEEK 4 HEAD-TO-HEAD MATCHUPS</h1></header>
- <section className="w4champ"><div className="w4champlabel">CHAMPIONSHIP<br/>MATCHUP<br/>(1ST &amp; 2ND)</div>{row(pairs[0].team_high_id,pairs[0].team_low_id,1,1000,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null)}<div className="w4vs">VS</div>{row(pairs[0].team_low_id,pairs[0].team_high_id,2,800,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null)}</section>
- <section className="w4grid">{pairs.slice(1).map((p,i)=>{const done=!!p.winner_team_id&&score(p.team_high_id)!=null&&score(p.team_low_id)!=null;return <div className="w4card" key={p.id}><h2>{names[i+1]}</h2>{row(p.team_high_id,p.team_low_id,p.seed_high,pointPairs[i+1][0],p.winner_team_id,done)}<div className="w4vs">VS</div>{row(p.team_low_id,p.team_high_id,p.seed_low,pointPairs[i+1][1],p.winner_team_id,done)}</div>})}</section>
+ <section className="w4champ"><div className="w4champlabel">CHAMPIONSHIP<br/>MATCHUP<br/>(1ST &amp; 2ND)</div>{row(pairs[0].team_high_id,pairs[0].team_low_id,1,1000,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].high_points_awarded)}<div className="w4vs">VS</div>{row(pairs[0].team_low_id,pairs[0].team_high_id,2,800,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].low_points_awarded)}</section>
+ <section className="w4grid">{pairs.slice(1).map((p,i)=>{const done=!!p.winner_team_id&&score(p.team_high_id)!=null&&score(p.team_low_id)!=null;return <div className="w4card" key={p.id}><h2>{names[i+1]}</h2>{row(p.team_high_id,p.team_low_id,p.seed_high,pointPairs[i+1][0],p.winner_team_id,done,p.high_points_awarded)}<div className="w4vs">VS</div>{row(p.team_low_id,p.team_high_id,p.seed_low,pointPairs[i+1][1],p.winner_team_id,done,p.low_points_awarded)}</div>})}</section>
  {!completeWeek3&&<div className="w4pending">SEEDS PROVISIONAL UNTIL ALL WEEK 3 SCORES ARE APPROVED</div>}
  </main>
 }
