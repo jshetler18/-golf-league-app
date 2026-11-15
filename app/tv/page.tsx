@@ -2,6 +2,7 @@
 
 import { useEffect,useMemo,useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Week4TV from '@/components/Week4TV'
 
 type Team={
  id:string
@@ -643,6 +644,10 @@ export default function TVLeaderboard(){
     )
 
   })()
+
+ // TEMPORARY TV 1 DISPLAY TEST — revert to normal schedule after review.
+ // This affects only /tv; Cup Standings and player pages are unchanged.
+ if (true) return <Week4TV month={d?.toLocaleDateString('en-US',{month:'long'})||'NOVEMBER'} teams={teams} scores={scores} handicaps={handicaps} matchups={matchups} scoreCap={scoreCap}/>
 
  const showWeek4=
   matchups.length===5
