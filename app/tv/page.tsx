@@ -651,7 +651,8 @@ export default function TVLeaderboard(){
  const nowEastern=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())
  const firstDay=m?.month_start||''
  const firstMonday=firstDay?(()=>{const date=new Date(firstDay+'T12:00:00Z');const shift=(8-date.getUTCDay())%7;date.setUTCDate(date.getUTCDate()+shift+21);return date.toISOString().slice(0,10)})():''
- const showWeek4=!!firstMonday&&nowEastern>=firstMonday
+ const previewWeek4=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('preview')==='week4'
+ const showWeek4=previewWeek4||(!!firstMonday&&nowEastern>=firstMonday)
 
  if(showWeek4) return <Week4TV month={d?.toLocaleDateString('en-US',{month:'long'})||'NOVEMBER'} teams={teams} scores={scores} handicaps={handicaps} matchups={matchups} scoreCap={scoreCap}/>
 
