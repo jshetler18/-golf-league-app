@@ -881,82 +881,9 @@ export default function TVLeaderboard(){
          {fmt(r.w3)}
         </span>
 
-        {/*
-         * TOTAL COLUMN
-         *
-         * Total and movement have
-         * their own aligned areas.
-         *
-         * Movement size now matches
-         * the Cup Standings page.
-         */}
-        <span
-         className=
-          "tv-approved-total"
-         style={{
-          display:'grid',
-          gridTemplateColumns:
-           '58% 42%',
-          alignItems:'center',
-          width:'100%',
-          boxSizing:'border-box'
-         }}
-        >
-
-         <b
-          style={{
-           display:'block',
-           width:'100%',
-           textAlign:'right',
-           paddingRight:'6px',
-           boxSizing:'border-box',
-           fontVariantNumeric:
-            'tabular-nums'
-          }}
-         >
-          {fmt(r.total)}
-         </b>
-
-         <i
-          className={
-           r.change>0
-            ?'up'
-            :r.change<0
-            ?'down'
-            :''
-          }
-          style={{
-           display:'block',
-           width:'100%',
-           textAlign:'left',
-           paddingLeft:'12px',
-           boxSizing:'border-box',
-           fontVariantNumeric:
-            'tabular-nums',
-           whiteSpace:'nowrap',
-
-           /*
-            * Same movement size
-            * as Cup Standings.
-            */
-           fontSize:'2.05vw',
-           fontWeight:1000
-          }}
-         >
-
-          {
-           r.change>0
-            ?'▲ '+r.change
-            :r.change<0
-            ?'▼ '+
-             Math.abs(
-              r.change
-             )
-            :'—'
-          }
-
-         </i>
-
+        {/* Center the total score; rank movement is intentionally hidden on TV 1. */}
+        <span className="tv-approved-total" style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',boxSizing:'border-box'}}>
+         <b style={{display:'block',width:'100%',textAlign:'center',fontVariantNumeric:'tabular-nums'}}>{fmt(r.total)}</b>
         </span>
 
        </div>
