@@ -24,13 +24,13 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  return <main className="w4screen"><style>{`
 
  .w4screen,.w4screen *{box-sizing:border-box}
- .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:Arial,Helvetica,sans-serif;display:grid;grid-template-rows:11% 20% minmax(0,1fr);gap:1.2vh}
+ .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:'Arial Narrow','Roboto Condensed',Impact,Arial,sans-serif;display:grid;grid-template-rows:11% 20% minmax(0,1fr);gap:1.2vh}
  .w4header{min-height:0;min-width:0;display:grid;grid-template-columns:14.5% .35% minmax(0,1fr);gap:1.2%;align-items:center;overflow:hidden}
  .w4header img{width:100%;height:100%;object-fit:contain}
  .w4bar{height:80%;width:100%;background:#43f719;border-radius:10px}
- .w4header h1{font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
+ .w4header h1{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-stretch:condensed;font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
  .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:20% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
- .w4champlabel{display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:1.75vw;font-style:italic;font-weight:1000;line-height:1.1}
+ .w4champlabel{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:1.75vw;font-style:italic;font-weight:1000;line-height:1.1}
  .w4champlabel span{transform:skewX(9deg)}
  .w4champ .w4team{justify-content:center;gap:1.3vh;padding:.4vw;overflow:hidden}
  .w4vs{font-size:2.7vw;font-weight:1000;display:flex;align-items:center;justify-content:center}
@@ -39,21 +39,21 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
  .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
  .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:19% minmax(0,1fr) 8% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
- .w4card h2{margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:2.05vw;line-height:1.06;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
+ .w4card h2{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:2.05vw;line-height:1.06;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
  .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:2.2vh;padding:.3vw}
  .w4card .w4vs{font-size:2vw;gap:.45vw;min-height:0}
  .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:3px;background:#40f419;flex:1}
  .w4team{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center}
  .w4name{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:.3vw;white-space:nowrap;line-height:1}
- .w4name strong{font-size:1.67vw;letter-spacing:-.05em;font-weight:1000}
+ .w4name strong{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-size:1.67vw;letter-spacing:-.05em;font-weight:1000}
  .w4champ .w4name strong{font-size:2.18vw}
- .w4seed{flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.26vw;font-weight:1000}
+ .w4seed{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.26vw;font-weight:1000}
  .w4champ .w4seed{font-size:1.35vw}
  .w4help{font-size:1.25vw;color:#ffe500}
  .w4numbers{min-width:0;display:flex;align-items:center;justify-content:center;gap:.6vw}
  .w4score,.w4points{display:flex;align-items:center;border:2px solid #d9e6ed;border-radius:.6vw;overflow:hidden;font-weight:1000;white-space:nowrap;line-height:1}
- .w4numbers em{font-style:italic;background:linear-gradient(#18c614,#057a0a);padding:.42vw .45vw;font-size:1.08vw;color:#fff}
- .w4numbers b{font-size:1.7vw;padding:.35vw .42vw;background:#f1f4f8;color:#080b0f}
+ .w4numbers em{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-style:italic;background:linear-gradient(#18c614,#057a0a);padding:.42vw .45vw;font-size:1.08vw;color:#fff}
+ .w4numbers b{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-size:1.7vw;padding:.35vw .42vw;background:#f1f4f8;color:#080b0f}
  .w4points b{background:#051626;color:#fff}
  .w4champ .w4numbers{gap:.65vw;flex-wrap:nowrap}
  .w4champ .w4numbers em{font-size:1.1vw}
