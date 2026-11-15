@@ -5,6 +5,7 @@ type Score={team_id:string;week_number:number;official_total:number|null;status:
 type Handicap={team_id:string;handicap_points:number}
 type Matchup={id:string;seed_high:number;seed_low:number;team_high_id:string;team_low_id:string;winner_team_id:string|null;high_points_awarded:number|null;low_points_awarded:number|null}
 type Props={month:string;teams:Team[];scores:Score[];handicaps:Handicap[];matchups:Matchup[];scoreCap:number}
+const pointPairs=[[1000,800],[700,600],[500,400],[300,200],[150,100]]
 const names=['CHAMPIONSHIP MATCHUP','3RD & 4TH MATCHUP','5TH & 6TH MATCHUP','7TH & 8TH MATCHUP','TOILET BOWL']
 export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}:Props){
  const handicap=(id:string)=>Number(handicaps.find(h=>h.team_id===id)?.handicap_points??0)
