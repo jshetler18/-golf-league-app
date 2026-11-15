@@ -24,8 +24,8 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
 
  .w4screen,.w4screen *{box-sizing:border-box}
  .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:'Arial Narrow','Roboto Condensed',Impact,Arial,sans-serif;display:grid;grid-template-rows:11% 20% minmax(0,1fr);gap:1.2vh}
- .w4header{min-height:0;min-width:0;display:grid;grid-template-columns:14.5% .35% minmax(0,1fr);gap:1.2%;align-items:center;overflow:hidden}
- .w4header img{width:82%;height:82%;object-fit:contain;justify-self:center;align-self:center}
+ .w4header{min-height:0;min-width:0;display:grid;grid-template-columns:14.5% .35% minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:1.2%;align-items:center;overflow:hidden}
+ .w4logo{width:100%;height:100%;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:.35vh .5vw}.w4header img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center}
  .w4bar{height:80%;width:100%;background:#43f719;border-radius:10px}
  .w4header h1{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-stretch:condensed;font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
  .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:21.5% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
@@ -65,7 +65,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4trophy{display:inline-block;font-size:.85em;transform:rotate(-16deg);margin-right:.12vw}
  .w4pending{position:absolute;right:.8vw;bottom:0;font-size:.7vw;color:#ffe991;background:#001c2d;padding:0 .4vw}
  `}</style>
- <header className="w4header"><img src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png" alt="Tom Krise 19th Hole Golf League"/><span className="w4bar"/><h1>{month.toUpperCase()} WEEK 4 HEAD-TO-HEAD MATCHUPS</h1></header>
+ <header className="w4header"><div className="w4logo"><img src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png" alt="Tom Krise 19th Hole Golf League"/></div><span className="w4bar"/><h1>{month.toUpperCase()} WEEK 4 HEAD-TO-HEAD MATCHUPS</h1></header>
  <section className="w4champ"><div className="w4champlabel"><span>CHAMPIONSHIP<br/>MATCHUP<br/>(1ST &amp; 2ND)</span></div>{row(pairs[0].team_high_id,pairs[0].team_low_id,1,1000,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].high_points_awarded)}<div className="w4vs">VS</div>{row(pairs[0].team_low_id,pairs[0].team_high_id,2,800,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].low_points_awarded)}</section>
  <section className="w4grid">{pairs.slice(1).map((p,i)=>{const done=!!p.winner_team_id&&score(p.team_high_id)!=null&&score(p.team_low_id)!=null;return <div className="w4card" key={p.id}><h2>{i===3?<><span>TOILET BOWL</span><span>(9TH &amp; 10TH)</span></>:<><span>{['3RD & 4TH','5TH & 6TH','7TH & 8TH'][i]}</span><span>MATCHUP</span></>}</h2>{row(p.team_high_id,p.team_low_id,p.seed_high,pointPairs[i+1][0],p.winner_team_id,done,p.high_points_awarded)}<div className="w4vs">VS</div>{row(p.team_low_id,p.team_high_id,p.seed_low,pointPairs[i+1][1],p.winner_team_id,done,p.low_points_awarded)}</div>})}</section>
  </main>
