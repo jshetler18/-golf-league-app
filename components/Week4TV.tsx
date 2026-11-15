@@ -45,7 +45,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4team{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center}
  .w4name{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:.3vw;white-space:nowrap;line-height:1}
  .w4name strong{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-size:1.87vw;letter-spacing:-.05em;font-weight:1000}
- .w4champ .w4name strong{font-size:2.3vw}
+ .w4champ .w4name strong{font-size:2.65vw;letter-spacing:-.055em}
  .w4seed{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.44vw;font-weight:1000}
  .w4champ .w4seed{font-size:1.35vw}
  .w4help{font-size:1.25vw;color:#ffe500}
