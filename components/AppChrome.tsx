@@ -7,7 +7,7 @@ import DesktopAppHeader from '@/components/DesktopAppHeader'
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || ''
   // Dedicated kiosk displays must bypass site navigation and .page width constraints.
-  if (pathname === '/tv' || pathname === '/cup-tv') return <>{children}</>
+  if (pathname === '/tv') return <>{children}</>
   const isPublicRsvp = pathname.startsWith('/rsvp/')
   const isHome = pathname === '/'
   const isAdmin = pathname === '/admin' || pathname.startsWith('/admin/')
