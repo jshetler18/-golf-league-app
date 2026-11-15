@@ -168,14 +168,18 @@ export default function ScoreSubmissions(){
    if(!window.confirm(`Approve ${r.teams?.name}'s submitted score of ${Number(r.official_total).toFixed(1)}?`))return
    setBusy(r.id);setMsg('Approving scorecard…')
    const submitted=Number(r.official_total)
+   const {data:monthlyHandicap,error:handicapError}=await supabase.from('monthly_team_handicaps').select('handicap_points').eq('league_month_id',r.league_month_id).eq('team_id',r.team_id).maybeSingle()
+   if(handicapError){setMsg(handicapError.message);setBusy('');return}
+   const handicap=Number(monthlyHandicap?.handicap_points??0)
    const {error}=await supabase.from('weekly_scores').upsert({
      league_month_id:r.league_month_id,
      team_id:r.team_id,
      week_number:r.week_number,
-     raw_stableford:submitted,
+     raw_stableford:submitted-handicap,
      bonus_birdies:0,
      bonus_points:0,
-     handicap_points:0,
+     handicap_points:handicap,
+     official_total:submitted,
      status:'approved'
    },{onConflict:'league_month_id,team_id,week_number'})
    if(error){setMsg(error.message);setBusy('');return}
