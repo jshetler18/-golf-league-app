@@ -42,15 +42,15 @@ export default function Cup(){
       const aWins=scoreA>scoreB
       return <div className="cup-match-card-v1256" key={seed} style={{marginBottom:16,fontSize:'0.95rem',lineHeight:1.4}}>
        <div className="cup-seed-banner-v1256" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',textAlign:'center',gap:3,padding:'10px 8px',lineHeight:1.25}}><strong style={{fontSize:'1.12rem',fontWeight:850}}>{label}</strong><span style={{fontSize:'0.84rem',fontWeight:750}}>#{seed} Seed vs #{seed+1} Seed</span></div>
-       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 42px minmax(0,1fr)',gap:4,alignItems:'start',padding:'14px 8px 16px'}}>
-        {([{team:a,hc:ha,help:helpA,score:scoreA,points:aWins?winPts:losePts,winner:aWins},{team:b,hc:hb,help:helpB,score:scoreB,points:aWins?losePts:winPts,winner:!aWins}] as const).map((side,i)=><div key={side.team} style={{gridColumn:i===0?1:3,minWidth:0,display:'grid',gridTemplateRows:'54px 28px 36px 30px 24px 30px 24px',justifyItems:'center',alignItems:'center',textAlign:'center',rowGap:3}}>
+       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 42px minmax(0,1fr)',gap:4,alignItems:'start',padding:'10px 8px 12px'}}>
+        {([{team:a,hc:ha,help:helpA,score:scoreA,points:aWins?winPts:losePts,winner:aWins},{team:b,hc:hb,help:helpB,score:scoreB,points:aWins?losePts:winPts,winner:!aWins}] as const).map((side,i)=><div key={side.team} style={{gridColumn:i===0?1:3,minWidth:0,display:'grid',gridTemplateRows:'34px 22px 26px 30px 20px 27px 22px',justifyItems:'center',alignItems:'center',textAlign:'center',rowGap:1}}>
          <strong style={{fontSize:'clamp(1rem,3.5vw,1.18rem)',lineHeight:1.15,overflowWrap:'break-word',alignSelf:'center'}}>{side.team}</strong>
          <small style={{fontSize:'0.83rem',whiteSpace:'nowrap'}}>Monthly HC: {side.hc>0?'+':''}{side.hc}</small>
          <span style={{fontSize:'0.78rem',fontWeight:800,color:side.help>0?'#15803d':'transparent',textAlign:'center',alignSelf:'center'}}>{side.help>0?`+${side.help} Matchup Help`:'No Help'}</span>
          <b style={{fontSize:'1.4rem',lineHeight:1}}>{side.score.toFixed(1)}</b>
          <small style={{fontSize:'0.8rem',whiteSpace:'nowrap'}}>Week 4 Score</small><b style={{fontSize:'1.1rem'}}>{side.points.toLocaleString()}</b><small style={{fontSize:'0.8rem'}}>{side.winner?'🏆 Winner • Cup Points':'Cup Points'}</small>
         </div>)}
-        <div className="cup-vs-badge-v1256" style={{gridColumn:2,gridRow:1,alignSelf:'center',justifySelf:'center',marginTop:58}}>VS</div>
+        <div className="cup-vs-badge-v1256" style={{gridColumn:2,gridRow:1,alignSelf:'center',justifySelf:'center',marginTop:42}}>VS</div>
        </div>
        <div className="cup-pending-v1256" style={{fontSize:'0.72rem',lineHeight:1.4}}>SAMPLE RESULT • {aWins?a:b} wins {winPts.toLocaleString()} Cup Points; {aWins?b:a} earns {losePts.toLocaleString()}</div>
       </div>
