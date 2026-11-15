@@ -38,16 +38,16 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4vs:before,.w4champ .w4vs:after{content:'';position:absolute;left:50%;width:3px;height:22%;background:#39f317;transform:translateX(-50%)}
  .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
  .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
- .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:19% minmax(0,1fr) 8% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
- .w4card h2{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:2.05vw;line-height:1.06;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
- .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:2.2vh;padding:.3vw}
- .w4card .w4vs{font-size:2vw;gap:.45vw;min-height:0}
+ .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:15% minmax(0,1fr) 10% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
+ .w4card h2{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:1.92vw;line-height:1.04;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
+ .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:2.6vh;padding:.22vw}
+ .w4card .w4vs{font-size:2.65vw;gap:.45vw;min-height:0}
  .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:3px;background:#40f419;flex:1}
  .w4team{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center}
  .w4name{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:.3vw;white-space:nowrap;line-height:1}
- .w4name strong{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-size:1.67vw;letter-spacing:-.05em;font-weight:1000}
- .w4champ .w4name strong{font-size:2.18vw}
- .w4seed{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.26vw;font-weight:1000}
+ .w4name strong{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-size:1.87vw;letter-spacing:-.05em;font-weight:1000}
+ .w4champ .w4name strong{font-size:2.3vw}
+ .w4seed{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.44vw;font-weight:1000}
  .w4champ .w4seed{font-size:1.35vw}
  .w4help{font-size:1.25vw;color:#ffe500}
  .w4numbers{min-width:0;display:flex;align-items:center;justify-content:center;gap:.6vw}
@@ -58,10 +58,10 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4numbers{gap:.65vw;flex-wrap:nowrap}
  .w4champ .w4numbers em{font-size:1.1vw}
  .w4champ .w4numbers b{font-size:1.8vw}
- .w4card .w4numbers{flex-direction:column;gap:.85vh}
- .w4card .w4score,.w4card .w4points{min-width:68%;justify-content:space-between}
- .w4card .w4numbers em{font-size:1.35vw}
- .w4card .w4numbers b{font-size:2.05vw}
+ .w4card .w4numbers{flex-direction:column;gap:1.1vh;width:100%}
+ .w4card .w4score,.w4card .w4points{width:75%;justify-content:space-between}
+ .w4card .w4numbers em{font-size:1.48vw;padding:.52vw .5vw}
+ .w4card .w4numbers b{font-size:2.3vw;padding:.45vw .5vw}
  .w4trophy{display:inline-block;font-size:.85em;transform:rotate(-16deg);margin-right:.12vw}
  .w4pending{position:absolute;right:.8vw;bottom:0;font-size:.7vw;color:#ffe991;background:#001c2d;padding:0 .4vw}
  `}</style>
