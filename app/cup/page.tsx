@@ -39,7 +39,20 @@ export default function Cup(){
       const handicap=(teamName:string)=>{const team=teams.find(t=>t.name===teamName);return Number(handicaps.find(h=>h.league_month_id===currentMonth.id&&h.team_id===team?.id)?.handicap_points??0)}
       const ha=handicap(a),hb=handicap(b),diff=Math.abs(ha-hb)
       const helpA=ha>hb?diff:0,helpB=hb>ha?diff:0
-      return <div className="cup-match-card-v1256" key={seed} style={{marginBottom:16,fontSize:'1.05rem',lineHeight:1.5}}><div className="cup-seed-banner-v1256" style={{fontSize:'1.05rem',fontWeight:850,lineHeight:1.35,display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>{label} <span style={{fontSize:'0.8rem',fontWeight:750,whiteSpace:'nowrap'}}>#{seed} Seed vs #{seed+1} Seed</span></div><div className="cup-head-to-head-v1256"><div className="cup-fighter-v1256" style={{fontSize:'0.95rem',minWidth:0}}><strong style={{fontSize:'clamp(1.05rem,3.6vw,1.22rem)',lineHeight:1.25,display:'block',overflowWrap:'anywhere'}}>{a}</strong><small style={{fontSize:'0.86rem'}}>Monthly HC: {ha>0?'+':''}{ha}</small>{helpA>0&&<em style={{color:'#15803d',fontWeight:800,fontSize:'0.88rem'}}>+{helpA} Matchup Help</em>}<b>—</b><small style={{fontSize:'0.86rem'}}>Week 4 Score</small></div><div className="cup-vs-badge-v1256">VS</div><div className="cup-fighter-v1256" style={{fontSize:'0.95rem',minWidth:0}}><strong style={{fontSize:'clamp(1.05rem,3.6vw,1.22rem)',lineHeight:1.25,display:'block',overflowWrap:'anywhere'}}>{b}</strong><small style={{fontSize:'0.86rem'}}>Monthly HC: {hb>0?'+':''}{hb}</small>{helpB>0&&<em style={{color:'#15803d',fontWeight:800,fontSize:'0.88rem'}}>+{helpB} Matchup Help</em>}<b>—</b><small style={{fontSize:'0.86rem'}}>Week 4 Score</small></div></div><div className="cup-pending-v1256" style={{fontSize:'0.86rem',lineHeight:1.5}}>Awaiting Week 4 Scores • Winner earns {winPts.toLocaleString()} Cup Points; loser earns {losePts.toLocaleString()}</div></div>
+      return <div className="cup-match-card-v1256" key={seed} style={{marginBottom:16,fontSize:'0.95rem',lineHeight:1.4}}>
+       <div className="cup-seed-banner-v1256" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',textAlign:'center',gap:3,padding:'10px 8px',lineHeight:1.25}}><strong style={{fontSize:'1.12rem',fontWeight:850}}>{label}</strong><span style={{fontSize:'0.84rem',fontWeight:750}}>#{seed} Seed vs #{seed+1} Seed</span></div>
+       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 42px minmax(0,1fr)',gap:4,alignItems:'start',padding:'14px 8px 16px'}}>
+        {([{team:a,hc:ha,help:helpA},{team:b,hc:hb,help:helpB}] as const).map((side,i)=><div key={side.team} style={{gridColumn:i===0?1:3,minWidth:0,display:'grid',gridTemplateRows:'54px 28px 36px 28px 24px',justifyItems:'center',alignItems:'center',textAlign:'center',rowGap:3}}>
+         <strong style={{fontSize:'clamp(1rem,3.5vw,1.18rem)',lineHeight:1.15,overflowWrap:'break-word',alignSelf:'center'}}>{side.team}</strong>
+         <small style={{fontSize:'0.83rem',whiteSpace:'nowrap'}}>Monthly HC: {side.hc>0?'+':''}{side.hc}</small>
+         <span style={{fontSize:'0.78rem',fontWeight:800,color:side.help>0?'#15803d':'transparent',textAlign:'center',alignSelf:'center'}}>{side.help>0?`+${side.help} Matchup Help`:'No Help'}</span>
+         <b style={{fontSize:'1.4rem',lineHeight:1}}>—</b>
+         <small style={{fontSize:'0.8rem',whiteSpace:'nowrap'}}>Week 4 Score</small>
+        </div>)}
+        <div className="cup-vs-badge-v1256" style={{gridColumn:2,gridRow:1,alignSelf:'center',justifySelf:'center',marginTop:58}}>VS</div>
+       </div>
+       <div className="cup-pending-v1256" style={{fontSize:'0.86rem',lineHeight:1.5}}>Awaiting Week 4 Scores • Winner earns {winPts.toLocaleString()} Cup Points; loser earns {losePts.toLocaleString()}</div>
+      </div>
      })}</div>
     </div>}
     {matchups.length===0&&!preview&&<div className="card">Week 4 matchups will appear here once they are created.</div>}
