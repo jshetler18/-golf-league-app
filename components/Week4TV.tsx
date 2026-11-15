@@ -29,9 +29,9 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4header img{width:100%;height:100%;object-fit:contain}
  .w4bar{height:80%;width:100%;background:#43f719;border-radius:10px}
  .w4header h1{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-stretch:condensed;font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
- .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:20% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
- .w4champlabel{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:1.75vw;font-style:italic;font-weight:1000;line-height:1.1}
- .w4champlabel span{transform:skewX(9deg)}
+ .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:21.5% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
+ .w4champlabel{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:2.05vw;font-style:italic;font-weight:1000;line-height:1.13}
+ .w4champlabel span{transform:skewX(9deg);display:block;width:100%;font-size:clamp(20px,2.12vw,43px);font-weight:1000;letter-spacing:-.045em;line-height:1.15;text-shadow:1px 2px 2px #002a06}
  .w4champ .w4team{justify-content:center;gap:1.3vh;padding:.4vw;overflow:hidden}
  .w4vs{font-size:2.7vw;font-weight:1000;display:flex;align-items:center;justify-content:center}
  .w4champ .w4vs{position:relative}
