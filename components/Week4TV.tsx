@@ -24,7 +24,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  return <main className="w4screen"><style>{`
 
  .w4screen,.w4screen *{box-sizing:border-box}
- .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:Arial,Helvetica,sans-serif;display:grid;grid-template-rows:12.5% 20% minmax(0,1fr);gap:1.2vh}
+ .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:Arial,Helvetica,sans-serif;display:grid;grid-template-rows:11% 20% minmax(0,1fr);gap:1.2vh}
  .w4header{min-height:0;min-width:0;display:grid;grid-template-columns:14.5% .35% minmax(0,1fr);gap:1.2%;align-items:center;overflow:hidden}
  .w4header img{width:100%;height:100%;object-fit:contain}
  .w4bar{height:80%;width:100%;background:#43f719;border-radius:10px}
@@ -38,16 +38,16 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4vs:before,.w4champ .w4vs:after{content:'';position:absolute;left:50%;width:3px;height:22%;background:#39f317;transform:translateX(-50%)}
  .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
  .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
- .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:21% minmax(0,1fr) 9% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
- .w4card h2{margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:1.9vw;line-height:1.05;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
- .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:1.5vh;padding:.3vw}
+ .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:19% minmax(0,1fr) 8% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
+ .w4card h2{margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:2.05vw;line-height:1.06;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
+ .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:2.2vh;padding:.3vw}
  .w4card .w4vs{font-size:2vw;gap:.45vw;min-height:0}
  .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:3px;background:#40f419;flex:1}
  .w4team{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center}
  .w4name{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:.3vw;white-space:nowrap;line-height:1}
- .w4name strong{font-size:1.52vw;letter-spacing:-.05em;font-weight:1000}
- .w4champ .w4name strong{font-size:2.05vw}
- .w4seed{flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.13vw;font-weight:1000}
+ .w4name strong{font-size:1.67vw;letter-spacing:-.05em;font-weight:1000}
+ .w4champ .w4name strong{font-size:2.18vw}
+ .w4seed{flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.26vw;font-weight:1000}
  .w4champ .w4seed{font-size:1.35vw}
  .w4help{font-size:1.25vw;color:#ffe500}
  .w4numbers{min-width:0;display:flex;align-items:center;justify-content:center;gap:.6vw}
@@ -58,16 +58,16 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4numbers{gap:.65vw;flex-wrap:nowrap}
  .w4champ .w4numbers em{font-size:1.1vw}
  .w4champ .w4numbers b{font-size:1.8vw}
- .w4card .w4numbers{flex-direction:column;gap:.6vh}
- .w4card .w4score,.w4card .w4points{min-width:58%;justify-content:space-between}
- .w4card .w4numbers em{font-size:1.13vw}
- .w4card .w4numbers b{font-size:1.7vw}
+ .w4card .w4numbers{flex-direction:column;gap:.85vh}
+ .w4card .w4score,.w4card .w4points{min-width:68%;justify-content:space-between}
+ .w4card .w4numbers em{font-size:1.35vw}
+ .w4card .w4numbers b{font-size:2.05vw}
  .w4trophy{display:inline-block;font-size:.85em;transform:rotate(-16deg);margin-right:.12vw}
  .w4pending{position:absolute;right:.8vw;bottom:0;font-size:.7vw;color:#ffe991;background:#001c2d;padding:0 .4vw}
  `}</style>
  <header className="w4header"><img src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png" alt="Tom Krise 19th Hole Golf League"/><span className="w4bar"/><h1>{month.toUpperCase()} WEEK 4 HEAD-TO-HEAD MATCHUPS</h1></header>
  <section className="w4champ"><div className="w4champlabel"><span>CHAMPIONSHIP<br/>MATCHUP<br/>(1ST &amp; 2ND)</span></div>{row(pairs[0].team_high_id,pairs[0].team_low_id,1,1000,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].high_points_awarded)}<div className="w4vs">VS</div>{row(pairs[0].team_low_id,pairs[0].team_high_id,2,800,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].low_points_awarded)}</section>
- <section className="w4grid">{pairs.slice(1).map((p,i)=>{const done=!!p.winner_team_id&&score(p.team_high_id)!=null&&score(p.team_low_id)!=null;return <div className="w4card" key={p.id}><h2>{i===3?<>TOILET BOWL<br/>(9TH &amp; 10TH)</>:names[i+1]}</h2>{row(p.team_high_id,p.team_low_id,p.seed_high,pointPairs[i+1][0],p.winner_team_id,done,p.high_points_awarded)}<div className="w4vs">VS</div>{row(p.team_low_id,p.team_high_id,p.seed_low,pointPairs[i+1][1],p.winner_team_id,done,p.low_points_awarded)}</div>})}</section>
+ <section className="w4grid">{pairs.slice(1).map((p,i)=>{const done=!!p.winner_team_id&&score(p.team_high_id)!=null&&score(p.team_low_id)!=null;return <div className="w4card" key={p.id}><h2>{i===3?<><span>TOILET BOWL</span><span>(9TH &amp; 10TH)</span></>:<><span>{['3RD & 4TH','5TH & 6TH','7TH & 8TH'][i]}</span><span>MATCHUP</span></>}</h2>{row(p.team_high_id,p.team_low_id,p.seed_high,pointPairs[i+1][0],p.winner_team_id,done,p.high_points_awarded)}<div className="w4vs">VS</div>{row(p.team_low_id,p.team_high_id,p.seed_low,pointPairs[i+1][1],p.winner_team_id,done,p.low_points_awarded)}</div>})}</section>
  {!completeWeek3&&<div className="w4pending">SEEDS PROVISIONAL — WEEK 3 APPROVALS PENDING</div>}
  </main>
 }
