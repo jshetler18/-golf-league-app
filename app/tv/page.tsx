@@ -48,6 +48,27 @@ export default function TVLeaderboard(){
  const [matchups,setMatchups]=useState<Matchup[]>([])
  const [flash,setFlash]=useState<string|null>(null)
  const [scoreCap,setScoreCap]=useState(30)
+ const [easternToday,setEasternToday]=useState('')
+
+ useEffect(()=>{
+  const updateDate=()=>{
+   const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date())
+   const value=(type:string)=>parts.find(p=>p.type===type)?.value||''
+   setEasternToday(`${value('year')}-${value('month')}-${value('day')}`)
+  }
+  updateDate()
+  const timer=window.setInterval(updateDate,60000)
+  return()=>window.clearInterval(timer)
+ },[])
+
+ useEffect(()=>{
+  if(!months.length||!easternToday)return
+  const currentMonth=easternToday.slice(0,7)
+  const active=months.find(m=>m.month_start.slice(0,7)===currentMonth)
+  // Outside the configured league months, retain the most recent league month.
+  const selected=active||[...months].filter(m=>m.month_start.slice(0,7)<=currentMonth).at(-1)||months[0]
+  if(selected.id!==monthId)setMonthId(selected.id)
+ },[months,easternToday,monthId])
 
  // Periodically reload the full TV page so deployed styles and code are picked up.
  useEffect(()=>{
@@ -101,13 +122,6 @@ export default function TVLeaderboard(){
     (m||[]) as Month[]
    )
 
-   /*
-    * Start with November,
-    * the first league month.
-    */
-   if(m?.length){
-    setMonthId(m[0].id)
-   }
 
   })()
  },[])
@@ -645,343 +659,16 @@ export default function TVLeaderboard(){
 
   })()
 
- // TEMPORARY TV 1 DISPLAY TEST — revert to normal schedule after review.
- // This affects only /tv; Cup Standings and player pages are unchanged.
- if (true) return <Week4TV month={d?.toLocaleDateString('en-US',{month:'long'})||'NOVEMBER'} teams={teams} scores={scores} handicaps={handicaps} matchups={matchups} scoreCap={scoreCap}/>
-
- const showWeek4=
-  matchups.length===5
-
- /*
-  * WEEK 4 MATCH PLAY
-  */
- if(showWeek4)
-  return(
-
-   <main
-    className=
-     "tv-approved tv-week4"
-   >
-
-    <header
-     className=
-      "tv-approved-header tv-week4-header"
-    >
-
-     <div
-      className=
-       "tv-approved-logo"
-     >
-
-      <img style={{ transform: 'scale(1.2)', transformOrigin: 'left center' }}
-       src=
-        "/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png"
-       alt=
-        "Tom Krise 19th Hole Golf League"
-      />
-
-     </div>
-
-     <div
-      className=
-       "tv-approved-titles"
-     >
-
-      <h1>
-       WEEK 4 MATCH PLAY
-      </h1>
-
-      <div
-       className=
-        "tv-week4-subtitle"
-      >
-       HEAD-TO-HEAD MATCHUPS
-      </div>
-
-     </div>
-
-     <div
-      className=
-       "tv-approved-divider"
-     />
-
-     <div
-      className=
-       "tv-approved-meta"
-     >
-
-      <div
-       className=
-        "tv-approved-month"
-      >
-       {monthLabel}
-      </div>
-
-      <div
-       className=
-        "tv-approved-week"
-      >
-       WEEK 4 OF 4
-      </div>
-
-     </div>
-
-    </header>
-
-    <section
-     className=
-      "tv-week4-table"
-    >
-
-     <div
-      className=
-       "tv-week4-row tv-week4-head"
-     >
-
-      <span>
-       MATCHUP
-      </span>
-
-      <span>
-       TEAM
-      </span>
-
-      <span>
-       ADJUSTED SCORE
-      </span>
-
-      <span>
-       VS
-      </span>
-
-      <span>
-       ADJUSTED SCORE
-      </span>
-
-      <span>
-       TEAM
-      </span>
-
-      <span>
-       RESULT
-      </span>
-
-     </div>
-
-     {matchups.map(
-      x=>{
-
-       const hi=
-        w4(
-         x.team_high_id
-        )
-
-       const lo=
-        w4(
-         x.team_low_id
-        )
-
-       const done=
-        hi!=null &&
-        lo!=null &&
-        x.winner_team_id!=
-         null
-
-       const tied=
-        hi!=null &&
-        lo!=null &&
-        Number(hi)===
-         Number(lo) &&
-        !x.winner_team_id
-
-       return(
-
-        <div
-         className={
-          'tv-week4-row '+
-          (
-           flash===
-            x.team_high_id ||
-           flash===
-            x.team_low_id
-            ?'tv-approved-flash'
-            :''
-          )
-         }
-         key={x.id}
-        >
-
-         <span
-          className=
-           "tv-week4-match"
-         >
-
-          <b>
-           {x.seed_high}
-          </b>
-
-          <i>
-           VS
-          </i>
-
-          <b>
-           {x.seed_low}
-          </b>
-
-         </span>
-
-         <span
-          className=
-           "tv-week4-team"
-         >
-
-          <strong>
-
-           {teamName(
-            x.team_high_id
-           ).toUpperCase()}
-
-          </strong>
-
-          {
-           done &&
-           x.high_points_awarded!=
-            null
-            ?(
-             <small>
-
-              {Number(
-               x.high_points_awarded
-              ).toLocaleString()} PTS
-
-             </small>
-            )
-            :null
-          }
-
-         </span>
-
-         <span
-          className=
-           "tv-week4-score"
-         >
-          {fmt(hi)}
-         </span>
-
-         <span
-          className=
-           "tv-week4-vs"
-         >
-          VS
-         </span>
-
-         <span
-          className=
-           "tv-week4-score"
-         >
-          {fmt(lo)}
-         </span>
-
-         <span
-          className=
-           "tv-week4-team"
-         >
-
-          <strong>
-
-           {teamName(
-            x.team_low_id
-           ).toUpperCase()}
-
-          </strong>
-
-          {
-           done &&
-           x.low_points_awarded!=
-            null
-            ?(
-             <small>
-
-              {Number(
-               x.low_points_awarded
-              ).toLocaleString()} PTS
-
-             </small>
-            )
-            :null
-          }
-
-         </span>
-
-         <span
-          className=
-           "tv-week4-result"
-         >
-
-          {
-           done
-            ?(
-             <>
-
-              <strong>
-
-               {teamName(
-                x.winner_team_id!
-               ).toUpperCase()}
-
-              </strong>
-
-              <small>
-               WINS
-              </small>
-
-             </>
-            )
-
-            :tied
-            ?(
-             <>
-
-              <strong>
-               TIED
-              </strong>
-
-              <small>
-               AWAITING TIEBREAKER
-              </small>
-
-             </>
-            )
-
-            :(
-             <>
-
-              <strong>
-               PENDING
-              </strong>
-
-              <small>
-               WAITING FOR SCORES
-              </small>
-
-             </>
-            )
-          }
-
-         </span>
-
-        </div>
-
-       )
-
-      }
-     )}
-
-    </section>
-
-   </main>
-
-  )
+ // The fourth Monday begins Week 4. The next league month automatically
+ // returns to Monthly Standings, even if last month's matchups remain saved.
+ const fourthMonday=m?.month_start?(()=>{
+  const first=new Date(m.month_start.slice(0,7)+'-01T12:00:00Z')
+  const offset=(8-first.getUTCDay())%7
+  first.setUTCDate(1+offset+21)
+  return first.toISOString().slice(0,10)
+ })():''
+ const showWeek4=!!m&&!!easternToday&&easternToday.slice(0,7)===m.month_start.slice(0,7)&&easternToday>=fourthMonday
+ if(showWeek4)return <Week4TV month={d?.toLocaleDateString('en-US',{month:'long'})||''} teams={teams} scores={scores} handicaps={handicaps} matchups={matchups} scoreCap={scoreCap}/>
 
  /*
   * WEEKS 1-3
