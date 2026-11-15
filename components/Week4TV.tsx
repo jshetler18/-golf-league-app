@@ -18,7 +18,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  const row=(id:string,other:string,seed:number,pts:number,winner:string|null,completed:boolean,awarded:number|null)=>{
   const diff=Math.max(0,handicap(id)-handicap(other))
   const v=score(id)
-  return <div className="w4team" key={seed}><div className="w4name"><span className="w4seed">{seed} SEED</span><strong>{byId(id)}</strong>{diff>0&&<b className="w4help">(+{diff})</b>}</div><div className="w4numbers"><span className="w4score"><em>SCORE:</em><b>{completed&&winner===id&&<span className="w4trophy">🏆</span>}{fmt(v)}</b></span><span className="w4points"><em>CUP PTS</em><b>{completed&&awarded!=null?awarded.toLocaleString():'—'}</b></span></div></div>
+  return <div className="w4team" key={seed}><div className="w4name"><span className="w4seed">{seed} SEED</span><strong>{byId(id)}</strong>{diff>0&&<b className="w4help">(+{diff})</b>}</div><div className="w4numbers"><span className="w4score"><em>SCORE</em><b>{completed&&winner===id&&<span className="w4trophy">🏆</span>}{fmt(v)}</b></span><span className="w4points"><em>CUP PTS</em><b>{completed&&awarded!=null?awarded.toLocaleString():'—'}</b></span></div></div>
  }
  return <main className="w4screen"><style>{`
 
