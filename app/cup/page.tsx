@@ -51,7 +51,7 @@ export default function Cup(){
         </div>)}
         <div className="cup-vs-badge-v1256" style={{gridColumn:2,gridRow:1,alignSelf:'center',justifySelf:'center',marginTop:58}}>VS</div>
        </div>
-       <div className="cup-pending-v1256" style={{fontSize:'0.86rem',lineHeight:1.5}}>Awaiting Week 4 Scores • Winner earns {winPts.toLocaleString()} Cup Points; loser earns {losePts.toLocaleString()}</div>
+       <div className="cup-pending-v1256" style={{fontSize:'0.72rem',lineHeight:1.4}}>Awaiting Week 4 Scores • Winner earns {winPts.toLocaleString()} Cup Points; loser earns {losePts.toLocaleString()}</div>
       </div>
      })}</div>
     </div>}
