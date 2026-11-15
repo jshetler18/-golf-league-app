@@ -67,7 +67,7 @@ export default function WeeklyScoring({seasonId,teams,scoreCap}:{seasonId:string
      if(d.raw==='')return []
      const raw=Number(d.raw),birdies=Number(d.birdies||0)
      if(!Number.isFinite(raw)||!Number.isFinite(birdies)||birdies<0)return []
-     return [{league_month_id:monthId,team_id:team.id,week_number:week,raw_stableford:raw,bonus_birdies:birdies,bonus_points:birdies*Number(month.bonus_birdie_value),handicap_points:hv(team.id),status:'approved'}]
+     return [{league_month_id:monthId,team_id:team.id,week_number:week,raw_stableford:raw,bonus_birdies:birdies,bonus_points:birdies*Number(month.bonus_birdie_value),handicap_points:hv(team.id),official_total:raw+birdies*Number(month.bonus_birdie_value)+hv(team.id),status:'approved'}]
    })
    if(!rows.length){setMsg('Enter at least one raw Stableford score before saving.');return}
    setSaving(true);setMsg('')
