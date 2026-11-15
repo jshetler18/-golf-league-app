@@ -1252,8 +1252,8 @@ export default function TVLeaderboard(){
             * Same movement size
             * as Cup Standings.
             */
-           fontSize:'1.45vw',
-           fontWeight:900
+           fontSize:'2.05vw',
+           fontWeight:1000
           }}
          >
 
