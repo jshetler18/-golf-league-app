@@ -22,36 +22,48 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
   return <div className="w4team" key={seed}><div className="w4name"><span className="w4seed">{seed} SEED</span><strong>{byId(id)}</strong>{diff>0&&<b className="w4help">(+{diff})</b>}</div><div className="w4numbers"><span className="w4score"><em>SCORE:</em><b>{completed&&winner===id&&<span className="w4trophy">🏆</span>}{fmt(v)}</b></span><span className="w4points"><em>CUP PTS</em><b>{completed&&awarded!=null?awarded.toLocaleString():'—'}</b></span></div></div>
  }
  return <main className="w4screen"><style>{`
- .w4screen,.w4screen *{box-sizing:border-box}\n .w4screen{height:100vh;overflow:hidden;box-sizing:border-box;padding:1.5vh .7vw 2vh;background:radial-gradient(ellipse at 50% 35%,#073454 0%,#001b2e 75%);color:white;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;gap:1.6vh}
- .w4header{flex:0 0 12%;min-height:0;display:grid;grid-template-columns:15% .4% minmax(0,1fr);align-items:center;gap:1.5%;overflow:hidden}
- .w4header img{height:95%;width:100%;object-fit:contain}
- .w4bar{width:100%;height:75%;border-radius:8px;background:#46ed10}
- .w4header h1{font-size:clamp(18px,3.05vw,59px);font-weight:1000;white-space:nowrap;letter-spacing:-.04em;text-shadow:2px 4px 3px #000;margin:0}
- .w4champ{flex:0 0 19%;min-height:0;border:4px solid #45ed13;border-radius:1.6vw;display:grid;grid-template-columns:19% minmax(0,1fr) 6% minmax(0,1fr);align-items:stretch;overflow:hidden;box-shadow:inset 0 0 0 2px #fff;background:linear-gradient(90deg,#03283e,#001b30)}
- .w4champlabel{background:linear-gradient(130deg,#2a9a0a,#00551c);border-right:5px solid #fff;transform:skewX(-9deg);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:1000;font-size:1.8vw;line-height:1.1;border-radius:1.3vw 0 0 1.3vw}
- .w4champ .w4team{justify-content:center;padding:.5vw;overflow:hidden}
- .w4vs{display:flex;align-items:center;justify-content:center;color:#fff;font-size:3vw;font-weight:1000}
- .w4grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw;overflow:hidden}
- .w4card{border:3px solid #e5eef4;border-radius:1.4vw;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(140deg,#06374d,#001526)}
- .w4card h2{height:21%;min-height:0;margin:0;background:linear-gradient(#f1f5f9,#a9b7c8);color:#080b12;text-align:center;display:flex;align-items:center;justify-content:center;font-size:1.9vw;font-weight:1000;line-height:1.1}
- .w4card .w4team{flex:1;min-height:0;justify-content:center;padding:.5vw;overflow:hidden;gap:1.5vh}
- .w4card .w4vs{height:7%;font-size:2vw;position:relative}
- .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:4px;background:#42eb10;flex:1;margin:0 .6vw}
- .w4team{display:flex;flex-direction:column;gap:1vh;align-items:center;min-width:0}
- .w4name{display:flex;flex-wrap:wrap;gap:.35vw;align-items:center;justify-content:center;min-width:0;width:100%;text-align:center;line-height:1.05}
- .w4name strong{font-size:1.52vw;font-weight:1000;letter-spacing:-.04em;min-width:0}
- .w4champ .w4name strong{font-size:2.1vw}
- .w4seed{flex:none;border-radius:.6vw;background:linear-gradient(#f8ffea,#7fe831);color:#061a0c;font-size:1.12vw;font-weight:1000;padding:.45vw}
- .w4champ .w4seed{font-size:1.45vw}
- .w4help{font-size:1.6vw;color:#ffe500}
- .w4numbers{display:flex;align-items:center;justify-content:center;gap:.35vw;flex-wrap:wrap;max-width:100%}
- .w4score,.w4points{display:flex;align-items:center;border:2px solid #dce7ec;border-radius:.6vw;overflow:hidden;font-weight:1000;white-space:nowrap}
- .w4numbers em{font-size:1vw;font-style:normal;background:linear-gradient(#14c40c,#05620c);padding:.35vw .5vw}
- .w4numbers b{font-size:1.4vw;padding:.3vw .5vw;background:#eaf1f8;color:#080b0e}
- .w4points b{background:#041526;color:white}
- .w4champ .w4numbers em{font-size:1.25vw}.w4champ .w4numbers b{font-size:1.9vw}\n .w4card .w4numbers{flex-direction:column;gap:.55vh}.w4card .w4score,.w4card .w4points{min-width:57%;justify-content:space-between}.w4card .w4numbers em{font-size:1.2vw}.w4card .w4numbers b{font-size:1.8vw}.w4card h2{font-style:italic}.w4champ .w4numbers{flex-wrap:nowrap}.w4champ .w4name{flex-wrap:nowrap}
- .w4screen .w4team,.w4screen .w4name,.w4screen .w4numbers{position:static}\n .w4trophy{display:inline-block;font-size:.8em;transform:rotate(-17deg);margin-right:.2vw}
- .w4pending{position:absolute;bottom:0;right:1vw;font-size:.85vw;color:#f8e99b;background:#001b2e;padding:.1vw .5vw}
+
+ .w4screen,.w4screen *{box-sizing:border-box}
+ .w4screen{width:100%;height:100dvh;overflow:hidden;margin:0;padding:1.1vh .55vw 1.8vh;background:#001c2d;color:#fff;font-family:Arial,Helvetica,sans-serif;display:grid;grid-template-rows:12.5% 20% minmax(0,1fr);gap:1.2vh}
+ .w4header{min-height:0;min-width:0;display:grid;grid-template-columns:14.5% .35% minmax(0,1fr);gap:1.2%;align-items:center;overflow:hidden}
+ .w4header img{width:100%;height:100%;object-fit:contain}
+ .w4bar{height:80%;width:100%;background:#43f719;border-radius:10px}
+ .w4header h1{font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
+ .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:20% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
+ .w4champlabel{display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:1.75vw;font-style:italic;font-weight:1000;line-height:1.1}
+ .w4champlabel span{transform:skewX(9deg)}
+ .w4champ .w4team{justify-content:center;gap:1.3vh;padding:.4vw;overflow:hidden}
+ .w4vs{font-size:2.7vw;font-weight:1000;display:flex;align-items:center;justify-content:center}
+ .w4champ .w4vs{position:relative}
+ .w4champ .w4vs:before,.w4champ .w4vs:after{content:'';position:absolute;left:50%;width:3px;height:22%;background:#39f317;transform:translateX(-50%)}
+ .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
+ .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
+ .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:21% minmax(0,1fr) 9% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
+ .w4card h2{margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:1.9vw;line-height:1.05;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
+ .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:1.5vh;padding:.3vw}
+ .w4card .w4vs{font-size:2vw;gap:.45vw;min-height:0}
+ .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:3px;background:#40f419;flex:1}
+ .w4team{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center}
+ .w4name{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:.3vw;white-space:nowrap;line-height:1}
+ .w4name strong{font-size:1.52vw;letter-spacing:-.05em;font-weight:1000}
+ .w4champ .w4name strong{font-size:2.05vw}
+ .w4seed{flex:none;padding:.3vw .42vw;background:linear-gradient(#faffed,#a2f350);border-radius:.55vw;color:#081707;font-size:1.13vw;font-weight:1000}
+ .w4champ .w4seed{font-size:1.35vw}
+ .w4help{font-size:1.25vw;color:#ffe500}
+ .w4numbers{min-width:0;display:flex;align-items:center;justify-content:center;gap:.6vw}
+ .w4score,.w4points{display:flex;align-items:center;border:2px solid #d9e6ed;border-radius:.6vw;overflow:hidden;font-weight:1000;white-space:nowrap;line-height:1}
+ .w4numbers em{font-style:italic;background:linear-gradient(#18c614,#057a0a);padding:.42vw .45vw;font-size:1.08vw;color:#fff}
+ .w4numbers b{font-size:1.7vw;padding:.35vw .42vw;background:#f1f4f8;color:#080b0f}
+ .w4points b{background:#051626;color:#fff}
+ .w4champ .w4numbers{gap:.65vw;flex-wrap:nowrap}
+ .w4champ .w4numbers em{font-size:1.1vw}
+ .w4champ .w4numbers b{font-size:1.8vw}
+ .w4card .w4numbers{flex-direction:column;gap:.6vh}
+ .w4card .w4score,.w4card .w4points{min-width:58%;justify-content:space-between}
+ .w4card .w4numbers em{font-size:1.13vw}
+ .w4card .w4numbers b{font-size:1.7vw}
+ .w4trophy{display:inline-block;font-size:.85em;transform:rotate(-16deg);margin-right:.12vw}
+ .w4pending{position:absolute;right:.8vw;bottom:0;font-size:.7vw;color:#ffe991;background:#001c2d;padding:0 .4vw}
  `}</style>
  <header className="w4header"><img src="/Tom%20Krise%2019th%20Hole%20Golf%20League%20Logo%20(1).png" alt="Tom Krise 19th Hole Golf League"/><span className="w4bar"/><h1>{month.toUpperCase()} WEEK 4 HEAD-TO-HEAD MATCHUPS</h1></header>
  <section className="w4champ"><div className="w4champlabel"><span>CHAMPIONSHIP<br/>MATCHUP<br/>(1ST &amp; 2ND)</span></div>{row(pairs[0].team_high_id,pairs[0].team_low_id,1,1000,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].high_points_awarded)}<div className="w4vs">VS</div>{row(pairs[0].team_low_id,pairs[0].team_high_id,2,800,pairs[0].winner_team_id,!!pairs[0].winner_team_id&&score(pairs[0].team_high_id)!=null&&score(pairs[0].team_low_id)!=null,pairs[0].low_points_awarded)}</section>
