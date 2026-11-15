@@ -34,7 +34,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4team{justify-content:center;gap:1.3vh;padding:.4vw;overflow:hidden}
  .w4vs{font-size:2.7vw;font-weight:1000;display:flex;align-items:center;justify-content:center}
  .w4champ .w4vs{position:relative}
- .w4champ .w4vs:before,.w4champ .w4vs:after{content:'';position:absolute;left:50%;width:3px;height:22%;background:#39f317;transform:translateX(-50%)}
+ .w4champ .w4vs:before,.w4champ .w4vs:after{content:none}
  .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
  .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
  .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:15% minmax(0,1fr) 10% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
