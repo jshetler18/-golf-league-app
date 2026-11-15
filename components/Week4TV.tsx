@@ -30,7 +30,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4header h1{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;font-stretch:condensed;font-size:min(3.2vw,5.8vh);line-height:1;letter-spacing:-.045em;font-weight:1000;white-space:nowrap;overflow:hidden;margin:0;text-shadow:1px 3px 2px #000}
  .w4champ{min-width:0;min-height:0;border:3px solid #4bff20;border-radius:1.5vw;box-shadow:inset 0 0 0 2px #fff;display:grid;grid-template-columns:21.5% minmax(0,1fr) 5.2% minmax(0,1fr);align-items:stretch;overflow:hidden;background:linear-gradient(180deg,#00283b,#001c2c)}
  .w4champlabel{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0d7810,#03470b);border-right:5px solid #fff;transform:skewX(-9deg);margin-left:-.6vw;padding:.5vw;font-size:2.05vw;font-style:italic;font-weight:1000;line-height:1.13}
- .w4champlabel span{transform:skewX(9deg);display:block;width:100%;font-size:clamp(20px,2.12vw,43px);font-weight:1000;letter-spacing:-.045em;line-height:1.15;text-shadow:1px 2px 2px #002a06}
+ .w4champlabel span{transform:skewX(9deg);display:block;width:100%;font-size:clamp(22px,2.5vw,49px);font-weight:1000;letter-spacing:-.055em;line-height:1.06;text-shadow:1px 2px 2px #002a06}
  .w4champ .w4team{justify-content:center;gap:1.3vh;padding:.4vw;overflow:hidden}
  .w4vs{font-size:2.7vw;font-weight:1000;display:flex;align-items:center;justify-content:center}
  .w4champ .w4vs{position:relative}
@@ -38,7 +38,7 @@ export default function Week4TV({month,teams,scores,handicaps,matchups,scoreCap}
  .w4champ .w4vs:before{top:4%}.w4champ .w4vs:after{bottom:4%}
  .w4grid{min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55vw}
  .w4card{min-width:0;min-height:0;border:3px solid #e9f1f7;border-radius:1.5vw;overflow:hidden;display:grid;grid-template-rows:15% minmax(0,1fr) 10% minmax(0,1fr);background:linear-gradient(180deg,#032c40,#001b2c)}
- .w4card h2{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:1.92vw;line-height:1.04;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
+ .w4card h2{font-family:Impact,'Arial Narrow','Arial Black',sans-serif;margin:0;padding:.3vw;background:linear-gradient(#f6f8fb,#aebdcd);color:#070c13;text-align:center;font-size:2.25vw;line-height:1.0;font-weight:1000;font-style:italic;display:flex;align-items:center;justify-content:center;flex-direction:column}
  .w4card .w4team{min-width:0;min-height:0;justify-content:center;gap:2.6vh;padding:.22vw}
  .w4card .w4vs{font-size:2.65vw;gap:.45vw;min-height:0}
  .w4card .w4vs:before,.w4card .w4vs:after{content:'';height:3px;background:#40f419;flex:1}
