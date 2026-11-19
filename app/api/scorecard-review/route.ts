@@ -37,7 +37,7 @@ async function publishWeek4AndNotify(admin:any,monthId:string){
  if(!published)return
  const {data:month}=await admin.from('league_months').select('month_start').eq('id',monthId).single()
  const monthName=month?.month_start?new Date(month.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'long'}):'This month'
- const {data:players}=await admin.from('profiles').select('id').eq('status','approved').neq('access_type','booking_only').not('player_id','is',null)
+ const {data:players}=await admin.from('profiles').select('id').eq('status','approved').eq('access_type','league')
  const ids=(players||[]).map((p:any)=>p.id)
  if(!ids.length)return
  const {data:subs}=await admin.from('push_subscriptions').select('*').in('user_id',ids)
