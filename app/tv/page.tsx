@@ -49,12 +49,14 @@ export default function TVLeaderboard(){
  const [flash,setFlash]=useState<string|null>(null)
  const [scoreCap,setScoreCap]=useState(30)
  const [easternToday,setEasternToday]=useState('')
+ const [easternHour,setEasternHour]=useState(0)
 
  useEffect(()=>{
   const updateDate=()=>{
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date())
    const value=(type:string)=>parts.find(p=>p.type===type)?.value||''
    setEasternToday(`${value('year')}-${value('month')}-${value('day')}`)
+   setEasternHour(Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',hourCycle:'h23'}).format(new Date())))
   }
   updateDate()
   const timer=window.setInterval(updateDate,60000)
@@ -667,7 +669,7 @@ export default function TVLeaderboard(){
   first.setUTCDate(1+offset+21)
   return first.toISOString().slice(0,10)
  })():''
- const showWeek4=!!m&&!!easternToday&&easternToday.slice(0,7)===m.month_start.slice(0,7)&&easternToday>=fourthMonday
+ const showWeek4=!!m&&!!easternToday&&easternToday.slice(0,7)===m.month_start.slice(0,7)&&(easternToday>fourthMonday||(easternToday===fourthMonday&&easternHour>=8))
  if(showWeek4)return <Week4TV month={d?.toLocaleDateString('en-US',{month:'long'})||''} teams={teams} scores={scores} handicaps={handicaps} matchups={matchups} scoreCap={scoreCap}/>
 
  /*
