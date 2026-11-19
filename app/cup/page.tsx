@@ -36,6 +36,7 @@ export default function Cup(){
     <div className="cup-scroll-v1231" style={{'--cup-months':months.length} as CSSProperties}><div className="cup-grid-v1231 header"><span>#</span><span>Team</span>{months.map(m=><span key={m.id}>{monthShort(m)}</span>)}<span>Total</span></div>{rows.map((r,i)=><div className={`cup-grid-v1231 row ${i===0?'cup-first-v1231':''}`} key={r.team.id}><span className="cup-rank-v1231">{i+1}</span><span className="cup-team-v1231"><strong>{r.team.name}</strong>{i===0&&<small>LEADER</small>}</span>{r.byMonth.map((v,j)=><span key={months[j].id}>{v===null?'—':v.toLocaleString()}</span>)}<span className="cup-total-v1231">{r.total.toLocaleString()}</span></div>)}</div>
    </div>
    </>}
+  </>}
    {view==='matchups'&&<section id="match-play" className="cup-match-section-v1231">
     <div className="section-title compact"><div><h2>Week 4 Matchups</h2><p className="muted">Head-to-head results and Cup points by month.</p></div></div>
     <div className="card"><label className="field">Select Month<select value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)}>{months.map(m=><option key={m.id} value={m.id}>{monthName(m)}</option>)}</select></label></div>
@@ -48,6 +49,5 @@ export default function Cup(){
       </div>
     })}
    </section>}
-  </>}
  </div></PlayerPage>
 }
