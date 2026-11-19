@@ -14,7 +14,7 @@ type Handicap={league_month_id:string;team_id:string;handicap_points:number}
 
 export default function Cup(){
  const [handicaps,setHandicaps]=useState<Handicap[]>([])
- const [view,setView]=useState('standings')
+ const [view,setView]=useState<'standings'|'matchups'>('standings')
  const [selectedMonth,setSelectedMonth]=useState('')
  const [allowed,setAllowed]=useState<boolean|null>(null)
  useEffect(()=>{setView(new URLSearchParams(window.location.search).get('view')==='matchups'?'matchups':'standings');(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){setAllowed(false);return};const {data:p}=await supabase.from('profiles').select('status,access_type').eq('id',user.id).maybeSingle();setAllowed(p?.status==='approved'&&p?.access_type==='league')})()},[])
