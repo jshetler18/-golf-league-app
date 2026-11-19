@@ -27,7 +27,7 @@ export default function Cup(){
  const monthShort=(m:Month)=>new Date(m.month_start+'T12:00:00').toLocaleDateString('en-US',{month:'short'})
  if(loading||allowed===null)return <PlayerPage title="Cup Standings & Matchups"><p>Loading…</p></PlayerPage>
  if(!allowed)return <PlayerPage title="Cup Standings & Matchups"><div className="card">This page is available to approved league players only.</div></PlayerPage>
- return <PlayerPage title="Cup Standings & Matchups"><div className="cup-page-v1231"><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}><button className={view==="standings"?"btn":"btn secondary"} onClick={()=>setView("standings")}>Cup Standings</button><button className={view==="matchups"?"btn":"btn secondary"} onClick={()=>setView("matchups")}>Week 4 Matchups</button></div>
+ return <PlayerPage title="Cup Standings & Matchups"><div className="cup-page-v1231"><div className="rules-settings-tabs-v1329" role="tablist" aria-label="Cup standings and Week 4 matchups"><button className={view==="standings"?"active":""} onClick={()=>setView("standings")}>Cup Standings</button><button className={view==="matchups"?"active":""} onClick={()=>setView("matchups")}>Week 4 Matchups</button></div>
   {view==='standings'&&<><div className="section-title cup-heading-v1231"><div><h1>Cup Standings</h1><p className="muted">Cup points earned in each month build toward the season championship.</p></div></div>
   {!season?<div className="card">No active season found.</div>:<>
    {rows.length>0&&<div className="card cup-leader-v1231"><span className="cup-leader-icon-v1231">🏆</span><div><small>CURRENT CUP LEADER</small><strong>{rows[0].team.name}</strong><span>{rows[0].total.toLocaleString()} points</span></div></div>}
