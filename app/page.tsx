@@ -12,7 +12,7 @@ type MenuItem={href:string;Icon:ComponentType<SVGProps<SVGSVGElement>>;title:str
 const items:MenuItem[]=[
  {href:'/my-bookings',Icon:CalendarIcon,title:'Sim Reservations'},
  {href:'/results',Icon:StandingsIcon,title:'Monthly Standings'},
- {href:'/cup',Icon:TrophyIcon,title:'Cup Standings'},
+ {href:'/cup',Icon:TrophyIcon,title:'Cup Standings & Matchups'},
  {href:'/live',Icon:LiveIcon,title:'Recorded Rounds'},
  {href:'/messages',Icon:MessagesIcon,title:'Messages'},
  {href:'/teams',Icon:TeamsIcon,title:'Teams & Handicaps'},
