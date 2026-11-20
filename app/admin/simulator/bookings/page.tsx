@@ -23,9 +23,10 @@ export default function Page(){
  const [recurring,setRecurring]=useState<R[]>([]),[editId,setEditId]=useState<string|null>(null),[rTitle,setRTitle]=useState('Unavailable'),[weekday,setWeekday]=useState(1),[rHour,setRHour]=useState(7),[rDur,setRDur]=useState(1),[startDate,setStartDate]=useState(''),[endDate,setEndDate]=useState('')
 
  async function load(){
+  const {data:activeSeason}=await supabase.from('seasons').select('id').eq('is_active',true).eq('is_closed',false).limit(1).maybeSingle()
   const [{data:b},{data:t},{data:r},{data:settings}]=await Promise.all([
    supabase.from('bookings').select('id,kind,user_id,team_id,title,start_at,end_at,admin_sim_block_slot_id').eq('status','active').gte('end_at',new Date().toISOString()).order('start_at').limit(500),
-   supabase.from('teams').select('id,name'),
+   activeSeason?supabase.from('teams').select('id,name').eq('season_id',activeSeason.id).eq('is_active',true).order('name'):supabase.from('teams').select('id,name').eq('id','00000000-0000-0000-0000-000000000000'),
    supabase.from('admin_sim_block_slots').select('id,title,weekday,start_time,duration_hours,start_date,end_date').order('weekday').order('start_time'),
    supabase.from('simulator_settings').select('booking_days_ahead').eq('id',1).maybeSingle()
   ])
