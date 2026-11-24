@@ -2743,3 +2743,15 @@ i .captain-mark-v1357{
 .results-grid.header{font-size:10px}
 .results-grid.row .team-cell{padding-left:1px;padding-right:1px}
 }
+
+/* Larger monthly standings text, including mobile scores. */
+.results-grid.header{font-size:16px}
+.results-grid.row>span{font-size:20px}
+.results-grid.row .team-cell>strong{font-size:22px}
+@media(max-width:600px){
+.results-grid.header{font-size:12px}
+.results-grid.row>span,.results-grid.row>span:nth-child(n+3){font-size:clamp(14px,4vw,18px);letter-spacing:-.35px}
+.results-grid.row .team-cell>strong{font-size:clamp(15px,4.2vw,19px);letter-spacing:-.55px}
+.results-grid.row .team-cell small{font-size:11px}
+.results-grid.row{min-height:58px}
+}
