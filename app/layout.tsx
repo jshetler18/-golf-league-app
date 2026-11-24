@@ -2,6 +2,7 @@ import './globals.css'
 import './booking-overrides.css'
 import AppChrome from '@/components/AppChrome'
 import NotificationApprovalPrompt from '@/components/NotificationApprovalPrompt'
+import MonthlyChampionship from '@/components/MonthlyChampionship'
 import PwaRegistration from '@/components/PwaRegistration'
 
 export const metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegistration />
         <AppChrome>{children}</AppChrome>
         <NotificationApprovalPrompt />
+        <MonthlyChampionship />
       </body>
     </html>
   )
