@@ -2720,3 +2720,15 @@ i .captain-mark-v1357{
 .handicap-score-chips-v1369>span>small:nth-of-type(2){display:block;font-size:10px;color:var(--muted);line-height:1.25}
 .past-score-breakdown{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .past-score-breakdown small{font-size:10px;color:var(--muted);font-weight:650;white-space:nowrap}
+
+/* Monthly standings: prioritize full team names on one line. */
+.results-grid{grid-template-columns:40px minmax(150px,1.8fr) 44px repeat(3,minmax(38px,.55fr)) minmax(52px,.7fr);min-width:0}
+.results-grid.row .team-cell>strong{display:block;white-space:nowrap;overflow-wrap:normal;line-height:1.2}
+.results-grid.row .team-cell>strong>span{display:inline;overflow-wrap:normal}
+@media(max-width:600px){
+.results-grid{grid-template-columns:minmax(23px,0.7fr) minmax(0,3.5fr) minmax(23px,.7fr) repeat(3,minmax(27px,1fr)) minmax(36px,1.2fr)}
+.results-grid.row .team-cell,.results-grid.row .team-cell>strong{font-size:clamp(10px,3.05vw,14px)}
+.results-grid.row>span:nth-child(n+3){font-size:clamp(10px,3vw,13px);padding-left:1px;padding-right:1px}
+.results-grid.header>span{padding-left:1px;padding-right:1px}
+.results-grid.row .team-cell{padding-left:2px;padding-right:1px}
+}
