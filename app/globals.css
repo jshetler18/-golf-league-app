@@ -286,7 +286,7 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 @media(max-width:820px){.results-heading-v1224{align-items:stretch}.results-month-select{width:100%;min-width:0}.results-section-label{align-items:center}.monthly-champion-banner{padding:14px}}
 @media(max-width:520px){.results-week-tabs{gap:5px}.results-week-tabs button{padding:11px 4px;font-size:13px}.results-section-label .pill{font-size:11px}.monthly-champion-trophy{font-size:40px}.monthly-champion-banner strong{font-size:20px}}
 /* v12.25 Results leaderboard trial */
-.results-heading-v1225{gap:18px}.results-leaderboard{padding:0;overflow:hidden}.results-leaderboard-head{display:flex;justify-content:space-between;align-items:end;padding:16px 16px 12px}.results-leaderboard-head h2{margin:2px 0 0}.results-leaderboard-head small{color:var(--muted);font-weight:800}.results-grid{display:grid;grid-template-columns:40px minmax(140px,1.8fr) repeat(4,minmax(58px,.7fr)) minmax(70px,.8fr);align-items:center}.results-grid.header{background:#173759;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.results-grid.header span{padding:10px 8px}.results-grid.row{border-top:1px solid var(--line);min-height:58px}.results-grid.row>span{padding:10px 8px;text-align:center}.results-grid.row .team-cell{text-align:left;display:grid;gap:2px}.team-cell small{font-size:11px;color:var(--muted);font-weight:750}.rank-number{font-weight:900}.month-total{font-size:17px;font-weight:900;color:var(--accent)}.monthly-champion-banner .trophy-monthly{filter:grayscale(1);opacity:.72}
+.results-heading-v1225{gap:18px}.results-leaderboard{padding:0;overflow:hidden}.results-leaderboard-head{display:flex;justify-content:space-between;align-items:end;padding:16px 16px 12px}.results-leaderboard-head h2{margin:2px 0 0}.results-leaderboard-head small{color:var(--muted);font-weight:800}.results-grid{display:grid;grid-template-columns:40px minmax(140px,1.8fr) repeat(3,minmax(58px,.7fr)) minmax(70px,.8fr);align-items:center}.results-grid.header{background:#173759;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.results-grid.header span{padding:10px 8px}.results-grid.row{border-top:1px solid var(--line);min-height:58px}.results-grid.row>span{padding:10px 8px;text-align:center}.results-grid.row .team-cell{text-align:left;display:grid;gap:2px}.team-cell small{font-size:11px;color:var(--muted);font-weight:750}.rank-number{font-weight:900}.month-total{font-size:17px;font-weight:900;color:var(--accent)}.monthly-champion-banner .trophy-monthly{filter:grayscale(1);opacity:.72}
 @media(max-width:620px){.results-leaderboard{overflow-x:auto}.results-grid{min-width:610px}.results-leaderboard-head{position:sticky;left:0;min-width:calc(100vw - 48px);background:#fff}.results-grid.row>span,.results-grid.header span{padding-left:6px;padding-right:6px}}
 
 /* v12.26 Results leaderboard refinements */
@@ -300,7 +300,7 @@ body:has(.mobile-home)>.topbar{display:none}body:has(.mobile-home)>.page{max-wid
 .results-grid.row>span:nth-child(2){background:#fff}
 .results-grid.row>span:nth-child(2){box-shadow:8px 0 10px -10px rgba(0,0,0,.45)}
 @media(max-width:620px){
-  .results-grid{grid-template-columns:40px 150px repeat(4,58px) 70px;min-width:492px}
+  .results-grid{grid-template-columns:40px 150px repeat(3,58px) 70px;min-width:492px}
   .results-leaderboard-head{position:sticky;left:0;z-index:6;min-width:calc(100vw - 48px);background:#fff}
   .results-grid.header>span:nth-child(1),.results-grid.header>span:nth-child(2){z-index:8}
   .results-grid.row>span:nth-child(1),.results-grid.row>span:nth-child(2){z-index:5}
@@ -1479,7 +1479,7 @@ i .captain-mark-v1357{
 
 /* v13.75 compact Monthly Standings — no horizontal scrolling */
 .results-leaderboard{overflow:hidden}
-.results-grid{width:100%;grid-template-columns:50px minmax(120px,1.7fr) 52px repeat(4,minmax(48px,.62fr)) minmax(62px,.72fr)}
+.results-grid{width:100%;grid-template-columns:50px minmax(120px,1.7fr) 52px repeat(3,minmax(48px,.62fr)) minmax(62px,.72fr)}
 .results-grid.header span,.results-grid.row>span{min-width:0}
 .results-handicap-v1375{font-weight:900}
 .results-handicap-v1375.positive{color:#287a45}
@@ -1487,7 +1487,7 @@ i .captain-mark-v1357{
 @media(max-width:620px){
   .results-leaderboard{overflow:hidden}
   .results-leaderboard-head{position:static;min-width:0;width:auto}
-  .results-grid{min-width:0;width:100%;grid-template-columns:30px minmax(78px,1.4fr) 34px repeat(4,minmax(34px,.55fr)) minmax(42px,.7fr)}
+  .results-grid{min-width:0;width:100%;grid-template-columns:30px minmax(78px,1.4fr) 34px repeat(3,minmax(34px,.55fr)) minmax(42px,.7fr)}
   .results-grid.header{font-size:8px;letter-spacing:0}
   .results-grid.header span,.results-grid.row>span{padding-left:2px;padding-right:2px}
   .results-grid.row{min-height:54px;font-size:11px}
@@ -1498,35 +1498,35 @@ i .captain-mark-v1357{
   .results-grid.header>span:nth-child(1),.results-grid.row>span:nth-child(1),.results-grid.header>span:nth-child(2),.results-grid.row>span:nth-child(2){position:static;left:auto;z-index:auto;box-shadow:none}
 }
 @media(max-width:390px){
-  .results-grid{grid-template-columns:28px minmax(72px,1.35fr) 32px repeat(4,minmax(31px,.52fr)) 39px}
+  .results-grid{grid-template-columns:28px minmax(72px,1.35fr) 32px repeat(3,minmax(31px,.52fr)) 39px}
   .results-grid.row{font-size:10px}
   .results-grid.header{font-size:7px}
   .month-total{font-size:12px}
 }
 
 /* v13.76 — larger compact Monthly Standings typography + tighter week spacing */
-.results-grid{grid-template-columns:50px minmax(120px,1.9fr) 50px repeat(4,minmax(43px,.48fr)) minmax(62px,.68fr)}
+.results-grid{grid-template-columns:50px minmax(120px,1.9fr) 50px repeat(3,minmax(43px,.48fr)) minmax(62px,.68fr)}
 .results-grid.header{font-size:13px}
 .results-grid.row{font-size:15px}
 .results-grid.row .team-cell{font-size:15px}
 .results-grid.row .team-cell strong{font-size:15px}
-.results-grid.row>span:nth-child(n+4):nth-child(-n+7),
-.results-grid.header>span:nth-child(n+4):nth-child(-n+7){padding-left:3px;padding-right:3px}
+.results-grid.row>span:nth-child(n+4):nth-child(-n+6),
+.results-grid.header>span:nth-child(n+4):nth-child(-n+6){padding-left:3px;padding-right:3px}
 .results-handicap-v1375{font-size:15px;font-weight:850}
 .month-total{font-size:18px}
 @media(max-width:620px){
-  .results-grid{grid-template-columns:29px minmax(82px,1.55fr) 34px repeat(4,minmax(30px,.43fr)) 42px}
+  .results-grid{grid-template-columns:29px minmax(82px,1.55fr) 34px repeat(3,minmax(30px,.43fr)) 42px}
   .results-grid.header{font-size:9px}
   .results-grid.row{font-size:12px}
   .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:12px}
   .results-grid.header span,.results-grid.row>span{padding-left:2px;padding-right:2px}
-  .results-grid.row>span:nth-child(n+4):nth-child(-n+7),
-  .results-grid.header>span:nth-child(n+4):nth-child(-n+7){padding-left:1px;padding-right:1px}
+  .results-grid.row>span:nth-child(n+4):nth-child(-n+6),
+  .results-grid.header>span:nth-child(n+4):nth-child(-n+6){padding-left:1px;padding-right:1px}
   .results-handicap-v1375{font-size:12px}
   .month-total{font-size:13px}
 }
 @media(max-width:390px){
-  .results-grid{grid-template-columns:27px minmax(76px,1.5fr) 32px repeat(4,minmax(28px,.4fr)) 39px}
+  .results-grid{grid-template-columns:27px minmax(76px,1.5fr) 32px repeat(3,minmax(28px,.4fr)) 39px}
   .results-grid.row{font-size:11px}
   .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:11px}
   .results-grid.header{font-size:8px}
@@ -1541,7 +1541,7 @@ i .captain-mark-v1357{
 .results-handicap-v1375{font-size:17px}
 .month-total{font-size:20px}
 @media(max-width:620px){
-  .results-grid{grid-template-columns:28px minmax(84px,1.65fr) 33px repeat(4,minmax(28px,.39fr)) 42px}
+  .results-grid{grid-template-columns:28px minmax(84px,1.65fr) 33px repeat(3,minmax(28px,.39fr)) 42px}
   .results-grid.header{font-size:10px}
   .results-grid.row{font-size:14px}
   .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:14px}
@@ -1549,7 +1549,7 @@ i .captain-mark-v1357{
   .month-total{font-size:15px}
 }
 @media(max-width:390px){
-  .results-grid{grid-template-columns:26px minmax(78px,1.58fr) 31px repeat(4,minmax(27px,.37fr)) 39px}
+  .results-grid{grid-template-columns:26px minmax(78px,1.58fr) 31px repeat(3,minmax(27px,.37fr)) 39px}
   .results-grid.header{font-size:9px}
   .results-grid.row{font-size:13px}
   .results-grid.row .team-cell,.results-grid.row .team-cell strong{font-size:13px}
@@ -1559,13 +1559,13 @@ i .captain-mark-v1357{
 
 /* v13.79 — Monthly Standings: keep full RANK and TOTAL visible */
 @media(max-width:620px){
-  .results-grid{grid-template-columns:36px minmax(72px,1.42fr) 31px repeat(4,minmax(26px,.35fr)) 48px}
+  .results-grid{grid-template-columns:36px minmax(72px,1.42fr) 31px repeat(3,minmax(26px,.35fr)) 48px}
   .results-grid.header>span:first-child,.results-grid.row>span:first-child{overflow:visible;white-space:nowrap}
   .results-grid.header>span:last-child,.results-grid.row>span:last-child{overflow:visible;white-space:nowrap}
   .results-grid.header span{padding-left:1px;padding-right:1px}
 }
 @media(max-width:390px){
-  .results-grid{grid-template-columns:35px minmax(68px,1.36fr) 30px repeat(4,minmax(25px,.34fr)) 47px}
+  .results-grid{grid-template-columns:35px minmax(68px,1.36fr) 30px repeat(3,minmax(25px,.34fr)) 47px}
   .results-grid.header{font-size:9px}
 }
 
@@ -2701,15 +2701,15 @@ i .captain-mark-v1357{
    Fractional columns fill the available width, so horizontal scrolling is never needed. */
 @media(max-width:620px){
  .results-leaderboard{width:100%;max-width:100%;overflow-x:hidden}
- .results-grid{width:100%;min-width:0;box-sizing:border-box;grid-template-columns:minmax(0,34fr) minmax(0,92fr) minmax(0,30fr) repeat(4,minmax(0,42fr)) minmax(0,49fr)}
+ .results-grid{width:100%;min-width:0;box-sizing:border-box;grid-template-columns:minmax(0,34fr) minmax(0,92fr) minmax(0,30fr) repeat(3,minmax(0,42fr)) minmax(0,49fr)}
  .results-grid.header>span,.results-grid.row>span{min-width:0;box-sizing:border-box}
- .results-grid.header>span:nth-child(n+4):nth-child(-n+7),.results-grid.row>span:nth-child(n+4):nth-child(-n+7){padding-left:3px;padding-right:3px}
+ .results-grid.header>span:nth-child(n+4):nth-child(-n+6),.results-grid.row>span:nth-child(n+4):nth-child(-n+6){padding-left:3px;padding-right:3px}
  .results-grid.header>span:nth-child(3),.results-grid.row>span:nth-child(3){padding-left:0;padding-right:1px}
  .results-grid.row .team-cell{padding-right:1px}
 }
 @media(max-width:390px){
- .results-grid{grid-template-columns:minmax(0,33fr) minmax(0,84fr) minmax(0,29fr) repeat(4,minmax(0,40fr)) minmax(0,47fr)}
- .results-grid.header>span:nth-child(n+4):nth-child(-n+7),.results-grid.row>span:nth-child(n+4):nth-child(-n+7){padding-left:2px;padding-right:2px}
+ .results-grid{grid-template-columns:minmax(0,33fr) minmax(0,84fr) minmax(0,29fr) repeat(3,minmax(0,40fr)) minmax(0,47fr)}
+ .results-grid.header>span:nth-child(n+4):nth-child(-n+6),.results-grid.row>span:nth-child(n+4):nth-child(-n+6){padding-left:2px;padding-right:2px}
 }
 
 /* Monthly app leaderboard: team label above surname, without widening columns. */
