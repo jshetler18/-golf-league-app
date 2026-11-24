@@ -2755,3 +2755,14 @@ i .captain-mark-v1357{
 .results-grid.row .team-cell small{font-size:11px}
 .results-grid.row{min-height:58px}
 }
+
+/* Align all primary standings cells; matchup detail occupies a separate grid row. */
+.results-grid.row{align-items:center;align-content:center;row-gap:0;padding-block:8px}
+.results-grid.row>span{padding-top:0;padding-bottom:0;font-size:21px;line-height:1.25}
+.results-grid.row .team-cell>strong{font-size:23px;line-height:1.25}
+.results-grid.row .results-match-detail{grid-column:2 / -1;grid-row:2;font-size:12px;color:var(--muted);font-weight:750;padding:2px 0 0 2px;text-align:left;line-height:1.2}
+@media(max-width:600px){
+.results-grid.row>span,.results-grid.row>span:nth-child(n+3){font-size:clamp(15px,4.15vw,19px);line-height:1.25}
+.results-grid.row .team-cell>strong{font-size:clamp(16px,4.35vw,20px);line-height:1.25}
+.results-grid.row .results-match-detail{font-size:11px;padding-left:1px}
+}
