@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 const adminColumns=[
   {title:'Simulator Management',links:[{href:'/admin/simulator/team-schedules',title:'Team & League Schedules',icon:'⛳'},{href:'/admin/simulator/bookings',title:'Bookings & Block Time',icon:'📅'}]},
   {title:'Account Management',links:[{href:'/admin/accounts',title:'Accounts',icon:'👤'}]},
-  {title:'League Management',links:[{href:'/admin/teams',title:'Players & Teams',icon:'👥'},{href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},{href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},{href:'/admin/rules',title:'Rules',icon:'📋'},{href:'/admin/messages',title:'Messages',icon:'✉️'},{href:'/admin/meeting-rsvp',title:"Meeting Setup & RSVP's",icon:'✅'}]}
+  {title:'League Management',links:[{href:'/admin/teams',title:'Players & Teams',icon:'👥'},{href:'/admin/league',title:'League Setup & Scoring',icon:'🏆'},{href:'/admin/championships',title:'Monthly Championship Announcements',icon:'🏆'},{href:'/admin/score-submissions',title:'Score Submissions',icon:'📷'},{href:'/admin/rules',title:'Rules',icon:'📋'},{href:'/admin/messages',title:'Messages',icon:'✉️'},{href:'/admin/meeting-rsvp',title:"Meeting Setup & RSVP's",icon:'✅'}]}
 ]
 
 export default function DesktopAppHeader(){
