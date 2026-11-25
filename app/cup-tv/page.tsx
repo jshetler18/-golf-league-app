@@ -892,7 +892,7 @@ export default function CupTV() {
         }
 
         .cup-tv-points {
-          font-size: 2.45vw;
+          font-size: 3.1vw !important;
 
           font-weight: 800;
 
@@ -921,7 +921,7 @@ export default function CupTV() {
 
           box-sizing: border-box;
 
-          font-size: 2.7vw;
+          font-size: 3.4vw !important;
 
           font-weight: 900;
 
@@ -940,7 +940,7 @@ export default function CupTV() {
 
           box-sizing: border-box;
 
-          font-size: 2.7vw;
+          font-size: 3.4vw !important;
 
           font-weight: 900;
         }
@@ -1003,11 +1003,11 @@ export default function CupTV() {
           }
 
           .cup-tv-points {
-            font-size: 2.45vw;
+            font-size: 3.1vw !important;
           }
 
           .cup-tv-total b {
-            font-size: 2.7vw;
+            font-size: 3.4vw !important;
           }
 
           .cup-tv-total i {
