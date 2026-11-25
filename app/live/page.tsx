@@ -131,6 +131,7 @@ export default function LivePage(){
     const cardKey=teamKey(c.team)
     const identifiedTeams=[video.team,...(video.matchupTeams||[]),...(video.matchupScores||[]).map(x=>x.team)].filter(Boolean).map(x=>teamKey(String(x)))
     if(cardKey&&identifiedTeams.includes(cardKey))return true
+    if(video.roundNumber===4&&identifiedTeams.length)return false
 
     // Historical Week 4 videos did not always have structured matchup-team metadata.
     // Fall back to title/round text and accept the old plural/possessive team labels too.
@@ -201,7 +202,7 @@ export default function LivePage(){
             </article>)}
           </div>
         </div>)}
-        {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Past-season recordings keep the original Raw Score display. Beginning with the 2026–2027 season, recorded rounds show Raw Score, that team’s monthly Handicap, and the Adjusted Score. Match-play recordings show both teams when the matchup can be identified.</div>}
+        {filtered.some(v=>typeof v.rawScore==='number'||(v.matchupScores?.length||0)>0)&&<div className="recorded-score-note-v1267">Past-season recordings keep the original Raw Score display. Beginning with the 2026–2027 season, recorded rounds show Raw Score, that team’s monthly Handicap, and the Adjusted Score. Week 4 recordings show both teams only when the stream is explicitly labeled as a shared head-to-head round.</div>}
       </section>
     </div>
   </PlayerPage>
